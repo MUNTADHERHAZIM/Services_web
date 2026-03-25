@@ -1,125 +1,111 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load i18n %}
 
 {% block title %}لوحة تحكم العميل - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <!-- Welcome Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card bg-gradient-primary text-white border-0 shadow">
-                <div class="card-body p-4">
-                    <h2 class="mb-2"><i class="bi bi-speedometer2 me-2"></i>مرحباً، {{
-                        user.get_full_name|default:user.username }}</h2>
-                    <p class="mb-0 opacity-75">لوحة التحكم الخاصة بك - تتبع طلباتك وخدماتك المفضلة</p>
+<div class="container py-4 py-md-5">
+    <!-- Header Section -->
+    <div class="row align-items-center mb-5 g-4">
+        <div class="col-md-auto">
+            <div class="position-relative">
+                {% if user.profile.profile_picture %}
+                <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.get_full_name }}" class="rounded-circle shadow-sm" style="width: 100px; height: 100px; object-fit: cover; border: 4px solid white;">
+                {% else %}
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 100px; height: 100px; border: 4px solid white; font-size: 2.5rem;">
+                    {{ user.username|first|upper }}
                 </div>
+                {% endif %}
+                <span class="position-absolute bottom-0 end-0 bg-success border border-white border-2 rounded-circle p-2" title="متصل"></span>
+            </div>
+        </div>
+        <div class="col-md">
+            <h2 class="fw-bold mb-1">مرحباً، {{ user.get_full_name|default:user.username }} 👋</h2>
+            <p class="text-muted mb-0">أهلاً بك في لوحة التحكم الخاصة بك. يمكنك هنا متابعة طلباتك والخدمات التي طلبتها.</p>
+        </div>
+        <div class="col-md-auto">
+            <a href="{% url 'services:service_list' %}" class="btn btn-primary btn-hover-lift rounded-pill px-4">
+                <i class="bi bi-search me-2"></i>تصفح الخدمات
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="stats-card h-100 border-0 shadow-sm position-relative overflow-hidden">
+                <div class="position-relative z-1">
+                    <h3 class="display-5 fw-bold mb-1">{{ pending_requests }}</h3>
+                    <p class="mb-0 opacity-75">طلبات قيد الانتظار</p>
+                </div>
+                <i class="bi bi-clock-history position-absolute bottom-0 end-0 me-n3 mb-n3 opacity-25" style="font-size: 6rem; transform: rotate(-15deg);"></i>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card warning h-100 border-0 shadow-sm position-relative overflow-hidden">
+                <div class="position-relative z-1">
+                    <h3 class="display-5 fw-bold mb-1">{{ in_progress_requests }}</h3>
+                    <p class="mb-0 opacity-75">طلبات قيد التنفيذ</p>
+                </div>
+                <i class="bi bi-arrow-repeat position-absolute bottom-0 end-0 me-n3 mb-n3 opacity-25" style="font-size: 6rem; transform: rotate(-15deg);"></i>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stats-card success h-100 border-0 shadow-sm position-relative overflow-hidden">
+                <div class="position-relative z-1">
+                    <h3 class="display-5 fw-bold mb-1">{{ completed_requests }}</h3>
+                    <p class="mb-0 opacity-75">طلبات مكتملة</p>
+                </div>
+                <i class="bi bi-check-circle position-absolute bottom-0 end-0 me-n3 mb-n3 opacity-25" style="font-size: 6rem; transform: rotate(-15deg);"></i>
             </div>
         </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
-                                <i class="bi bi-clock-history text-warning fs-2"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h3 class="mb-0">{{ pending_requests }}</h3>
-                            <p class="text-muted mb-0">طلبات قيد الانتظار</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-info bg-opacity-10 rounded-circle p-3">
-                                <i class="bi bi-arrow-repeat text-info fs-2"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h3 class="mb-0">{{ in_progress_requests }}</h3>
-                            <p class="text-muted mb-0">قيد التنفيذ</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
-                                <i class="bi bi-check-circle text-success fs-2"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <h3 class="mb-0">{{ completed_requests }}</h3>
-                            <p class="text-muted mb-0">مكتملة</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Requests -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0">
+    <div class="row g-4">
+        <!-- Main Requests Table -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 p-4 pb-0">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="bi bi-list-task me-2"></i>آخر الطلبات</h5>
-                        <a href="{% url 'services:service_list' %}" class="btn btn-primary btn-sm">
-                            <i class="bi bi-plus-circle me-2"></i>طلب خدمة جديدة
-                        </a>
+                        <h5 class="fw-bold mb-0">آخر الطلبات</h5>
+                        <a href="{% url 'requests:my_requests' %}" class="btn btn-link text-primary p-0">مشاهدة الكل</a>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     {% if my_requests %}
                     <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
                                 <tr>
-                                    <th>رقم الطلب</th>
-                                    <th>الخدمة</th>
-                                    <th>الحالة</th>
-                                    <th>التاريخ</th>
-                                    <th>إجراءات</th>
+                                    <th class="border-0 rounded-start">الطلب</th>
+                                    <th class="border-0">الخدمة</th>
+                                    <th class="border-0">الحالة</th>
+                                    <th class="border-0">التاريخ</th>
+                                    <th class="border-0 rounded-end">إجراء</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for request in my_requests %}
                                 <tr>
-                                    <td><strong>#{{ request.id }}</strong></td>
-                                    <td>{{ request.service.title }}</td>
+                                    <td><span class="fw-bold text-primary">#{{ request.id }}</span></td>
                                     <td>
-                                        {% if request.status == 'new' %}
-                                        <span class="badge bg-warning">جديد</span>
-                                        {% elif request.status == 'in_progress' %}
-                                        <span class="badge bg-info">قيد التنفيذ</span>
-                                        {% elif request.status == 'done' %}
-                                        <span class="badge bg-success">مكتمل</span>
-                                        {% else %}
-                                        <span class="badge bg-secondary">{{ request.get_status_display }}</span>
-                                        {% endif %}
+                                        <div class="d-flex align-items-center">
+                                            {% if request.service.cover_image %}
+                                            <img src="{{ request.service.cover_image.url }}" class="rounded-2 me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                            {% endif %}
+                                            <div class="text-truncate" style="max-width: 150px;">{{ request.service.title }}</div>
+                                        </div>
                                     </td>
-                                    <td>{{ request.created_at|date:"Y-m-d" }}</td>
                                     <td>
-                                        <a href="{% url 'requests:track_request' request.id %}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye me-1"></i>عرض
+                                        <span class="badge status-{{ request.status }}">
+                                            {{ request.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td class="small text-muted">{{ request.created_at|date:"Y-m-d" }}</td>
+                                    <td>
+                                        <a href="{% url 'requests:request_detail' request.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                            عرض
                                         </a>
                                     </td>
                                 </tr>
@@ -129,22 +115,56 @@
                     </div>
                     {% else %}
                     <div class="text-center py-5">
-                        <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
-                        <p class="text-muted">لا توجد طلبات بعد</p>
-                        <a href="{% url 'services:service_list' %}" class="btn btn-primary">
-                            <i class="bi bi-search me-2"></i>تصفح الخدمات
-                        </a>
+                        <div class="mb-4">
+                            <i class="bi bi-inbox fs-1 text-muted"></i>
+                        </div>
+                        <h5>لا توجد طلبات حتى الآن</h5>
+                        <p class="text-muted">ابدأ بطلب أول خدمة لك من خلال تصفح الخدمات المتاحة.</p>
+                        <a href="{% url 'services:service_list' %}" class="btn btn-primary rounded-pill px-4">تصفح الخدمات</a>
                     </div>
                     {% endif %}
                 </div>
             </div>
         </div>
+
+        <!-- Sidebar / Quick Actions -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 p-4 pb-0">
+                    <h5 class="fw-bold mb-0">إجراءات سريعة</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-light text-start p-3 rounded-4 btn-hover-lift">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-person-gear fs-4 text-primary me-3"></i>
+                                <div>
+                                    <div class="fw-bold">تعديل الملف الشخصي</div>
+                                    <div class="small text-muted">تحديث بياناتك الشخصية</div>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="{% url 'requests:notifications' %}" class="btn btn-light text-start p-3 rounded-4 btn-hover-lift">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-bell fs-4 text-warning me-3"></i>
+                                <div>
+                                    <div class="fw-bold">الإشعارات</div>
+                                    <div class="small text-muted">آخر التحديثات على طلباتك</div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 bg-light">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">تحتاج مساعدة؟</h6>
+                    <p class="small text-muted mb-3">إذا واجهت أي مشكلة في طلباتك أو لديك استفسار، لا تتردد في الاتصال بنا.</p>
+                    <a href="{% url 'core:contact' %}" class="btn btn-outline-dark btn-sm rounded-pill px-4">اتصل بالدعم</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
-<style>
-    .bg-gradient-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-</style>
 {% endblock %}

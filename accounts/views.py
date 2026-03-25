@@ -46,56 +46,12 @@ class RegisterView(CreateView):
     success_url = reverse_lazy('accounts:login')
     
     def form_valid(self, form):
-        # Create user
-        user = form.save(commit=False)
-        user.email = form.cleaned_data['email']
-        user.first_name = form.cleaned_data.get('first_name', '')
-        user.last_name = form.cleaned_data.get('last_name', '')
-        user.save()
-        
-        # Get or create profile (should be auto-created by signal)
-        from .models import UserProfile
-        profile, created = UserProfile.objects.get_or_create(user=user)
-        
-        # Set user type
-        user_type = form.cleaned_data.get('user_type', 'customer')
-        profile.user_type = user_type
-        
-        # Fill profile data
-        profile.phone_number = form.cleaned_data.get('phone', '')
-        profile.alternate_phone = form.cleaned_data.get('alternate_phone', '')
-        profile.address = form.cleaned_data.get('address', '')
-        profile.date_of_birth = form.cleaned_data.get('date_of_birth')
-        profile.gender = form.cleaned_data.get('gender', '')
-        
-        # Handle ID document upload
-        if 'id_document' in self.request.FILES:
-            profile.id_document = self.request.FILES['id_document']
-        
-        profile.save()
-        
-        # Assign to appropriate group
-        from django.contrib.auth.models import Group
-        if user_type == 'customer':
-            group, _ = Group.objects.get_or_create(name='Customers')
-            user.groups.add(group)
-        elif user_type == 'provider':
-            group, _ = Group.objects.get_or_create(name='Providers')
-            user.groups.add(group)
-            # Create Provider profile if doesn't exist
-            from services.models import Provider
-            if not hasattr(user, 'provider'):
-                Provider.objects.create(
-                    user=user,
-                    bio='مقدم خدمة جديد'
-                )
-        
+        self.object = form.save()
         messages.success(
             self.request,
             f'تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.'
         )
-        
-        return super().form_valid(form)
+        return redirect(self.get_success_url())
 
 
 class ProfileView(LoginRequiredMixin, TemplateView):
@@ -104,16 +60,25 @@ class ProfileView(LoginRequiredMixin, TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
         
         # إنشاء profile إذا لم يكن موجوداً
-        if not hasattr(self.request.user, 'profile'):
-            UserProfile.objects.create(user=self.request.user)
+        if not hasattr(user, 'profile'):
+            UserProfile.objects.create(user=user)
         
-        context['user_profile'] = self.request.user.profile
+        profile = user.profile
+        context['user_profile'] = profile
+        context['completion_percentage'] = profile.calculate_completion()
+        context['verification_status'] = profile.get_verification_status()
         
-        # آخر الطلبات
-        context['recent_requests'] = self.request.user.service_requests.all()[:5]
+        # إحصائيات
+        context['unread_notifications'] = user.notifications.filter(is_read=False).count() if hasattr(user, 'notifications') else 0
+        context['recent_requests'] = user.service_requests.all()[:5]
         
+        # معلومات المزود
+        if profile.is_provider() and hasattr(user, 'provider_profile'):
+            context['provider'] = user.provider_profile
+            
         return context
 
 
@@ -161,10 +126,11 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
         profile.save()
         
         # Update Provider info if user is a provider
-        if profile.is_provider() and hasattr(user, 'provider'):
-            provider = user.provider
-            provider.specialty = request.POST.get('specialty', provider.specialty)
+        if profile.is_provider() and hasattr(user, 'provider_profile'):
+            provider = user.provider_profile
             provider.bio = request.POST.get('bio', provider.bio)
+            provider.phone = request.POST.get('phone', provider.phone)
+            provider.display_name = f"{user.first_name} {user.last_name}".strip() or user.username
             provider.save()
         
         messages.success(request, 'تم تحديث ملفك الشخصي بنجاح!')

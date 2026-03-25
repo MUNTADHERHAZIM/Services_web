@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}تأكيد حذف الخدمة - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-5">
+                <div class="mb-4">
+                    <div class="bg-danger bg-opacity-10 text-danger rounded-circle p-4 d-inline-block">
+                        <i class="bi bi-trash fs-1"></i>
+                    </div>
+                </div>
+                
+                <h3 class="fw-bold mb-3">تأكيد حذف الخدمة</h3>
+                <p class="text-muted mb-4">هل أنت متأكد من رغبتك في حذف الخدمة "<strong>{{ object.title }}</strong>"؟<br>هذا الإجراء لا يمكن التراجع عنه.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{% url 'dashboard:provider' %}" class="btn btn-light px-4">إلغاء</a>
+                        <button type="submit" class="btn btn-danger px-4">
+                            <i class="bi bi-trash me-2"></i>حذف الخدمة نهائياً
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

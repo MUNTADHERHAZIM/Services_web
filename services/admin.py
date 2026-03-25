@@ -181,7 +181,7 @@ class ServiceImageAdmin(admin.ModelAdmin):
     list_display = ['service', 'image_preview', 'caption', 'order']
     list_filter = ['service__category']
     search_fields = ['service__title', 'caption']
-    list_editable = ['order'] if False else []
+    list_editable = ['order']
 
     def image_preview(self, obj):
         if obj.image:
@@ -290,7 +290,7 @@ class ProviderPortfolioAdmin(admin.ModelAdmin):
 @admin.register(Testimonial)
 class TestimonialAdmin(admin.ModelAdmin):
     """إدارة شهادات العملاء"""
-    list_display = ['service', 'customer_name', 'rating', 'is_featured', 'is_approved', 'created_at']
+    list_display = ['service', 'customer_name', 'rating_display', 'is_featured', 'is_approved', 'created_at']
     list_filter = ['rating', 'is_featured', 'is_approved']
     search_fields = ['customer_name', 'comment', 'service__title']
     autocomplete_fields = ['service']

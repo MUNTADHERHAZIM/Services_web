@@ -2,11 +2,77 @@
 Services Views - عروض الخدمات
 """
 
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.db.models import Q
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect
+from django.utils.decorators import method_decorator
+from django.contrib import messages
+
 from .models import Category, Tag, Service
-from .forms import ServiceSearchForm
+from .forms import ServiceSearchForm, ServiceForm
+from accounts.decorators import provider_required
+
+
+class ServiceCreateView(LoginRequiredMixin, CreateView):
+    """إنشاء خدمة جديدة"""
+    model = Service
+    form_class = ServiceForm
+    template_name = 'services/service_form.html'
+    success_url = reverse_lazy('dashboard:provider')
+
+    @method_decorator(provider_required)
+    def dispatch(self, request, *args, **kwargs):
+        # السماح للمزود بإضافة خدمة حتى لو لم يتم الموافقة عليه بعد (للتجربة)
+        # إذا أردت تفعيل الموافقة الإجبارية، قم بإزالة التعليق عن الأسطر التالية:
+        # if not request.user.profile.provider_approved:
+        #     messages.error(request, 'يجب الموافقة على حسابك كمزود قبل إنشاء الخدمات.')
+        #     return redirect('dashboard:provider')
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.provider = self.request.user.provider_profile
+        messages.success(self.request, 'تم إنشاء الخدمة بنجاح.')
+        return super().form_valid(form)
+
+
+class ServiceUpdateView(LoginRequiredMixin, UpdateView):
+    """تعديل خدمة موجودة"""
+    model = Service
+    form_class = ServiceForm
+    template_name = 'services/service_form.html'
+    success_url = reverse_lazy('dashboard:provider')
+
+    @method_decorator(provider_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return Service.objects.filter(provider__user=self.request.user)
+
+    def form_valid(self, form):
+        messages.success(self.request, 'تم تعديل الخدمة بنجاح.')
+        return super().form_valid(form)
+
+
+class ServiceDeleteView(LoginRequiredMixin, DeleteView):
+    """حذف خدمة"""
+    model = Service
+    template_name = 'services/service_confirm_delete.html'
+    success_url = reverse_lazy('dashboard:provider')
+
+    @method_decorator(provider_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return Service.objects.filter(provider__user=self.request.user)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, 'تم حذف الخدمة بنجاح.')
+        return super().delete(request, *args, **kwargs)
 
 
 class ServiceListView(ListView):

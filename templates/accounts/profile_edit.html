@@ -188,15 +188,15 @@
 
                         <div class="row g-3 mb-4">
                             <div class="col-md-12">
-                                <label class="form-label fw-bold">التخصص/الوظيفة</label>
-                                <input type="text" name="specialty" class="form-control"
-                                    value="{{ user.provider.specialty|default:'' }}"
-                                    placeholder="مثل: صباغ، نجار، كهربائي">
+                                <label class="form-label fw-bold">المسمى الوظيفي</label>
+                                <input type="text" name="title" class="form-control"
+                                    value="{{ user.provider_profile.title|default:'' }}"
+                                    placeholder="مثل: مصمم جرافيك محترف">
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label fw-bold">نبذة تعريفية</label>
                                 <textarea name="bio" class="form-control" rows="4"
-                                    placeholder="اكتب نبذة عن نفسك وخبراتك...">{{ user.provider.bio|default:'' }}</textarea>
+                                    placeholder="اكتب نبذة عن نفسك وخبراتك...">{{ user.provider_profile.bio|default:'' }}</textarea>
                             </div>
                         </div>
                         {% endif %}

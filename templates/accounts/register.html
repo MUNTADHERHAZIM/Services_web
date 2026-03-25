@@ -178,46 +178,53 @@
                     <div class="registration-header">
                         <i class="bi bi-person-plus-fill"></i>
                         <h1 class="mb-2">إنشاء حساب جديد</h1>
-
-                        <div class="mb-4 p-4 bg-light rounded-3 text-dark">
-                            <label class="form-label fw-bold mb-3">
-                                <i class="bi bi-person-badge me-2"></i>اختر نوع الحساب
-                            </label>
-
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <input type="radio" class="btn-check" name="user_type" id="type_customer"
-                                        value="customer" checked>
-                                    <label class="btn btn-outline-primary w-100 p-3 text-end" for="type_customer">
-                                        <i class="bi bi-person-circle fs-2 d-block mb-2"></i>
-                                        <div class="fw-bold">عميل</div>
-                                        <small class="text-muted">أريد طلب خدمات</small>
-                                    </label>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <input type="radio" class="btn-check" name="user_type" id="type_provider"
-                                        value="provider">
-                                    <label class="btn btn-outline-success w-100 p-3 text-end" for="type_provider">
-                                        <i class="bi bi-tools fs-2 d-block mb-2"></i>
-                                        <div class="fw-bold">مقدم خدمة</div>
-                                        <small class="text-muted">أريد تقديم خدمات</small>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
                         <p class="mb-0 opacity-75">انضم إلينا واستمتع بخدماتنا الاحترافية</p>
                     </div>
 
                     <div class="registration-body">
-                        <form method="post" enctype="multipart/form-data" id="registration-form" novalidate>
+                        <form method="post" enctype="multipart/form-data" id="registration-form">
                             {% csrf_token %}
 
-                            {% if form.non_field_errors %}
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                {{ form.non_field_errors }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <div class="mb-4 p-4 bg-light rounded-3 text-dark">
+                                <label class="form-label fw-bold mb-3">
+                                    <i class="bi bi-person-badge me-2"></i>اختر نوع الحساب
+                                </label>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <input type="radio" class="btn-check" name="user_type" id="type_customer"
+                                            value="customer" {% if form.user_type.value == 'customer' or not form.user_type.value %}checked{% endif %}>
+                                        <label class="btn btn-outline-primary w-100 p-3 text-end" for="type_customer">
+                                            <i class="bi bi-person-circle fs-2 d-block mb-2"></i>
+                                            <div class="fw-bold">عميل</div>
+                                            <small class="text-muted">أريد طلب خدمات</small>
+                                        </label>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <input type="radio" class="btn-check" name="user_type" id="type_provider"
+                                            value="provider" {% if form.user_type.value == 'provider' %}checked{% endif %}>
+                                        <label class="btn btn-outline-success w-100 p-3 text-end" for="type_provider">
+                                            <i class="bi bi-tools fs-2 d-block mb-2"></i>
+                                            <div class="fw-bold">مقدم خدمة</div>
+                                            <small class="text-muted">أريد تقديم خدمات</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                {% if form.user_type.errors %}
+                                <div class="text-danger small mt-2 fw-bold"><i class="bi bi-exclamation-circle me-1"></i>{{ form.user_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            {% if form.errors and not form.user_type.errors %}
+                            <div class="alert alert-danger">
+                                <ul class="mb-0">
+                                    {% for field, errors in form.errors.items %}
+                                        {% for error in errors %}
+                                            <li><strong>{{ field }}:</strong> {{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </ul>
                             </div>
                             {% endif %}
 
@@ -252,7 +259,7 @@
                                     المستخدم</label>
                                 {{ form.username }}
                                 {% if form.username.errors %}
-                                <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+                                <div class="text-danger small mt-1 fw-bold"><i class="bi bi-exclamation-circle me-1"></i>{{ form.username.errors.0 }}</div>
                                 {% endif %}
                             </div>
 
@@ -262,7 +269,7 @@
                                     الإلكتروني</label>
                                 {{ form.email }}
                                 {% if form.email.errors %}
-                                <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                                <div class="text-danger small mt-1 fw-bold"><i class="bi bi-exclamation-circle me-1"></i>{{ form.email.errors.0 }}</div>
                                 {% endif %}
                             </div>
 
@@ -271,18 +278,28 @@
                                 <div class="col-md-6 mb-3">
                                     <label for="id_password1" class="form-label"><span
                                             class="required-badge">*</span>كلمة المرور</label>
-                                    {{ form.password1 }}
+                                    <div class="input-group">
+                                        {{ form.password1 }}
+                                        <button class="btn btn-outline-secondary toggle-password" type="button" data-target="id_password1">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
                                     {% if form.password1.errors %}
-                                    <div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>
+                                    <div class="text-danger small mt-1 fw-bold"><i class="bi bi-exclamation-circle me-1"></i>{{ form.password1.errors.0 }}</div>
                                     {% endif %}
                                 </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label for="id_password2" class="form-label"><span
                                             class="required-badge">*</span>تأكيد كلمة المرور</label>
-                                    {{ form.password2 }}
+                                    <div class="input-group">
+                                        {{ form.password2 }}
+                                        <button class="btn btn-outline-secondary toggle-password" type="button" data-target="id_password2">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
                                     {% if form.password2.errors %}
-                                    <div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>
+                                    <div class="text-danger small mt-1 fw-bold"><i class="bi bi-exclamation-circle me-1"></i>{{ form.password2.errors.0 }}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -602,6 +619,25 @@
                 submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>جاري الإنشاء...';
             });
         }
+
+        // إظهار/إخفاء كلمة المرور
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', function() {
+                // Find the input field within the same input-group
+                const input = this.parentElement.querySelector('input');
+                const icon = this.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                }
+            });
+        });
     });
 </script>
 {% endblock %}

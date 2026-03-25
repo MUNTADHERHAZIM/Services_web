@@ -1,81 +1,117 @@
 {% extends 'base.html' %}
-{% block title %}اتصل بنا - {{ SITE_NAME }}{% endblock %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}اتصل بنا - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container py-4 py-md-5">
     <div class="row justify-content-center">
         <div class="col-lg-10">
-            <div class="text-center mb-5">
-                <i class="bi bi-envelope display-3 text-primary mb-3"></i>
-                <h1 class="fw-bold">اتصل بنا</h1>
-                <p class="lead text-muted">نحن هنا لمساعدتك</p>
+            <div class="text-center mb-5 pb-3">
+                <h1 class="fw-bold display-4 mb-3">نحن هنا لمساعدتك</h1>
+                <p class="lead text-muted mx-auto" style="max-width: 700px;">
+                    هل لديك استفسار أو واجهت مشكلة؟ فريق الدعم الفني لدينا جاهز للرد على جميع تساؤلاتك في أسرع وقت ممكن.
+                </p>
             </div>
 
-            <div class="row g-4">
+            <div class="row g-4 mb-5">
                 <div class="col-md-4">
-                    <div class="card h-100 text-center">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 text-center card-hover-lift">
                         <div class="card-body p-5">
-                            <i class="bi bi-geo-alt display-4 text-primary mb-3"></i>
-                            <h5 class="fw-bold">العنوان</h5>
+                            <div class="icon-box mx-auto mb-4 rounded-circle d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary" style="width: 80px; height: 80px;">
+                                <i class="bi bi-geo-alt fs-1"></i>
+                            </div>
+                            <h5 class="fw-bold mb-2">العنوان</h5>
                             <p class="text-muted mb-0">
-                                جمهورية العراق<br>
-                                البصرة
+                                جمهورية العراق، البصرة<br>
+                                مركز المدينة
                             </p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="card h-100 text-center">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 text-center card-hover-lift">
                         <div class="card-body p-5">
-                            <i class="bi bi-telephone display-4 text-primary mb-3"></i>
-                            <h5 class="fw-bold">الهاتف</h5>
+                            <div class="icon-box mx-auto mb-4 rounded-circle d-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success" style="width: 80px; height: 80px;">
+                                <i class="bi bi-telephone fs-1"></i>
+                            </div>
+                            <h5 class="fw-bold mb-2">الهاتف</h5>
                             <p class="text-muted mb-0" dir="ltr">
-                                +964 770 000 0000
+                                +964 770 000 0000<br>
+                                متاح من 9ص إلى 9م
                             </p>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="card h-100 text-center">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 text-center card-hover-lift">
                         <div class="card-body p-5">
-                            <i class="bi bi-envelope display-4 text-primary mb-3"></i>
-                            <h5 class="fw-bold">البريد الإلكتروني</h5>
+                            <div class="icon-box mx-auto mb-4 rounded-circle d-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning" style="width: 80px; height: 80px;">
+                                <i class="bi bi-envelope fs-1"></i>
+                            </div>
+                            <h5 class="fw-bold mb-2">البريد الإلكتروني</h5>
                             <p class="text-muted mb-0">
-                                info@services.com
+                                support@example.com<br>
+                                info@example.com
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card mt-5">
-                <div class="card-body p-5">
-                    <h3 class="fw-bold mb-4 text-center">أرسل لنا رسالة</h3>
-                    <form>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">الاسم</label>
-                                <input type="text" class="form-control" placeholder="اسمك الكامل">
+            <div class="row g-5">
+                <div class="col-lg-7">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body p-4 p-md-5">
+                            <h3 class="fw-bold mb-4">أرسل لنا رسالة</h3>
+                            <form action="#" method="POST">
+                                {% csrf_token %}
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small">الاسم الكامل</label>
+                                        <input type="text" class="form-control rounded-3 py-2" placeholder="أدخل اسمك هنا">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold small">البريد الإلكتروني</label>
+                                        <input type="email" class="form-control rounded-3 py-2" placeholder="name@example.com" dir="ltr">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold small">الموضوع</label>
+                                        <input type="text" class="form-control rounded-3 py-2" placeholder="عن ماذا تود الاستفسار؟">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold small">الرسالة</label>
+                                        <textarea class="form-control rounded-3" rows="5" placeholder="اكتب تفاصيل استفسارك هنا..."></textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary rounded-pill px-5 py-3 w-100 fw-bold">
+                                            <i class="bi bi-send me-2"></i>إرسال الرسالة الآن
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="card border-0 bg-primary text-white rounded-4 h-100">
+                        <div class="card-body p-4 p-md-5 d-flex flex-column justify-content-center">
+                            <h3 class="fw-bold mb-4">أسئلة متكررة</h3>
+                            <div class="mb-4">
+                                <h6 class="fw-bold mb-2">كيف يمكنني التسجيل كمزود؟</h6>
+                                <p class="small opacity-75">يمكنك التسجيل من خلال صفحة "إنشاء حساب" واختيار نوع الحساب "مقدم خدمة".</p>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">البريد الإلكتروني</label>
-                                <input type="email" class="form-control" placeholder="example@email.com" dir="ltr">
+                            <div class="mb-4">
+                                <h6 class="fw-bold mb-2">هل الخدمات مضمونة؟</h6>
+                                <p class="small opacity-75">نعم، نحن نضمن حقوق الطرفين من خلال نظام إدارة الطلبات والتحقق من الهوية.</p>
                             </div>
-                            <div class="col-12">
-                                <label class="form-label">الموضوع</label>
-                                <input type="text" class="form-control" placeholder="موضوع الرسالة">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">الرسالة</label>
-                                <textarea class="form-control" rows="5" placeholder="اكتب رسالتك هنا..."></textarea>
-                            </div>
-                            <div class="col-12 text-center">
-                                <button type="submit" class="btn btn-primary btn-lg px-5">
-                                    <i class="bi bi-send me-2"></i>إرسال
-                                </button>
+                            <div>
+                                <h6 class="fw-bold mb-2">ما هي مدة الرد على الرسائل؟</h6>
+                                <p class="small opacity-75">فريقنا يعمل على الرد على جميع الاستفسارات خلال مدة لا تتجاوز 24 ساعة.</p>
                             </div>
                         </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>

@@ -75,11 +75,21 @@ class ProviderDashboardView(TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         
+        # التأكد من وجود كائن المزود
+        if not hasattr(user, 'provider_profile'):
+            Provider.objects.get_or_create(
+                user=user,
+                defaults={
+                    'display_name': f"{user.first_name} {user.last_name}".strip() or user.username,
+                    'bio': 'مقدم خدمة جديد'
+                }
+            )
+        
         context['is_approved'] = user.profile.provider_approved
         
         context['my_services'] = Service.objects.filter(
             provider__user=user
-        ).order_by('-created_at')[:10]
+        ).order_by('-created_at')[:6]
         
         context['services_count'] = Service.objects.filter(
             provider__user=user
@@ -95,6 +105,30 @@ class ProviderDashboardView(TemplateView):
         context['recent_requests'] = my_requests[:10]
         
         return context
+
+
+@method_decorator(provider_required, name='dispatch')
+class ProviderServiceListView(ListView):
+    """قائمة خدمات المزود"""
+    model = Service
+    template_name = 'dashboard/provider_services.html'
+    context_object_name = 'services'
+    paginate_by = 12
+
+    def get_queryset(self):
+        return Service.objects.filter(provider__user=self.request.user).order_by('-created_at')
+
+
+@method_decorator(provider_required, name='dispatch')
+class ProviderRequestListView(ListView):
+    """قائمة الطلبات المستلمة للمزود"""
+    model = ServiceRequest
+    template_name = 'dashboard/provider_requests.html'
+    context_object_name = 'service_requests'
+    paginate_by = 15
+
+    def get_queryset(self):
+        return ServiceRequest.objects.filter(service__provider__user=self.request.user).order_by('-created_at')
 
 
 class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):

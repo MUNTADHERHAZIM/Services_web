@@ -632,11 +632,16 @@ class ProviderViolation(models.Model):
 def create_user_profile(sender, instance, created, **kwargs):
     """إنشاء ملف شخصي تلقائياً للمستخدم الجديد"""
     if created:
-        UserProfile.objects.create(user=instance)
+        UserProfile.objects.get_or_create(user=instance)
 
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     """حفظ الملف الشخصي عند حفظ المستخدم"""
-    if hasattr(instance, 'profile'):
-        instance.profile.save()
+    try:
+        if hasattr(instance, 'profile'):
+            instance.profile.save()
+    except (UserProfile.DoesNotExist, AttributeError):
+        # في حال عدم وجود ملف شخصي أو وجود خطأ تقني، لا نفعل شيئاً
+        # حيث سيتم التعامل معه في مكان آخر (مثل دالة save في النموذج)
+        pass

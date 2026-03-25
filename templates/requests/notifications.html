@@ -1,18 +1,22 @@
 {% extends 'base.html' %}
-{% block title %}الإشعارات - {{ SITE_NAME }}{% endblock %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}الإشعارات - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container py-4 py-md-5">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold mb-0">
-                    <i class="bi bi-bell text-primary me-2"></i>الإشعارات
-                </h2>
+        <div class="col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h2 class="fw-bold mb-1">مركز الإشعارات</h2>
+                    <p class="text-muted mb-0">ابقَ على اطلاع بآخر التحديثات على طلباتك وخدماتك.</p>
+                </div>
                 {% if notifications %}
                 <form method="post" action="{% url 'requests:mark_all_read' %}">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                    <button type="submit" class="btn btn-outline-primary rounded-pill px-4 btn-hover-lift">
                         <i class="bi bi-check-all me-1"></i>تحديد الكل كمقروء
                     </button>
                 </form>
@@ -20,62 +24,64 @@
             </div>
 
             {% if notifications %}
-            <div class="list-group">
-                {% for notification in notifications %}
-                <div
-                    class="list-group-item list-group-item-action {% if not notification.is_read %}bg-light{% endif %}">
-                    <div class="d-flex w-100 justify-content-between align-items-start">
-                        <div class="d-flex align-items-start">
-                            <div class="me-3">
-                                {% if notification.notification_type == 'request_created' %}
-                                <i class="bi bi-plus-circle text-success fs-4"></i>
-                                {% elif notification.notification_type == 'status_changed' %}
-                                <i class="bi bi-arrow-repeat text-primary fs-4"></i>
-                                {% elif notification.notification_type == 'request_completed' %}
-                                <i class="bi bi-check-circle text-success fs-4"></i>
-                                {% else %}
-                                <i class="bi bi-bell text-warning fs-4"></i>
-                                {% endif %}
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="list-group list-group-flush">
+                    {% for notification in notifications %}
+                    <div class="list-group-item list-group-item-action p-4 border-0 border-bottom {% if not notification.is_read %}bg-primary bg-opacity-10{% endif %}">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div class="d-flex align-items-start">
+                                <div class="icon-box me-4 rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" 
+                                     style="width: 50px; height: 50px; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                                    {% if notification.notification_type == 'request_created' %}
+                                    <i class="bi bi-plus-circle text-success fs-4"></i>
+                                    {% elif notification.notification_type == 'status_changed' %}
+                                    <i class="bi bi-arrow-repeat text-primary fs-4"></i>
+                                    {% elif notification.notification_type == 'request_completed' %}
+                                    <i class="bi bi-check-circle text-success fs-4"></i>
+                                    {% else %}
+                                    <i class="bi bi-bell text-warning fs-4"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold text-dark">{{ notification.title }}</h6>
+                                    <p class="mb-2 text-muted small lh-base">{{ notification.message }}</p>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <small class="text-muted">
+                                            <i class="bi bi-clock me-1"></i>{{ notification.created_at|timesince }}
+                                        </small>
+                                        {% if notification.request %}
+                                        <a href="{% url 'requests:request_detail' notification.request.pk %}"
+                                            class="text-primary text-decoration-none small fw-bold">
+                                            <i class="bi bi-eye me-1"></i>عرض التفاصيل
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <h6 class="mb-1 fw-semibold">{{ notification.title }}</h6>
-                                <p class="mb-1 text-muted">{{ notification.message }}</p>
-                                <small class="text-muted">
-                                    <i class="bi bi-clock me-1"></i>{{ notification.created_at|timesince }}
-                                </small>
-                            </div>
+                            {% if not notification.is_read %}
+                            <span class="badge bg-primary rounded-pill px-3">جديد</span>
+                            {% endif %}
                         </div>
-                        {% if not notification.is_read %}
-                        <span class="badge bg-primary rounded-pill">جديد</span>
-                        {% endif %}
                     </div>
-                    {% if notification.request %}
-                    <div class="mt-2">
-                        <a href="{% url 'requests:request_detail' notification.request.pk %}"
-                            class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-eye me-1"></i>عرض الطلب
-                        </a>
-                    </div>
-                    {% endif %}
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
 
             <!-- Pagination -->
             {% if is_paginated %}
-            <nav class="mt-4">
+            <nav class="mt-5">
                 <ul class="pagination justify-content-center">
                     {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابق</a>
+                        <a class="page-link shadow-sm border-0 rounded-pill px-4 mx-1" href="?page={{ page_obj.previous_page_number }}">السابق</a>
                     </li>
                     {% endif %}
                     <li class="page-item active">
-                        <span class="page-link">{{ page_obj.number }} من {{ page_obj.paginator.num_pages }}</span>
+                        <span class="page-link shadow-sm border-0 rounded-pill px-4 mx-1">{{ page_obj.number }} من {{ page_obj.paginator.num_pages }}</span>
                     </li>
                     {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالي</a>
+                        <a class="page-link shadow-sm border-0 rounded-pill px-4 mx-1" href="?page={{ page_obj.next_page_number }}">التالي</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -83,11 +89,13 @@
             {% endif %}
 
             {% else %}
-            <div class="text-center py-5">
-                <i class="bi bi-bell-slash display-1 text-muted mb-4"></i>
-                <h4>لا توجد إشعارات</h4>
-                <p class="text-muted">ستظهر هنا إشعاراتك عند وجود تحديثات على طلباتك</p>
-                <a href="{% url 'services:service_list' %}" class="btn btn-primary">
+            <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+                <div class="mb-4">
+                    <i class="bi bi-bell-slash display-1 text-muted opacity-25"></i>
+                </div>
+                <h3 class="fw-bold">لا توجد إشعارات حالياً</h3>
+                <p class="text-muted mb-4">عندما يكون هناك تحديث على طلباتك أو خدماتك، ستجد التنبيهات هنا.</p>
+                <a href="{% url 'services:service_list' %}" class="btn btn-primary rounded-pill px-5 py-2">
                     <i class="bi bi-collection me-2"></i>تصفح الخدمات
                 </a>
             </div>
@@ -95,4 +103,13 @@
         </div>
     </div>
 </div>
+
+<style>
+    .list-group-item {
+        transition: all 0.2s ease;
+    }
+    .list-group-item:hover {
+        background-color: #f8fafc !important;
+    }
+</style>
 {% endblock %}

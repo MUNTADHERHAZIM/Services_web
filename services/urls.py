@@ -11,6 +11,11 @@ urlpatterns = [
     # قائمة الخدمات
     path('', views.ServiceListView.as_view(), name='service_list'),
     
+    # إدارة الخدمات (للمزودين)
+    path('create/', views.ServiceCreateView.as_view(), name='service_create'),
+    path('service/<slug:slug>/update/', views.ServiceUpdateView.as_view(), name='service_update'),
+    path('service/<slug:slug>/delete/', views.ServiceDeleteView.as_view(), name='service_delete'),
+    
     # تفاصيل خدمة
     path('service/<slug:slug>/', views.ServiceDetailView.as_view(), name='service_detail'),
     

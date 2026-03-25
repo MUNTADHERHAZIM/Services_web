@@ -509,39 +509,59 @@
 
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
-                    {% if user.is_staff %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dashboard:home' %}">
-                            <i class="bi bi-speedometer2 me-1"></i> لوحة التحكم
-                        </a>
-                    </li>
-                    {% endif %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'requests:my_requests' %}">
-                            <i class="bi bi-list-check me-1"></i> طلباتي
-                        </a>
-                    </li>
+                        {% if user.is_staff %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'dashboard:home' %}">
+                                <i class="bi bi-speedometer2 me-1"></i> لوحة الإدارة
+                            </a>
+                        </li>
+                        {% elif user.profile.user_type == 'provider' or user.profile.user_type == 'PROVIDER' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'dashboard:provider' %}">
+                                <i class="bi bi-speedometer2 me-1"></i> لوحة التحكم
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'services:service_create' %}">
+                                <i class="bi bi-plus-circle me-1"></i> إضافة خدمة
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'dashboard:customer' %}">
+                                <i class="bi bi-speedometer2 me-1"></i> لوحة التحكم
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'requests:my_requests' %}">
+                                <i class="bi bi-list-check me-1"></i> طلباتي
+                            </a>
+                        </li>
+                        {% endif %}
+
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle me-1"></i> {{ user.username }}
+                            <i class="bi bi-person-circle me-1"></i> {{ user.get_full_name|default:user.username }}
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2">
+                            <li><a class="dropdown-item py-2 px-3" href="{% url 'accounts:profile' %}">
                                     <i class="bi bi-person me-2"></i> الملف الشخصي
                                 </a></li>
-                            <li><a class="dropdown-item" href="{% url 'requests:notifications' %}">
+                            <li><a class="dropdown-item py-2 px-3" href="{% url 'requests:notifications' %}">
                                     <i class="bi bi-bell me-2"></i> الإشعارات
                                 </a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item" href="{% url 'admin:index' %}">
-                                    <i class="bi bi-gear me-2"></i> لوحة الإدارة
+                            {% if user.is_staff %}
+                            <li><a class="dropdown-item py-2 px-3" href="{% url 'admin:index' %}">
+                                    <i class="bi bi-gear me-2"></i> الإدارة العامة
                                 </a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
+                            {% endif %}
+                            <li><a class="dropdown-item py-2 px-3 text-danger" href="{% url 'accounts:logout' %}">
                                     <i class="bi bi-box-arrow-right me-2"></i> تسجيل الخروج
                                 </a></li>
                         </ul>

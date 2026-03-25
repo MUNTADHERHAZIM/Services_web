@@ -12,6 +12,8 @@ urlpatterns = [
     path('', views.DashboardRedirectView.as_view(), name='redirect'),
     path('customer/', views.CustomerDashboardView.as_view(), name='customer'),
     path('provider/', views.ProviderDashboardView.as_view(), name='provider'),
+    path('provider/services/', views.ProviderServiceListView.as_view(), name='provider_services'),
+    path('provider/requests/', views.ProviderRequestListView.as_view(), name='provider_requests'),
     path('admin/', views.DashboardHomeView.as_view(), name='admin'),
     
     # Admin - الصفحة الرئيسية

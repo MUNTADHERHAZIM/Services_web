@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}الخدمات تحت وسم: {{ tag.name }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center py-5 mb-5">
+    <div class="container py-4">
+        <h1 class="display-4 fw-bold mb-3" data-aos="fade-up">الوسم: {{ tag.name }}</h1>
+        <p class="lead opacity-75" data-aos="fade-up" data-aos-delay="100">
+            استكشف جميع الخدمات المتاحة المرتبطة بهذا الوسم.
+        </p>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row g-4">
+        {% if services %}
+            {% for service in services %}
+            <div class="col-md-6 col-lg-4 col-xl-3" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:1 }}00">
+                <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden card-hover-lift position-relative">
+                    {% if service.price %}
+                    <div class="price-tag shadow-sm">{{ service.price }} د.ع</div>
+                    {% endif %}
+                    
+                    {% if service.cover_image %}
+                    <img src="{{ service.cover_image.url }}" class="card-img-top" alt="{{ service.title }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <i class="bi bi-image text-muted display-4"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-body p-4">
+                        <div class="mb-2">
+                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3">{{ service.category.name }}</span>
+                        </div>
+                        <h5 class="card-title fw-bold mb-2">
+                            <a href="{% url 'services:service_detail' service.slug %}" class="text-decoration-none text-dark stretched-link">
+                                {{ service.title }}
+                            </a>
+                        </h5>
+                        <p class="card-text text-muted small mb-4 text-truncate-2">{{ service.summary }}</p>
+                        
+                        <div class="d-flex align-items-center mt-auto pt-3 border-top">
+                            {% if service.provider.user.profile.profile_picture %}
+                            <img src="{{ service.provider.user.profile.profile_picture.url }}" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px; font-size: 0.8rem;">
+                                {{ service.provider.display_name|first|upper }}
+                            </div>
+                            {% endif %}
+                            <span class="small text-muted">{{ service.provider.display_name }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-search display-1 text-muted opacity-25"></i>
+                </div>
+                <h3 class="fw-bold">لا توجد خدمات بهذا الوسم حالياً</h3>
+                <p class="text-muted mb-4">يمكنك تصفح بقية التصنيفات أو العودة للرئيسية.</p>
+                <a href="{% url 'services:service_list' %}" class="btn btn-primary rounded-pill px-5 py-2">
+                    تصفح جميع الخدمات
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link shadow-sm" href="?page={{ page_obj.previous_page_number }}">السابق</a></li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <a class="page-link shadow-sm" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link shadow-sm" href="?page={{ page_obj.next_page_number }}">التالي</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<style>
+    .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .price-tag {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: #10b981;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        z-index: 2;
+    }
+</style>
+{% endblock %}

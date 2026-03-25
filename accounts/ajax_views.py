@@ -6,22 +6,28 @@ import json
 @require_http_methods(["GET"])
 def check_username(request):
     """Check if username is available"""
+    import re
     username = request.GET.get('username', '').strip()
     
     if not username:
         return JsonResponse({'available': False, 'message': 'يرجى إدخال اسم مستخدم'})
     
+    username = username.replace(' ', '')
+    
+    if not re.match(r'^[a-zA-Z0-9_]+$', username):
+        return JsonResponse({'available': False, 'message': 'حروف إنجليزية وأرقام فقط'})
+    
     if len(username) < 3:
         return JsonResponse({'available': False, 'message': 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل'})
     
-    exists = User.objects.filter(username=username).exists()
+    exists = User.objects.filter(username__iexact=username).exists()
     
     if exists:
         # Suggest alternatives
         suggestions = []
         for i in range(1, 4):
             alt = f"{username}{i}"
-            if not User.objects.filter(username=alt).exists():
+            if not User.objects.filter(username__iexact=alt).exists():
                 suggestions.append(alt)
         
         return JsonResponse({
