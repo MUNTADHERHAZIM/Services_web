@@ -135,6 +135,5 @@ ail_project/
 - [ ] نظام دفع إلكتروني
 - [ ] إشعارات فورية مع Django Channels
 
-## الترخيص
+## المطور MUNTADHER HAZIM THAMER
 
-MIT License
