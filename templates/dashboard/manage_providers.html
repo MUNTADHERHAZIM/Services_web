@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}إدارة مقدمي الخدمات - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-people-fill me-2"></i>إدارة مقدمي الخدمات</h2>
+        <a href="{% url 'dashboard:admin' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-right me-2"></i>العودة للوحة التحكم
+        </a>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">التوثيق</label>
+                    <select name="is_verified" class="form-select">
+                        <option value="">الكل</option>
+                        <option value="1" {% if request.GET.is_verified == '1' %}selected{% endif %}>موثق</option>
+                        <option value="0" {% if request.GET.is_verified == '0' %}selected{% endif %}>غير موثق</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel me-2"></i>تصفية
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Providers Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>المزود</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>عدد الخدمات</th>
+                            <th>التوثيق</th>
+                            <th>تاريخ التسجيل</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for provider in providers %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if provider.profile_picture %}
+                                    <img src="{{ provider.profile_picture.url }}" class="rounded-circle me-2" width="40"
+                                        height="40">
+                                    {% else %}
+                                    <div class="bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center"
+                                        style="width:40px;height:40px;">
+                                        {{ provider.display_name|first }}
+                                    </div>
+                                    {% endif %}
+                                    <strong>{{ provider.display_name }}</strong>
+                                </div>
+                            </td>
+                            <td>{{ provider.user.email }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ provider.services_count }}</span>
+                            </td>
+                            <td>
+                                {% if provider.is_verified %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>موثق</span>
+                                {% else %}
+                                <span class="badge bg-warning"><i class="bi bi-clock me-1"></i>غير موثق</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ provider.created_at|date:"Y-m-d" }}</td>
+                            <td>
+                                <form method="post" action="{% url 'dashboard:toggle_provider_verify' provider.pk %}"
+                                    class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                        class="btn btn-sm {% if provider.is_verified %}btn-warning{% else %}btn-success{% endif %}">
+                                        <i
+                                            class="bi {% if provider.is_verified %}bi-x-circle{% else %}bi-check-circle{% endif %} me-1"></i>
+                                        {% if provider.is_verified %}إلغاء التوثيق{% else %}توثيق{% endif %}
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                لا يوجد مقدمو خدمات
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابق</a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }}</span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالي</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

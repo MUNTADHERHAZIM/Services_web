@@ -1,0 +1,664 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}شروط الاستخدام - {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root{
+    --t-primary:#667eea;
+    --t-primary-2:#764ba2;
+    --t-bg:#f6f7fb;
+    --t-text:#1f2937;
+    --t-muted:#6b7280;
+    --t-border:#e5e7eb;
+    --t-card:#ffffff;
+    --t-shadow:0 10px 30px rgba(2,6,23,.08);
+    --t-radius:16px;
+  }
+
+  .terms-page{
+    background: radial-gradient(1200px 700px at 20% 10%, rgba(102,126,234,.20), transparent 60%),
+                radial-gradient(900px 600px at 80% 0%, rgba(118,75,162,.18), transparent 55%),
+                var(--t-bg);
+  }
+
+  .terms-hero{
+    background: linear-gradient(135deg, var(--t-primary) 0%, var(--t-primary-2) 100%);
+    color:#fff;
+    padding: clamp(44px, 6vw, 72px) 0;
+    position: relative;
+    overflow:hidden;
+  }
+
+  .terms-hero::after{
+    content:"";
+    position:absolute;
+    inset:-40%;
+    background:
+      radial-gradient(circle at 30% 40%, rgba(255,255,255,.18), transparent 40%),
+      radial-gradient(circle at 70% 30%, rgba(255,255,255,.12), transparent 42%);
+    transform: rotate(10deg);
+    pointer-events:none;
+  }
+
+  .terms-hero .hero-wrap{
+    position:relative;
+    z-index:1;
+  }
+
+  .terms-breadcrumb{
+    display:flex;
+    justify-content:center;
+    gap:.5rem;
+    flex-wrap:wrap;
+    opacity:.9;
+    font-size:.95rem;
+  }
+
+  .terms-breadcrumb a{
+    color:#fff;
+    text-decoration:underline;
+    text-underline-offset: 3px;
+    opacity:.9;
+  }
+
+  .terms-shell{
+    margin-top:-34px;
+    padding-bottom:60px;
+  }
+
+  .terms-card{
+    background:var(--t-card);
+    border:1px solid var(--t-border);
+    border-radius: var(--t-radius);
+    box-shadow: var(--t-shadow);
+    overflow:hidden;
+  }
+
+  .terms-card-head{
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--t-border);
+    background: linear-gradient(180deg, rgba(102,126,234,.06), transparent);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .terms-meta{
+    color: var(--t-muted);
+    font-size:.92rem;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+/* ✅ Fix RTL + overlap safety */
+.terms-page, .terms-content, .terms-card, .terms-card-body {
+  direction: rtl;
+  unicode-bidi: plaintext;
+}
+
+.terms-card-body{
+  overflow: hidden;                 /* يمنع أي عناصر تطلع وتغطي غيرها */
+}
+
+/* ✅ ألغِ السحب القاسي للأعلى أو خليه مرن */
+.terms-shell{ margin-top: 0 !important; }
+@media (min-width: 992px){
+  .terms-shell{ margin-top: -18px !important; } /* إن تحب تأثير السحب، خليه خفيف */
+}
+
+/* ✅ أهم إصلاح: قائمة الشروط RTL (بدون تداخل ✓ مع النص) */
+.terms-list{
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.terms-list li{
+  position: relative;
+  padding: 10px 40px 10px 0 !important;  /* مساحة على اليمين للعلامة */
+  line-height: 1.9;
+  overflow-wrap: anywhere;               /* يحل مشاكل الكلمات/الروابط الطويلة */
+  word-break: break-word;
+}
+.terms-list li:before{
+  content: "✓";
+  position: absolute;
+  right: 0;
+  top: 10px;
+  width: 28px;
+  text-align: center;
+  color: #667eea;
+  font-weight: 900;
+  font-size: 1.15rem;
+}
+
+/* ✅ صناديق التحذير/المعلومة: محاذاة صحيحة ومنع تداخل الأيقونة مع النص */
+.box{
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+.box .ico{
+  flex: 0 0 36px;
+}
+.box .txt{
+  min-width: 0;                     /* مهم داخل flex لمنع overflow */
+  overflow-wrap: anywhere;
+}
+
+/* ✅ فهرس سريع: عمودين فقط على الشاشات الواسعة، عمود واحد على الجوال */
+.toc-list{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+@media (min-width: 768px){
+  .toc-list{ grid-template-columns: 1fr 1fr; }
+}
+
+/* ✅ عناوين الأقسام: منع كسر سيّئ وتداخل */
+.section-title{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;                 /* مهم حتى لا يركب "رابط" فوق العنوان */
+}
+.section-title .permalink{
+  white-space: nowrap;
+}
+
+/* ✅ زر/أيقونات Bootstrap في RTL: استخدم ms بدل me إذا واجهت تباعد غلط */
+.bi.me-2{ margin-left: .5rem !important; margin-right: 0 !important; } /* اختياري */
+
+  .chip{
+    display:inline-flex;
+    align-items:center;
+    gap:.45rem;
+    padding:.35rem .65rem;
+    border-radius:999px;
+    border:1px solid var(--t-border);
+    background:#fff;
+    color:var(--t-text);
+    font-size:.85rem;
+    white-space:nowrap;
+  }
+
+  .terms-card-body{
+    padding: 22px;
+  }
+
+  .toc{
+    border:1px dashed var(--t-border);
+    border-radius:14px;
+    padding:16px;
+    background: rgba(255,255,255,.75);
+  }
+  .toc-title{
+    font-weight:800;
+    color:var(--t-text);
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    margin-bottom:10px;
+  }
+  .toc-list{
+    list-style:none;
+    padding:0;
+    margin:0;
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:8px;
+  }
+  @media (min-width: 768px){
+    .toc-list{ grid-template-columns: 1fr 1fr; }
+  }
+  .toc-list a{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    text-decoration:none;
+    padding:10px 12px;
+    border:1px solid var(--t-border);
+    border-radius:12px;
+    color:var(--t-text);
+    background:#fff;
+    transition:.15s ease;
+  }
+  .toc-list a:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(2,6,23,.08);
+    border-color: rgba(102,126,234,.35);
+  }
+  .toc-num{
+    font-weight:800;
+    color: var(--t-primary);
+  }
+
+  .section{
+    scroll-margin-top: 90px;
+    padding-top: 6px;
+  }
+
+  .section-title{
+    color: var(--t-primary);
+    font-size: 1.3rem;
+    font-weight: 900;
+    margin: 28px 0 12px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(102,126,234,.35);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+
+  .section-title .permalink{
+    font-size:.9rem;
+    color: var(--t-muted);
+    text-decoration:none;
+    border:1px solid var(--t-border);
+    padding:.25rem .55rem;
+    border-radius:10px;
+    background:#fff;
+  }
+  .section-title .permalink:hover{ border-color: rgba(102,126,234,.35); }
+
+  .terms-p{
+    color: var(--t-text);
+    line-height: 1.95;
+    margin-bottom: 12px;
+  }
+
+  .terms-list{
+    list-style:none;
+    padding-right:0;
+    margin: 0;
+  }
+
+  .terms-list li{
+    padding: 10px 0 10px 40px;
+    position: relative;
+    line-height: 1.9;
+    color: var(--t-text);
+  }
+
+  .terms-list li:before{
+    content:"✓";
+    position:absolute;
+    right:0;
+    top: 10px;
+    color: var(--t-primary);
+    font-weight: 900;
+    font-size: 1.15rem;
+  }
+
+  .box{
+    border-radius: 14px;
+    padding: 16px 16px;
+    margin: 16px 0;
+    border: 1px solid var(--t-border);
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+  }
+  .box .ico{
+    width:36px;
+    height:36px;
+    border-radius: 12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex: 0 0 auto;
+    font-weight:900;
+  }
+  .box .txt{
+    line-height:1.85;
+  }
+
+  .box-info{
+    background: rgba(13,110,253,.06);
+    border-color: rgba(13,110,253,.18);
+  }
+  .box-info .ico{ background: rgba(13,110,253,.12); color:#0d6efd; }
+
+  .box-warn{
+    background: rgba(255,193,7,.10);
+    border-color: rgba(255,193,7,.22);
+  }
+  .box-warn .ico{ background: rgba(255,193,7,.18); color:#b45309; }
+
+  .box-danger{
+    background: rgba(220,53,69,.08);
+    border-color: rgba(220,53,69,.18);
+  }
+  .box-danger .ico{ background: rgba(220,53,69,.14); color:#dc3545; }
+
+  .terms-actions{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin-top: 22px;
+  }
+
+  .btn-soft{
+    border:1px solid var(--t-border);
+    background:#fff;
+  }
+
+  .muted{
+    color: var(--t-muted);
+  }
+
+  /* Accessibility: reduce motion */
+  @media (prefers-reduced-motion: reduce){
+    .toc-list a:hover{ transform:none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="terms-page">
+  <header class="terms-hero">
+    <div class="container text-center hero-wrap">
+      <h1 class="fw-bold mb-2">شروط الاستخدام</h1>
+      <p class="lead opacity-75 mb-2">منصة {{ SITE_NAME }} — البصرة، العراق</p>
+
+      <div class="terms-breadcrumb">
+        <a href="{% url 'core:home' %}">الرئيسية</a>
+        <span>›</span>
+        <span>شروط الاستخدام</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="terms-shell">
+    <div class="container">
+      <section class="terms-card" aria-label="شروط الاستخدام">
+        <div class="terms-card-head">
+          <div class="terms-meta">
+            <span class="chip"><i class="bi bi-shield-lock"></i> سياسة وأمان</span>
+            <span class="chip"><i class="bi bi-journal-text"></i> نسخة محدثة</span>
+            <span class="chip">
+              <i class="bi bi-calendar-check"></i>
+              آخر تحديث: {{ current_date|default:"1 يناير 2026" }}
+            </span>
+          </div>
+
+          <div class="d-flex gap-2 flex-wrap">
+            <button type="button" class="btn btn-sm btn-soft" onclick="window.print()">
+              <i class="bi bi-printer"></i> طباعة
+            </button>
+            <a class="btn btn-sm btn-primary" href="#contact">
+              <i class="bi bi-envelope"></i> تواصل معنا
+            </a>
+          </div>
+        </div>
+
+        <div class="terms-card-body">
+          <!-- TOC -->
+          <div class="toc mb-4" aria-label="فهرس">
+            <div class="toc-title"><i class="bi bi-list"></i> فهرس سريع</div>
+            <div class="toc-list">
+              <a href="#s1"><span><span class="toc-num">1</span> مقدمة وتعريف بالخدمة</span><span class="muted">›</span></a>
+              <a href="#s2"><span><span class="toc-num">2</span> شروط التسجيل</span><span class="muted">›</span></a>
+              <a href="#s3"><span><span class="toc-num">3</span> الخصوصية والأمان</span><span class="muted">›</span></a>
+              <a href="#s4"><span><span class="toc-num">4</span> الالتزامات المالية</span><span class="muted">›</span></a>
+              <a href="#s5"><span><span class="toc-num">5</span> المسؤولية القانونية</span><span class="muted">›</span></a>
+              <a href="#s6"><span><span class="toc-num">6</span> التقييمات</span><span class="muted">›</span></a>
+              <a href="#s7"><span><span class="toc-num">7</span> إلغاء الخدمة</span><span class="muted">›</span></a>
+              <a href="#s8"><span><span class="toc-num">8</span> النزاعات والتحكيم</span><span class="muted">›</span></a>
+              <a href="#s9"><span><span class="toc-num">9</span> تحديثات الشروط</span><span class="muted">›</span></a>
+              <a href="#contact"><span><span class="toc-num">10</span> الاتصال بنا</span><span class="muted">›</span></a>
+            </div>
+          </div>
+
+          <!-- 1 -->
+          <section id="s1" class="section">
+            <h2 class="section-title">
+              <span>1. مقدمة وتعريف بالخدمة</span>
+              <a class="permalink" href="#s1">رابط</a>
+            </h2>
+
+            <p class="terms-p">
+              تعتبر منصة <strong>{{ SITE_NAME }}</strong> وسيطاً إلكترونياً يجمع بين مقدمي الخدمات (الفنيين) وطالبي الخدمة (العملاء)
+              في محافظة البصرة. المنصة لا تقوم بتنفيذ الأعمال بنفسها، بل تسهل عملية الربط والوصول.
+            </p>
+
+            <div class="box box-info">
+              <div class="ico">i</div>
+              <div class="txt">
+                <strong>ملاحظة مهمة:</strong> المنصة وسيط فقط ولا تتحمل المسؤولية المباشرة عن جودة التنفيذ، لكنها تسهّل التواصل وتدير
+                تجربة الاستخدام وتتابع الشكاوى ضمن الصلاحيات المتاحة.
+              </div>
+            </div>
+          </section>
+
+          <!-- 2 -->
+          <section id="s2" class="section">
+            <h2 class="section-title">
+              <span>2. شروط التسجيل</span>
+              <a class="permalink" href="#s2">رابط</a>
+            </h2>
+
+            <h5 class="mt-3">للفنيين (مقدمي الخدمات):</h5>
+            <ul class="terms-list">
+              <li>تقديم معلومات صحيحة ومطابقة للبطاقة الموحدة/هوية الأحوال المدنية</li>
+              <li>العمر لا يقل عن 18 عاماً</li>
+              <li>إثبات الخبرة في المجال المتخصص</li>
+              <li>توقيع تعهد وإقرار عند المقابلة الشخصية (إن وُجدت)</li>
+              <li>تقديم صورة من البطاقة الموحدة/المستمسكات المطلوبة</li>
+            </ul>
+
+            <h5 class="mt-4">للعملاء (طالبي الخدمة):</h5>
+            <ul class="terms-list">
+              <li>تقديم معلومات اتصال صحيحة</li>
+              <li>العمر لا يقل عن 18 عاماً</li>
+              <li>الالتزام بالاحترام المتبادل مع مقدمي الخدمات</li>
+            </ul>
+
+            <div class="box box-warn">
+              <div class="ico">!</div>
+              <div class="txt">
+                <strong>تنبيه:</strong> أي بيانات مضللة أو منتحلة قد تؤدي إلى تعطيل أو حظر الحساب وحفظ حق المنصة باتخاذ ما يلزم وفق القانون.
+              </div>
+            </div>
+          </section>
+
+          <!-- 3 -->
+          <section id="s3" class="section">
+            <h2 class="section-title">
+              <span>3. سياسة الخصوصية والأمان</span>
+              <a class="permalink" href="#s3">رابط</a>
+            </h2>
+
+            <ul class="terms-list">
+              <li><strong>أمن المنازل:</strong> يلتزم مقدم الخدمة بحرمة المنازل والآداب العامة المتبعة في المجتمع العراقي والبصري الأصيل</li>
+              <li><strong>البيانات:</strong> لا تتم مشاركة أرقام الهواتف أو العناوين إلا لغرض إتمام الخدمة فقط</li>
+              <li><strong>السرية:</strong> تُعامل البيانات الشخصية بسرية ويُقيد الوصول إليها قدر الإمكان</li>
+              <li><strong>الخصوصية:</strong> لا يحق لمقدم الخدمة التقاط صور أو نشر معلومات عن منزل العميل دون إذن صريح</li>
+            </ul>
+
+            <div class="box box-info">
+              <div class="ico">🔒</div>
+              <div class="txt">
+                <strong>ممارسات أمان موصى بها:</strong> لا تشارك رمز التحقق/كلمة المرور مع أي طرف، وأبلغ فوراً عند الاشتباه بأي نشاط غير معتاد.
+              </div>
+            </div>
+          </section>
+
+          <!-- 4 -->
+          <section id="s4" class="section">
+            <h2 class="section-title">
+              <span>4. الالتزامات المالية والعمولات</span>
+              <a class="permalink" href="#s4">رابط</a>
+            </h2>
+
+            <div class="box box-danger">
+              <div class="ico">⚠</div>
+              <div class="txt">
+                <strong>تنبيه هام:</strong> أي محاولة للتهرب من عمولة المنصة قد تؤدي إلى حظر نهائي، مع حفظ حق المنصة بالمطالبة وفق الإجراءات القانونية.
+              </div>
+            </div>
+
+            <h5 class="mt-3">عمولة المنصة:</h5>
+            <ul class="terms-list">
+              <li>يقر مقدم الخدمة بأن للمنصة نسبة أو مبلغاً ثابتاً يتم استقطاعه عن كل عملية</li>
+              <li>العمولة محددة في التعهد/الاتفاق الموقع من قبل الفني</li>
+              <li>تتم عملية السداد عبر: زين كاش، آسيا حوالة، أو رصيد مسبق (حسب المتاح)</li>
+            </ul>
+
+            <h5 class="mt-4">الأسعار:</h5>
+            <ul class="terms-list">
+              <li>الالتزام بقائمة الأسعار الثابتة (إن وُجدت) أو التسعير المعتمد داخل التطبيق</li>
+              <li>لا يحق للفني فرض مبالغ إضافية خارج المتفق عليه إلا بموافقة العميل المسبقة والواضحة</li>
+              <li>في حال شراء مواد احتياطية، يجب تقديم وصل/فاتورة للعميل قدر الإمكان</li>
+            </ul>
+
+            <h5 class="mt-4 text-danger fw-bold">التهرب من العمولات:</h5>
+            <p class="terms-p">
+              أي اتفاق خارجي بقصد التهرب من عمولة المنصة قد يؤدي إلى:
+            </p>
+            <ul class="terms-list">
+              <li>حظر الحساب نهائياً</li>
+              <li>مطالبة قانونية بالتعويضات (عند الاقتضاء)</li>
+              <li>استرداد العمولات المستحقة عن الطلبات السابقة</li>
+            </ul>
+          </section>
+
+          <!-- 5 -->
+          <section id="s5" class="section">
+            <h2 class="section-title">
+              <span>5. المسؤولية القانونية</span>
+              <a class="permalink" href="#s5">رابط</a>
+            </h2>
+
+            <h5 class="mt-3">جودة العمل:</h5>
+            <ul class="terms-list">
+              <li>الفني مسؤول مباشرة عن جودة العمل المقدم</li>
+              <li>المنصة غير مسؤولة عن أضرار ناتجة عن سوء التنفيذ، لكنها تساعد في إدارة الشكاوى حسب الإمكان</li>
+              <li>المنصة تقوم بدور الوسيط لتسهيل حل النزاعات</li>
+            </ul>
+
+            <h5 class="mt-4">الضمان:</h5>
+            <ul class="terms-list">
+              <li>يُنصح العميل بطلب ضمان واضح قبل بدء العمل</li>
+              <li>للمنصة حق تقييد أو استبعاد الفنيين ذوي التقييمات المنخفضة أو الشكاوى المتكررة</li>
+              <li>الفني ملتزم بإصلاح الخلل خلال مدة الضمان المتفق عليها إن وُجدت</li>
+            </ul>
+
+            <div class="box box-warn">
+              <div class="ico">!</div>
+              <div class="txt">
+                المنصة غير مسؤولة عن فقدان ممتلكات شخصية. تقع المطالبة القانونية (عند الحاجة) على عاتق الأطراف المعنية وفق القانون العراقي.
+              </div>
+            </div>
+          </section>
+
+          <!-- 6 -->
+          <section id="s6" class="section">
+            <h2 class="section-title">
+              <span>6. التقييمات والمراجعات</span>
+              <a class="permalink" href="#s6">رابط</a>
+            </h2>
+
+            <ul class="terms-list">
+              <li>يحق للعميل تقييم الفني بعد انتهاء الخدمة بشفافية</li>
+              <li>يُمنع استخدام الألفاظ النابية أو التشهير غير المستند إلى وقائع</li>
+              <li>للإدارة حق مراجعة/حذف التقييمات المسيئة أو المخالفة للسياسات</li>
+              <li>يحق لمقدم الخدمة الرد على التقييمات بشكل مهني</li>
+            </ul>
+          </section>
+
+          <!-- 7 -->
+          <section id="s7" class="section">
+            <h2 class="section-title">
+              <span>7. إلغاء الخدمة</span>
+              <a class="permalink" href="#s7">رابط</a>
+            </h2>
+
+            <ul class="terms-list">
+              <li>يحق للعميل إلغاء الطلب قبل تحرك الفني دون رسوم (إن كان ذلك متاحاً)</li>
+              <li>عند وصول الفني وإلغاء الطلب لسبب غير فني، قد تُفرض رسوم فحص/نقل لصالح الفني</li>
+              <li>الإلغاء المتكرر من قبل العميل قد يؤدي إلى تقييد الحساب</li>
+            </ul>
+          </section>
+
+          <!-- 8 -->
+          <section id="s8" class="section">
+            <h2 class="section-title">
+              <span>8. التحكيم وحل النزاعات</span>
+              <a class="permalink" href="#s8">رابط</a>
+            </h2>
+
+            <p class="terms-p">
+              أي نزاع ينشأ بين العميل ومقدم الخدمة يُفضّل حله ودياً عبر إدارة المنصة أولاً قبل اللجوء للجهات القانونية.
+            </p>
+
+            <ul class="terms-list">
+              <li>التواصل مع خدمة العملاء خلال 48 ساعة من حدوث المشكلة</li>
+              <li>تقديم الأدلة والوثائق اللازمة (صور/محادثات/فواتير)</li>
+              <li>الالتزام بإجراءات المنصة عند التحكيم الداخلي</li>
+            </ul>
+
+            <div class="box box-info">
+              <div class="ico">⏱</div>
+              <div class="txt">
+                لتسريع المعالجة: اذكر رقم الطلب، تاريخ الخدمة، وملخص المشكلة بجملة واحدة في بداية الرسالة.
+              </div>
+            </div>
+          </section>
+
+          <!-- 9 -->
+          <section id="s9" class="section">
+            <h2 class="section-title">
+              <span>9. التحديثات على الشروط</span>
+              <a class="permalink" href="#s9">رابط</a>
+            </h2>
+
+            <p class="terms-p">
+              تحتفظ إدارة المنصة بحق تحديث هذه الشروط في أي وقت. سيتم إشعار المستخدمين بأي تغييرات جوهرية عبر البريد الإلكتروني أو الإشعارات داخل المنصة.
+            </p>
+          </section>
+
+          <!-- 10 -->
+          <section id="contact" class="section">
+            <h2 class="section-title">
+              <span>10. الاتصال بنا</span>
+              <a class="permalink" href="#contact">رابط</a>
+            </h2>
+
+            <p class="terms-p">لأي استفسارات حول شروط الاستخدام، يرجى التواصل عبر:</p>
+            <ul class="terms-list">
+              <li><strong>البريد الإلكتروني:</strong> support@{{ SITE_NAME }}.com</li>
+              <li><strong>الهاتف:</strong> 07XX XXX XXXX</li>
+              <li><strong>العنوان:</strong> البصرة، العراق</li>
+            </ul>
+          </section>
+
+          <hr class="my-4" />
+
+          <div class="text-center">
+            <p class="muted mb-3">بالتسجيل أو استخدام المنصة، فإنك توافق على هذه الشروط والأحكام</p>
+
+            <div class="terms-actions">
+              <a href="{% url 'core:home' %}" class="btn btn-primary btn-lg">
+                <i class="bi bi-house-door me-2"></i>العودة للصفحة الرئيسية
+              </a>
+              <a href="#s1" class="btn btn-lg btn-soft">
+                <i class="bi bi-arrow-up me-2"></i>أعلى الصفحة
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+{% endblock %}

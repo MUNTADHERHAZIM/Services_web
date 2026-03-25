@@ -1,0 +1,407 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}تتبع الطلب #{{ request.id }} - {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tracking-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 40px;
+    }
+
+    .timeline {
+        position: relative;
+        padding: 30px 0;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 50%;
+        width: 4px;
+        height: 100%;
+        background: #e0e0e0;
+        transform: translateX(50%);
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 50px;
+        width: 50%;
+        padding: 0 40px;
+    }
+
+    .timeline-item:nth-child(odd) {
+        text-align: left;
+        padding-left: calc(50% + 40px);
+        padding-right: 0;
+    }
+
+    .timeline-item:nth-child(even) {
+        text-align: right;
+        margin-right: auto;
+        padding-right: calc(50% + 40px);
+        padding-left: 0;
+    }
+
+    .timeline-icon {
+        position: absolute;
+        top: 0;
+        right: 50%;
+        transform: translateX(50%);
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        background: white;
+        border: 4px solid;
+        z-index: 2;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .timeline-icon.active {
+        border-color: #667eea;
+        color: #667eea;
+        animation: pulse 2s infinite;
+    }
+
+    .timeline-icon.completed {
+        border-color: #28a745;
+        color: #28a745;
+    }
+
+    .timeline-icon.pending {
+        border-color: #e0e0e0;
+        color: #999;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+        }
+
+        50% {
+            box-shadow: 0 0 0 15px rgba(102, 126, 234, 0);
+        }
+    }
+
+    .timeline-content {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        position: relative;
+    }
+
+    .timeline-content::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        width: 0;
+        height: 0;
+        border: 10px solid transparent;
+    }
+
+    .timeline-item:nth-child(odd) .timeline-content::before {
+        right: 100%;
+        border-left-color: white;
+    }
+
+    .timeline-item:nth-child(even) .timeline-content::before {
+        left: 100%;
+        border-right-color: white;
+    }
+
+    .timeline-date {
+        color: #667eea;
+        font-weight: 600;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .timeline-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #2d3748;
+    }
+
+    .request-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+
+    .status-badge-large {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 24px;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .qr-code-container {
+        text-align: center;
+        padding: 30px;
+        background: #f8f9fa;
+        border-radius: 15px;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .timeline::before {
+            right: 30px;
+        }
+
+        .timeline-item {
+            width: 100%;
+            padding-right: 80px !important;
+            padding-left: 0 !important;
+            text-align: right !important;
+        }
+
+        .timeline-icon {
+            right: 0;
+            transform: none;
+        }
+
+        .timeline-content::before {
+            left: 100% !important;
+            right: auto !important;
+            border-right-color: white !important;
+            border-left-color: transparent !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tracking-header">
+    <div class="container text-center">
+        <h1><i class="bi bi-search me-2"></i>تتبع الطلب #{{ request.id }}</h1>
+        <p class="mb-0 opacity-75">متابعة حالة طلبك خطوة بخطوة</p>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <!-- معلومات الطلب -->
+    <div class="request-card">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h3 class="mb-3">{{ request.service.title }}</h3>
+                <p class="text-muted mb-3">
+                    <i class="bi bi-calendar3 me-2"></i>تاريخ الطلب: {{ request.created_at|date:"d M Y - h:i A" }}
+                </p>
+                <span class="status-badge-large {{ request.get_status_badge_class }}">
+                    <i class="bi bi-{{ request.status|get_status_icon }}"></i>
+                    {{ request.get_status_display }}
+                </span>
+            </div>
+            <div class="col-md-4 mt-4 mt-md-0">
+                <div class="qr-code-container">
+                    <svg width="150" height="150" viewBox="0 0 150 150">
+                        <rect width="150" height="150" fill="white" />
+                        <!-- QR Code placeholder -->
+                        <g fill="#667eea">
+                            <rect x="10" y="10" width="30" height="30" />
+                            <rect x="50" y="10" width="10" height="10" />
+                            <rect x="70" y="10" width="10" height="10" />
+                            <rect x="110" y="10" width="30" height="30" />
+                            <rect x="10" y="110" width="30" height="30" />
+                            <rect x="110" y="110" width="30" height="30" />
+                            <rect x="50" y="50" width="50" height="50" />
+                        </g>
+                    </svg>
+                    <p class="small text-muted mt-2 mb-0">امسح للتتبع السريع</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline التتبع -->
+    <div class="timeline">
+        <!-- الخطوة 1: طلب جديد -->
+        <div class="timeline-item">
+            <div class="timeline-icon {% if request.status %}completed{% endif %}">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-date">
+                    <i class="bi bi-clock"></i>
+                    {{ request.created_at|date:"d M Y - h:i A" }}
+                </div>
+                <h4 class="timeline-title">تم استلام الطلب</h4>
+                <p class="text-muted mb-0">تم إنشاء طلبك بنجاح وجاري مراجعته من قبل فريقنا</p>
+            </div>
+        </div>
+
+        <!-- الخطوة 2: قيد المراجعة -->
+        <div class="timeline-item">
+            <div
+                class="timeline-icon {% if request.status == 'in_review' or request.status == 'approved' or request.status == 'in_progress' or request.status == 'done' %}completed{% elif request.status == 'new' %}active{% else %}pending{% endif %}">
+                <i class="bi bi-eye-fill"></i>
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-date">
+                    <i class="bi bi-clock"></i>
+                    {% if request.status == 'in_review' or request.status == 'approved' or request.status ==
+                    'in_progress' or request.status == 'done' %}
+                    {{ request.updated_at|date:"d M Y - h:i A" }}
+                    {% else %}
+                    قريباً
+                    {% endif %}
+                </div>
+                <h4 class="timeline-title">قيد المراجعة</h4>
+                <p class="text-muted mb-0">فريقنا يقوم بمراجعة طلبك والتأكد من جميع التفاصيل</p>
+            </div>
+        </div>
+
+        <!-- الخطوة 3: تمت الموافقة -->
+        <div class="timeline-item">
+            <div
+                class="timeline-icon {% if request.status == 'approved' or request.status == 'in_progress' or request.status == 'done' %}completed{% elif request.status == 'in_review' %}active{% else %}pending{% endif %}">
+                <i class="bi bi-patch-check-fill"></i>
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-date">
+                    <i class="bi bi-clock"></i>
+                    {% if request.status == 'approved' or request.status == 'in_progress' or request.status == 'done' %}
+                    {{ request.updated_at|date:"d M Y - h:i A" }}
+                    {% else %}
+                    قريباً
+                    {% endif %}
+                </div>
+                <h4 class="timeline-title">تمت الموافقة</h4>
+                <p class="text-muted mb-0">تمت الموافقة على طلبك وسيتم البدء في التنفيذ قريباً</p>
+            </div>
+        </div>
+
+        <!-- الخطوة 4: قيد التنفيذ -->
+        <div class="timeline-item">
+            <div
+                class="timeline-icon {% if request.status == 'in_progress' or request.status == 'done' %}completed{% elif request.status == 'approved' %}active{% else %}pending{% endif %}">
+                <i class="bi bi-gear-fill"></i>
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-date">
+                    <i class="bi bi-clock"></i>
+                    {% if request.status == 'in_progress' or request.status == 'done' %}
+                    {{ request.updated_at|date:"d M Y - h:i A" }}
+                    {% else %}
+                    قريباً
+                    {% endif %}
+                </div>
+                <h4 class="timeline-title">قيد التنفيذ</h4>
+                <p class="text-muted mb-0">فريقنا يعمل الآن على تنفيذ طلبك بأعلى جودة</p>
+            </div>
+        </div>
+
+        <!-- الخطوة 5: مكتمل -->
+        <div class="timeline-item">
+            <div
+                class="timeline-icon {% if request.status == 'done' %}completed{% elif request.status == 'in_progress' %}active{% else %}pending{% endif %}">
+                <i class="bi bi-trophy-fill"></i>
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-date">
+                    <i class="bi bi-clock"></i>
+                    {% if request.status == 'done' %}
+                    {{ request.updated_at|date:"d M Y - h:i A" }}
+                    {% else %}
+                    قريباً
+                    {% endif %}
+                </div>
+                <h4 class="timeline-title">اكتمل الطلب</h4>
+                <p class="text-muted mb-0">تم إنجاز طلبك بنجاح! شكراً لثقتك بنا</p>
+                {% if request.status == 'done' %}
+                <a href="#" class="btn btn-sm btn-primary mt-3">
+                    <i class="bi bi-star-fill me-1"></i>قيّم الخدمة
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ملاحظات إضافية -->
+    <div class="request-card">
+        <h5 class="mb-3"><i class="bi bi-chat-left-text me-2"></i>ملاحظات وتفاصيل</h5>
+
+        {% if request.customer_notes %}
+        <div class="mb-3">
+            <strong class="text-muted d-block mb-2">ملاحظاتك:</strong>
+            <p class="ps-3 border-start border-3 border-primary">{{ request.customer_notes }}</p>
+        </div>
+        {% endif %}
+
+        {% if request.staff_notes %}
+        <div class="mb-3">
+            <strong class="text-muted d-block mb-2">ملاحظات الفريق:</strong>
+            <p class="ps-3 border-start border-3 border-success">{{ request.staff_notes }}</p>
+        </div>
+        {% endif %}
+
+        <div class="mt-4 p-3 bg-light rounded">
+            <h6 class="mb-3"><i class="bi bi-telephone-fill text-primary me-2"></i>تواصل معنا</h6>
+            <p class="mb-2"><strong>البريد:</strong> {{ request.contact_email|default:user.email }}</p>
+            <p class="mb-0"><strong>الهاتف:</strong> {{ request.contact_phone|default:"-" }}</p>
+        </div>
+    </div>
+
+    <!-- أزرار الإجراءات -->
+    <div class="text-center">
+        <a href="{% url 'requests:my_requests' %}" class="btn btn-outline-primary btn-lg me-2">
+            <i class="bi bi-arrow-right me-2"></i>طلباتي
+        </a>
+        {% if request.can_be_canceled %}
+        <button class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#cancelModal">
+            <i class="bi bi-x-circle me-2"></i>إلغاء الطلب
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal إلغاء الطلب -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الإلغاء</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من إلغاء هذا الطلب؟ لن تتمكن من التراجع عن هذا الإجراء.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">تراجع</button>
+                <form method="post" action="{% url 'requests:cancel_request' request.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">تأكيد الإلغاء</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh page every 60 seconds
+    setTimeout(function () {
+        location.reload();
+    }, 60000);
+</script>
+{% endblock %}

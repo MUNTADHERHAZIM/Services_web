@@ -1,0 +1,627 @@
+{% extends 'base.html' %}
+{% block title %}{{ service.title }} - {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.service-detail-page {
+    direction: rtl;
+    padding-bottom: 100px;
+}
+.package-card {
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 25px;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+.package-card:hover {
+    border-color: #667eea;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+.package-card.featured {
+    border-color: #667eea;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+}
+.package-badge {
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+.feature-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+.feature-item:last-child {
+    border-bottom: none;
+}
+.feature-item i {
+    color: #10b981;
+    margin-left: 10px;
+    font-size: 1.2rem;
+}
+.faq-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+.faq-question {
+    padding: 20px;
+    background: #f8f9fa;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+}
+.faq-answer {
+    padding: 20px;
+    display: none;
+}
+.faq-item.active .faq-answer {
+    display: block;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5 service-detail-page" style="margin-top: 20px;">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">الرئيسية</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'services:service_list' %}">الخدمات</a></li>
+            {% if service.category %}
+            <li class="breadcrumb-item">
+                <a href="{% url 'services:category_detail' service.category.slug %}">{{ service.category.name }}</a>
+            </li>
+            {% endif %}
+            <li class="breadcrumb-item active">{{ service.title|truncatewords:5 }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Service Header -->
+            <div class="card mb-4">
+                {% if service.cover_image %}
+                <img src="{{ service.cover_image.url }}" class="card-img-top" alt="{{ service.title }}"
+                    style="max-height: 450px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-gradient d-flex align-items-center justify-content-center"
+                    style="height: 350px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <i class="bi bi-image text-white display-1"></i>
+                </div>
+                {% endif %}
+
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        {% if service.category %}
+                        <a href="{% url 'services:category_detail' service.category.slug %}"
+                            class="badge bg-primary text-decoration-none">
+                            <i class="bi bi-folder me-1"></i>{{ service.category.name }}
+                        </a>
+                        {% endif %}
+                        {% if service.is_featured %}
+                        <span class="badge bg-warning">
+                            <i class="bi bi-star-fill me-1"></i>مميز
+                        </span>
+                        {% endif %}
+                        {% if service.is_verified %}
+                        <span class="badge bg-success">
+                            <i class="bi bi-patch-check-fill me-1"></i>موثق
+                        </span>
+                        {% endif %}
+                        {% if service.level %}
+                        <span class="badge bg-info">
+                            {{ service.get_level_display }}
+                        </span>
+                        {% endif %}
+                        {% for tag in service.tags.all %}
+                        <a href="{% url 'services:tag_services' tag.slug %}"
+                            class="badge bg-light text-dark text-decoration-none">
+                            {{ tag.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+
+                    <h1 class="card-title h2 fw-bold mb-3">{{ service.title }}</h1>
+
+                    <div class="d-flex flex-wrap align-items-center gap-4 text-muted mb-4">
+                        <span><i class="bi bi-eye me-1"></i> {{ service.views_count }} مشاهدة</span>
+                        <span><i class="bi bi-calendar me-1"></i> {{ service.created_at|date:"d M Y" }}</span>
+                        {% if service.avg_rating > 0 %}
+                        <span class="text-warning">
+                            <i class="bi bi-star-fill me-1"></i> {{ service.avg_rating }} / 5
+                            <small class="text-muted">({{ service.total_reviews }} تقييم)</small>
+                        </span>
+                        {% endif %}
+                        {% if service.response_time %}
+                        <span><i class="bi bi-clock-history me-1"></i> {{ service.response_time }}</span>
+                        {% endif %}
+                    </div>
+
+                    <p class="lead text-muted">{{ service.summary }}</p>
+                </div>
+            </div>
+
+            <!-- Service Description -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-file-text me-2 text-primary"></i>وصف الخدمة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="service-description">
+                        {{ service.description|linebreaks }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Features -->
+            {% if service.features.all %}
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-check-circle me-2 text-primary"></i>مميزات الخدمة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for feature in service.features.all %}
+                        <div class="col-md-6">
+                            <div class="feature-item">
+                                {% if feature.icon %}
+                                <i class="bi {{ feature.icon }}"></i>
+                                {% else %}
+                                <i class="bi bi-check-lg"></i>
+                                {% endif %}
+                                <div>
+                                    <strong>{{ feature.title }}</strong>
+                                    {% if feature.description %}
+                                    <p class="text-muted small mb-0">{{ feature.description }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Service Packages -->
+            {% if service.packages.all %}
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-box-seam me-2 text-primary"></i>باقات الخدمة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        {% for package in service.packages.all %}
+                        <div class="col-md-4 d-flex">
+    <div class="package-card w-100 {% if package.package_type == 'standard' %}featured{% endif %} position-relative">
+                                {% if package.package_type == 'standard' %}
+                                <span class="package-badge">الأكثر مبيعاً</span>
+                                {% endif %}
+                                
+                                <h5 class="fw-bold mb-3">{{ package.name }}</h5>
+                                
+                                <div class="mb-3">
+                                    <span class="h3 fw-bold text-primary">{{ package.price }} د.ع</span>
+                                    {% if package.duration_days > 1 %}
+                                    <small class="text-muted">/ {{ package.duration_days }} أيام</small>
+                                    {% endif %}
+                                </div>
+                                
+                                <p class="text-muted small mb-4">{{ package.description }}</p>
+                                
+                                <ul class="list-unstyled mb-4">
+                                    {% for feature in package.get_features_list %}
+                                    <li class="mb-2">
+                                        <i class="bi bi-check text-success me-2"></i>{{ feature }}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                
+                                <div class="d-flex justify-content-between align-items-center text-muted small mb-4">
+                                    <span><i class="bi bi-clock me-1"></i> {{ package.duration_days }} أيام</span>
+                                    <span><i class="bi bi-arrow-repeat me-1"></i> {{ package.revision_count }} مراجعة</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- FAQs -->
+            {% if service.faqs.all %}
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-question-circle me-2 text-primary"></i>الأسئلة الشائعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for faq in service.faqs.all %}
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+                            <span>{{ faq.question }}</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p class="mb-0">{{ faq.answer }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Service Images Gallery -->
+            {% if service.images.all %}
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-images me-2 text-primary"></i>معرض الصور
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for image in service.images.all %}
+                        <div class="col-md-4 col-6">
+                            <a href="{{ image.image.url }}" target="_blank">
+                                <img src="{{ image.image.url }}" class="img-fluid rounded" alt="{{ image.caption }}"
+                                    style="height: 180px; width: 100%; object-fit: cover;">
+                            </a>
+                            {% if image.caption %}
+                            <small class="text-muted d-block mt-2">{{ image.caption }}</small>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Reviews -->
+            {% if reviews %}
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-chat-quote me-2 text-primary"></i>التقييمات
+                    </h5>
+                    <span class="badge bg-light text-dark">{{ reviews|length }} تقييم</span>
+                </div>
+                <div class="card-body">
+                    {% for review in reviews %}
+                    <div class="d-flex mb-4 {% if not forloop.last %}pb-4 border-bottom{% endif %}">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3"
+                            style="width: 50px; height: 50px; min-width: 50px;">
+                            {{ review.customer.username|slice:":1"|upper }}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 fw-bold">{{ review.customer.username }}</h6>
+                                <small class="text-muted">{{ review.created_at|date:"d M Y" }}</small>
+                            </div>
+                            <div class="text-warning mb-2">
+                                {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %} <i class="bi bi-star-fill"></i>
+                                    {% else %}
+                                    <i class="bi bi-star"></i>
+                                    {% endif %}
+                                    {% endfor %}
+                            </div>
+                            {% if review.title %}
+                            <h6 class="fw-bold">{{ review.title }}</h6>
+                            {% endif %}
+                            {% if review.comment %}
+                            <p class="mb-3 text-muted">{{ review.comment }}</p>
+                            {% endif %}
+                            {% if review.pros %}
+                            <div class="mb-2">
+                                <small class="text-success fw-bold"><i class="bi bi-plus-circle me-1"></i>الإيجابيات:</small>
+                                <p class="small mb-0">{{ review.pros }}</p>
+                            </div>
+                            {% endif %}
+                            {% if review.cons %}
+                            <div>
+                                <small class="text-danger fw-bold"><i class="bi bi-dash-circle me-1"></i>السلبيات:</small>
+                                <p class="small mb-0">{{ review.cons }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            {% if review.provider_response %}
+                            <div class="bg-light p-3 rounded mt-3">
+                                <small class="text-muted fw-bold">رد مقدم الخدمة:</small>
+                                <p class="small mb-0">{{ review.provider_response }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="sticky-lg-top" style="top: 100px; z-index: 10;">
+                <!-- Price & Request Card -->
+                <div class="card mb-4">
+                <div class="card-body">
+                    {% if service.price %}
+                    <div class="text-center mb-4">
+                        <span class="text-muted">السعر يبدأ من</span>
+                        <h2 class="fw-bold text-primary mb-0">
+                            {{ service.price|floatformat:0 }} <small class="fs-5">د.ع</small>
+                        </h2>
+                        {% if service.price_note %}
+                        <small class="text-muted">{{ service.price_note }}</small>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="text-center mb-4">
+                        <h4 class="text-muted">حسب الطلب</h4>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        {% if service.duration %}
+                        <div class="d-flex align-items-center mb-2 p-3 bg-light rounded">
+                            <i class="bi bi-clock text-primary fs-5 me-3"></i>
+                            <div>
+                                <small class="text-muted d-block">مدة التنفيذ</small>
+                                <span class="fw-semibold">{{ service.duration }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if service.revision_count %}
+                        <div class="d-flex align-items-center mb-2 p-3 bg-light rounded">
+                            <i class="bi bi-arrow-repeat text-primary fs-5 me-3"></i>
+                            <div>
+                                <small class="text-muted d-block">المراجعات</small>
+                                <span class="fw-semibold">{{ service.revision_count }} مراجعة</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if service.delivery_time %}
+                        <div class="d-flex align-items-center p-3 bg-light rounded">
+                            <i class="bi bi-truck text-primary fs-5 me-3"></i>
+                            <div>
+                                <small class="text-muted d-block">موعد التسليم</small>
+                                <span class="fw-semibold">{{ service.delivery_time }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if user.is_authenticated %}
+                    {% if user_has_requested %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        لديك طلب سابق على هذه الخدمة
+                    </div>
+                    <a href="{% url 'requests:my_requests' %}" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="bi bi-list-check me-2"></i>عرض طلباتي
+                    </a>
+                    {% else %}
+                    <a href="{% url 'requests:request_create' service.slug %}" class="btn btn-primary btn-lg w-100 mb-2">
+                        <i class="bi bi-send me-2"></i>طلب الخدمة
+                    </a>
+                    {% endif %}
+                    {% else %}
+                    <a href="{% url 'accounts:login' %}?next={% url 'requests:request_create' service.slug %}"
+                        class="btn btn-primary btn-lg w-100 mb-2">
+                        <i class="bi bi-box-arrow-in-left me-2"></i>سجل دخولك للطلب
+                    </a>
+                    <p class="text-center mt-3 mb-0">
+                        <small class="text-muted">
+                            ليس لديك حساب؟
+                            <a href="{% url 'accounts:register' %}">سجل الآن</a>
+                        </small>
+                    </p>
+                    {% endif %}
+                    
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-outline-secondary flex-grow-1" onclick="shareService()">
+                            <i class="bi bi-share"></i> مشاركة
+                        </button>
+                        <button class="btn btn-outline-danger flex-grow-1" onclick="saveService()">
+                            <i class="bi bi-heart"></i> حفظ
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Provider Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-person-badge me-2 text-primary"></i>مقدم الخدمة
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if service.provider.avatar %}
+                    <img src="{{ service.provider.avatar.url }}" class="rounded-circle mb-3"
+                        style="width: 100px; height: 100px; object-fit: cover;" alt="{{ service.provider.display_name }}">
+                    {% else %}
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3"
+                        style="width: 100px; height: 100px; font-size: 2.5rem;">
+                        {{ service.provider.display_name|slice:":1" }}
+                    </div>
+                    {% endif %}
+
+                    <h5 class="mb-1">
+                        {{ service.provider.display_name }}
+                        {% if service.provider.is_verified %}
+                        <i class="bi bi-patch-check-fill text-primary" title="موثق"></i>
+                        {% endif %}
+                    </h5>
+                    
+                    {% if service.provider.title %}
+                    <p class="text-muted small">{{ service.provider.title }}</p>
+                    {% endif %}
+
+                    <!-- Provider Stats -->
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <div class="fw-bold text-primary">{{ service.provider.get_services_count }}</div>
+                            <small class="text-muted">خدمات</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold text-warning">{{ service.provider.get_average_rating|default:0 }}</div>
+                            <small class="text-muted">تقييم</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold text-success">{{ service.provider.completed_orders }}</div>
+                            <small class="text-muted">مكتمل</small>
+                        </div>
+                    </div>
+
+                    {% if service.provider.bio %}
+                    <p class="text-muted small">{{ service.provider.bio|truncatewords:30 }}</p>
+                    {% endif %}
+
+                    <!-- Social Links -->
+                    <div class="d-flex justify-content-center gap-2 mb-3">
+                        {% if service.provider.website %}
+                        <a href="{{ service.provider.website }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-globe"></i>
+                        </a>
+                        {% endif %}
+                        {% if service.provider.linkedin %}
+                        <a href="{{ service.provider.linkedin }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-linkedin"></i>
+                        </a>
+                        {% endif %}
+                        {% if service.provider.twitter %}
+                        <a href="{{ service.provider.twitter }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-twitter"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <a href="{% url 'services:provider_detail' service.provider.user.username %}"
+                        class="btn btn-outline-primary w-100">
+                        <i class="bi bi-eye me-2"></i>عرض الملف الكامل
+                    </a>
+                </div>
+            </div>
+
+            <!-- Safety Tips -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-shield-check me-2 text-success"></i>نصائح الأمان
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <small>تواصل داخل المنصة فقط</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <small>لا تحول الأموال خارج المنصة</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <small>راجع التقييمات قبل الطلب</small>
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <small>احتفظ بسجل للمحادثات</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Services -->
+    {% if related_services %}
+    <div class="mt-5 pb-5">
+        <h3 class="fw-bold mb-4">
+            <i class="bi bi-grid me-2 text-primary"></i>خدمات مشابهة
+        </h3>
+        <div class="row g-4">
+            {% for rel_service in related_services %}
+            <div class="col-md-6 col-lg-3">
+                <div class="card service-card h-100">
+                    <div class="position-relative">
+                        {% if rel_service.cover_image %}
+                        <img src="{{ rel_service.cover_image.url }}" class="card-img-top" alt="{{ rel_service.title }}" style="height: 180px; object-fit: cover;">
+                        {% else %}
+                        <div class="card-img-top bg-gradient d-flex align-items-center justify-content-center"
+                            style="height: 180px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="bi bi-image text-white display-4"></i>
+                        </div>
+                        {% endif %}
+                        
+                        {% if rel_service.avg_rating > 0 %}
+                        <span class="badge bg-dark position-absolute bottom-0 start-0 m-2">
+                            <i class="bi bi-star-fill text-warning"></i> {{ rel_service.avg_rating }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <a href="{% url 'services:service_detail' rel_service.slug %}"
+                                class="text-decoration-none text-dark stretched-link">
+                                {{ rel_service.title|truncatewords:6 }}
+                            </a>
+                        </h6>
+                        {% if rel_service.price %}
+                        <span class="text-primary fw-bold">{{ rel_service.price|floatformat:0 }} د.ع</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+function shareService() {
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ service.title }}',
+            text: '{{ service.summary }}',
+            url: window.location.href
+        });
+    } else {
+        navigator.clipboard.writeText(window.location.href);
+        alert('تم نسخ الرابط!');
+    }
+}
+
+function saveService() {
+    // Add to favorites functionality
+    alert('تم حفظ الخدمة في المفضلة!');
+}
+</script>
+{% endblock %}
+{% endblock %}

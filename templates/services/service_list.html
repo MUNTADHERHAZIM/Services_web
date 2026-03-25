@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+{% block title %}الخدمات - {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .service-card {
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .service-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .service-card .card-img-top {
+        transition: transform 0.3s ease;
+    }
+    
+    .service-card:hover .card-img-top {
+        transform: scale(1.05);
+    }
+    
+    .filter-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        position: sticky;
+        top: 100px;
+    }
+    
+    .filter-title {
+        font-weight: 700;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .tag-cloud .badge {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .tag-cloud .badge:hover {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+        color: white !important;
+        transform: translateY(-2px);
+    }
+    
+    .view-toggle-btn {
+        padding: 8px 12px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .view-toggle-btn.active {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+    }
+    
+    .results-info {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border-radius: 12px;
+        padding: 15px 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Page Header -->
+    <div class="row mb-4" data-aos="fade-up">
+        <div class="col-lg-8">
+            <h1 class="fw-bold mb-2">
+                <i class="bi bi-collection text-primary me-2"></i>
+                {% if search_query %}
+                نتائج البحث: "{{ search_query }}"
+                {% elif current_category %}
+                {{ current_category }}
+                {% else %}
+                جميع الخدمات
+                {% endif %}
+            </h1>
+            <p class="text-muted">{{ total_count }} خدمة متاحة</p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+            <div class="results-info d-inline-flex align-items-center gap-3">
+                <span class="text-muted">ترتيب حسب:</span>
+                <select class="form-select form-select-sm" style="width: auto;" onchange="window.location.href=this.value">
+                    <option value="?sort=newest{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}" {% if current_sort == 'newest' %}selected{% endif %}>الأحدث</option>
+                    <option value="?sort=price_low{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}" {% if current_sort == 'price_low' %}selected{% endif %}>الأقل سعراً</option>
+                    <option value="?sort=price_high{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}" {% if current_sort == 'price_high' %}selected{% endif %}>الأعلى سعراً</option>
+                    <option value="?sort=rating{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}" {% if current_sort == 'rating' %}selected{% endif %}>الأعلى تقييماً</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar Filters -->
+        <div class="col-lg-3 mb-4">
+            <div class="filter-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="filter-title">
+                    <i class="bi bi-funnel text-primary"></i>
+                    <span>تصفية النتائج</span>
+                </div>
+
+                <form method="get" action="{% url 'services:service_list' %}">
+                    <!-- Search -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">البحث</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" name="search" class="form-control border-start-0" placeholder="ابحث عن خدمة..." value="{{ search_query }}">
+                        </div>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">التصنيف</label>
+                        <select name="category" class="form-select form-select-lg">
+                            <option value="">جميع التصنيفات</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.slug }}" {% if cat.slug == current_category %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Price Range -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">نطاق السعر</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">من</span>
+                                    <input type="number" name="price_min" class="form-control" placeholder="0" value="{{ request.GET.price_min }}">
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">إلى</span>
+                                    <input type="number" name="price_max" class="form-control" placeholder="∞" value="{{ request.GET.price_max }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rating Filter -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">التقييم</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for i in "54321" %}
+                            <label class="btn btn-outline-secondary btn-sm flex-fill">
+                                <input type="radio" name="rating" value="{{ i }}" {% if request.GET.rating == i %}checked{% endif %} style="display: none;">
+                                {% for star in "x"|add:i %}<i class="bi bi-star-fill text-warning"></i>{% endfor %}
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-search me-2"></i> تطبيق الفلتر
+                        </button>
+                        {% if search_query or current_category or request.GET.price_min or request.GET.price_max or request.GET.rating %}
+                        <a href="{% url 'services:service_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-2"></i> مسح الفلتر
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tags Cloud -->
+            {% if tags %}
+            <div class="filter-card mt-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="filter-title">
+                    <i class="bi bi-tags text-primary"></i>
+                    <span>الوسوم الشائعة</span>
+                </div>
+                <div class="tag-cloud d-flex flex-wrap gap-2">
+                    {% for tag in tags|slice:":10" %}
+                    <a href="{% url 'services:tag_services' tag.slug %}" class="badge bg-light text-dark text-decoration-none py-2 px-3">
+                        {{ tag.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Services Grid -->
+        <div class="col-lg-9">
+            {% if services %}
+            <div class="row g-4">
+                {% for service in services %}
+                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:2 }}00">
+                    <div class="card service-card h-100 border-0 shadow-sm">
+                        <div class="position-relative overflow-hidden">
+                            {% if service.cover_image %}
+                            <img src="{{ service.cover_image.url }}" class="card-img-top" alt="{{ service.title }}" loading="lazy">
+                            {% else %}
+                            <div class="card-img-top bg-gradient d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 200px;">
+                                <i class="bi bi-image text-white display-4"></i>
+                            </div>
+                            {% endif %}
+                            {% if service.is_featured %}
+                            <span class="badge bg-warning position-absolute top-0 start-0 m-3">
+                                <i class="bi bi-star-fill me-1"></i>مميز
+                            </span>
+                            {% endif %}
+                            {% if service.price %}
+                            <span class="badge bg-success position-absolute bottom-0 end-0 m-3">
+                                {{ service.price|floatformat:0 }} د.ع
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                {% if service.category %}
+                                <a href="{% url 'services:category_detail' service.category.slug %}" class="badge bg-primary bg-opacity-10 text-primary text-decoration-none">
+                                    <i class="bi bi-folder me-1"></i>{{ service.category.name }}
+                                </a>
+                                {% endif %}
+                                {% if service.avg_rating > 0 %}
+                                <span class="ms-auto text-warning small fw-bold">
+                                    <i class="bi bi-star-fill"></i> {{ service.avg_rating }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <h5 class="card-title fw-bold">
+                                <a href="{% url 'services:service_detail' service.slug %}" class="text-decoration-none text-dark stretched-link">
+                                    {{ service.title|truncatewords:8 }}
+                                </a>
+                            </h5>
+                            <p class="card-text text-muted small">{{ service.summary|truncatewords:12 }}</p>
+                        </div>
+                        <div class="card-footer bg-transparent border-0 pt-0">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center text-muted small">
+                                    <img src="{% if service.provider.avatar %}{{ service.provider.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ service.provider.display_name|slice:":1" }}&background=667eea&color=fff{% endif %}" class="rounded-circle me-2" style="width: 24px; height: 24px; object-fit: cover;">
+                                    <span>{{ service.provider.display_name }}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 text-muted small">
+                                    <span><i class="bi bi-eye"></i> {{ service.views_count }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav class="mt-5" data-aos="fade-up">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <!-- No Results -->
+            <div class="text-center py-5" data-aos="fade-up">
+                <div class="mb-4">
+                    <i class="bi bi-search display-1 text-muted"></i>
+                </div>
+                <h3 class="fw-bold">لا توجد نتائج</h3>
+                <p class="text-muted">لم نتمكن من العثور على خدمات تطابق بحثك</p>
+                <a href="{% url 'services:service_list' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-arrow-right me-2"></i> عرض جميع الخدمات
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}لوحة تحكم المزود - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-success text-white border-0 shadow">
+                <div class="card-body p-4">
+                    <h2 class="mb-2"><i class="bi bi-tools me-2"></i>مرحباً، {{ user.get_full_name|default:user.username
+                        }}</h2>
+                    <p class="mb-0 opacity-75">لوحة تحكم مقدم الخدمة - إدارة خدماتك وطلباتك</p>
+
+                    {% if not is_approved %}
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>حسابك قيد المراجعة</strong> - سيتم إخطارك عند الموافقة على حسابك لتتمكن من إنشاء خدمات
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                                <i class="bi bi-grid text-primary fs-2"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-0">{{ services_count }}</h3>
+                            <p class="text-muted mb-0">خدماتي</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                <i class="bi bi-bell text-warning fs-2"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-0">{{ new_requests }}</h3>
+                            <p class="text-muted mb-0">طلبات جديدة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                                <i class="bi bi-arrow-repeat text-info fs-2"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-0">{{ in_progress }}</h3>
+                            <p class="text-muted mb-0">قيد التنفيذ</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                <i class="bi bi-check-circle text-success fs-2"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-0">{{ completed }}</h3>
+                            <p class="text-muted mb-0">مكتملة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- My Services -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-grid me-2"></i>خدماتي</h5>
+                        {% if is_approved %}
+                        <a href="{% url 'services:service_create' %}" class="btn btn-success btn-sm">
+                            <i class="bi bi-plus-circle me-2"></i>إضافة خدمة
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if my_services %}
+                    <div class="list-group list-group-flush">
+                        {% for service in my_services %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ service.title }}</h6>
+                                    <small class="text-muted">{{ service.category.name }}</small>
+                                </div>
+                                <a href="{% url 'services:service_detail' service.slug %}"
+                                    class="btn btn-sm btn-outline-primary">
+                                    عرض
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+                        <p class="text-muted">لم تقم بإنشاء خدمات بعد</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Requests -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0"><i class="bi bi-list-task me-2"></i>الطلبات الأخيرة</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_requests %}
+                    <div class="list-group list-group-flush">
+                        {% for request in recent_requests %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ request.service.title }}</h6>
+                                    <small class="text-muted">{{
+                                        request.customer.get_full_name|default:request.customer.username }}</small>
+                                </div>
+                                <div>
+                                    {% if request.status == 'new' %}
+                                    <span class="badge bg-warning me-2">جديد</span>
+                                    {% elif request.status == 'in_progress' %}
+                                    <span class="badge bg-info me-2">قيد التنفيذ</span>
+                                    {% elif request.status == 'done' %}
+                                    <span class="badge bg-success me-2">مكتمل</span>
+                                    {% endif %}
+                                    <a href="{% url 'requests:track_request' request.id %}"
+                                        class="btn btn-sm btn-outline-primary">
+                                        عرض
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+                        <p class="text-muted">لا توجد طلبات حالياً</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+</style>
+{% endblock %}

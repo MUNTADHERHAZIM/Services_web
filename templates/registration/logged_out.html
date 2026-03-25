@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}تسجيل الخروج - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .logout-section {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .logout-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: moveBackground 20s linear infinite;
+    }
+
+    @keyframes moveBackground {
+        0% {
+            transform: translate(0, 0);
+        }
+
+        100% {
+            transform: translate(50px, 50px);
+        }
+    }
+
+    .logout-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 60px 40px;
+        text-align: center;
+        max-width: 500px;
+        width: 90%;
+        position: relative;
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .logout-icon {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 30px;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+        }
+
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 20px rgba(102, 126, 234, 0);
+        }
+    }
+
+    .logout-icon i {
+        font-size: 3rem;
+        color: white;
+    }
+
+    .logout-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 15px;
+    }
+
+    .logout-message {
+        font-size: 1.1rem;
+        color: #64748b;
+        margin-bottom: 40px;
+    }
+
+    .btn-logout-action {
+        padding: 15px 40px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+        margin: 0 10px;
+    }
+
+    .btn-logout-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+    }
+
+    .btn-logout-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .btn-logout-secondary {
+        background: white;
+        border: 2px solid #667eea;
+        color: #667eea;
+    }
+
+    .btn-logout-secondary:hover {
+        background: #f8f9fa;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .success-checkmark {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+    }
+
+    .check-icon {
+        width: 80px;
+        height: 80px;
+        position: relative;
+        border-radius: 50%;
+        box-sizing: content-box;
+        border: 4px solid #4ade80;
+    }
+
+    .check-icon::before {
+        top: 3px;
+        left: -2px;
+        width: 30px;
+        transform-origin: 100% 50%;
+        border-radius: 100px 0 0 100px;
+    }
+
+    .check-icon::after {
+        top: 0;
+        left: 30px;
+        width: 60px;
+        transform-origin: 0 50%;
+        border-radius: 0 100px 100px 0;
+        animation: rotate-circle 4.25s ease-in;
+    }
+
+    .icon-line {
+        height: 5px;
+        background-color: #4ade80;
+        display: block;
+        border-radius: 2px;
+        position: absolute;
+        z-index: 10;
+    }
+
+    .icon-line.line-tip {
+        top: 46px;
+        left: 14px;
+        width: 25px;
+        transform: rotate(45deg);
+        animation: icon-line-tip 0.75s;
+    }
+
+    .icon-line.line-long {
+        top: 38px;
+        right: 8px;
+        width: 47px;
+        transform: rotate(-45deg);
+        animation: icon-line-long 0.75s;
+    }
+
+    @keyframes icon-line-tip {
+        0% {
+            width: 0;
+            left: 1px;
+            top: 19px;
+        }
+
+        54% {
+            width: 0;
+            left: 1px;
+            top: 19px;
+        }
+
+        70% {
+            width: 50px;
+            left: -8px;
+            top: 37px;
+        }
+
+        84% {
+            width: 17px;
+            left: 21px;
+            top: 48px;
+        }
+
+        100% {
+            width: 25px;
+            left: 14px;
+            top: 46px;
+        }
+    }
+
+    @keyframes icon-line-long {
+        0% {
+            width: 0;
+            right: 46px;
+            top: 54px;
+        }
+
+        65% {
+            width: 0;
+            right: 46px;
+            top: 54px;
+        }
+
+        84% {
+            width: 55px;
+            right: 0px;
+            top: 35px;
+        }
+
+        100% {
+            width: 47px;
+            right: 8px;
+            top: 38px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="logout-section">
+    <div class="logout-card">
+        <!-- Success Animation -->
+        <div class="success-checkmark mb-4">
+            <div class="check-icon">
+                <span class="icon-line line-tip"></span>
+                <span class="icon-line line-long"></span>
+            </div>
+        </div>
+
+        <h1 class="logout-title">تم تسجيل الخروج بنجاح</h1>
+        <p class="logout-message">
+            شكراً لزيارتك! نتطلع لرؤيتك مرة أخرى قريباً
+        </p>
+
+        <div class="d-flex justify-content-center flex-wrap gap-3">
+            <a href="{% url 'core:home' %}" class="btn btn-logout-primary">
+                <i class="bi bi-house-door me-2"></i>العودة للرئيسية
+            </a>
+            <a href="{% url 'accounts:login' %}" class="btn btn-logout-secondary">
+                <i class="bi bi-box-arrow-in-right me-2"></i>تسجيل الدخول مرة أخرى
+            </a>
+        </div>
+
+        <div class="mt-4 pt-4 border-top">
+            <p class="text-muted small mb-0">
+                <i class="bi bi-shield-check me-2"></i>
+                تم تأمين جلستك وحماية بياناتك
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

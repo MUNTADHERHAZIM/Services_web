@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+{% block title %}لوحة التحكم - {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-sidebar {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+    
+    .dashboard-sidebar .list-group-item {
+        border: none;
+        padding: 15px 20px;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .dashboard-sidebar .list-group-item::before {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 0;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        transition: height 0.3s ease;
+    }
+    
+    .dashboard-sidebar .list-group-item:hover::before,
+    .dashboard-sidebar .list-group-item.active::before {
+        height: 60%;
+    }
+    
+    .dashboard-sidebar .list-group-item.active {
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(30, 94, 48, 0.1));
+        color: var(--primary-color);
+    }
+    
+    .dashboard-sidebar .list-group-item:hover {
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.05), rgba(30, 94, 48, 0.05));
+        padding-right: 25px;
+    }
+    
+    .stat-card {
+        border-radius: 16px;
+        padding: 24px;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+        animation: pulse-bg 4s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-bg {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    .stat-card > * {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .data-table {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .data-table thead {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+    }
+    
+    .data-table thead th {
+        border: none;
+        padding: 15px;
+        font-weight: 600;
+    }
+    
+    .data-table tbody tr {
+        transition: all 0.3s ease;
+    }
+    
+    .data-table tbody tr:hover {
+        background: rgba(37, 99, 235, 0.05);
+        transform: translateX(-5px);
+    }
+    
+    .status-progress {
+        height: 8px;
+        border-radius: 4px;
+        background: #e2e8f0;
+        overflow: hidden;
+    }
+    
+    .status-progress .progress-bar {
+        border-radius: 4px;
+        transition: width 1s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 mb-4">
+            <div class="dashboard-sidebar" data-aos="fade-up">
+                <div class="p-3 bg-primary text-white text-center">
+                    <i class="bi bi-grid-3x3-gap-fill fs-4"></i>
+                    <span class="fw-bold ms-2">{{ SITE_NAME }}</span>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'dashboard:home' %}" class="list-group-item list-group-item-action active">
+                        <i class="bi bi-speedometer2 me-2"></i>الرئيسية
+                    </a>
+                    <a href="{% url 'dashboard:manage_services' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-collection me-2"></i>الخدمات
+                    </a>
+                    <a href="{% url 'dashboard:manage_requests' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-list-check me-2"></i>الطلبات
+                        {% if pending_requests %}
+                        <span class="badge bg-danger rounded-pill float-end">{{ pending_requests }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="{% url 'dashboard:manage_categories' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-folder me-2"></i>التصنيفات
+                    </a>
+                    <a href="{% url 'dashboard:manage_providers' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-people me-2"></i>المقدمون
+                    </a>
+                    <a href="{% url 'admin:index' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-gear me-2"></i>لوحة الإدارة
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-up">
+                <h2 class="fw-bold mb-0">
+                    <i class="bi bi-speedometer2 text-primary me-2"></i>لوحة التحكم
+                </h2>
+                <div class="text-muted">
+                    <i class="bi bi-calendar3 me-1"></i>
+                    {% now "d/m/Y" %}
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+                    <div class="stat-card" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="fw-bold mb-0 counter" data-target="{{ stats.services_count|default:0 }}">0</h3>
+                                <span class="opacity-75">الخدمات النشطة</span>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-collection fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="fw-bold mb-0 counter" data-target="{{ stats.requests_count|default:0 }}">0</h3>
+                                <span class="opacity-75">إجمالي الطلبات</span>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-list-check fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="fw-bold mb-0 counter" data-target="{{ stats.categories_count|default:0 }}">0</h3>
+                                <span class="opacity-75">التصنيفات</span>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-folder fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="400">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="fw-bold mb-0 counter" data-target="{{ stats.providers_count|default:0 }}">0</h3>
+                                <span class="opacity-75">مقدمو الخدمات</span>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-people fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Requests by Status -->
+                <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 pt-4 px-4">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="bi bi-graph-up text-primary me-2"></i>
+                                الطلبات حسب الحالة
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% for item in requests_by_status %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="fw-semibold">{{ item.status_display }}</span>
+                                    <span class="badge bg-primary rounded-pill">{{ item.count }}</span>
+                                </div>
+                                <div class="status-progress">
+                                    <div class="progress-bar bg-primary" style="width: {% widthratio item.count stats.requests_count 100 %}%"></div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                                لا توجد طلبات
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Services -->
+                <div class="col-lg-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 pt-4 px-4">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="bi bi-star-fill text-warning me-2"></i>
+                                الخدمات الأكثر مشاهدة
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% for service in top_services %}
+                            <div class="d-flex align-items-center p-3 bg-light rounded mb-2">
+                                <div class="flex-grow-1">
+                                    <span class="fw-semibold d-block">{{ service.title|truncatewords:5 }}</span>
+                                    <small class="text-muted">
+                                        <i class="bi bi-person me-1"></i>{{ service.provider.display_name }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-info">
+                                        <i class="bi bi-eye me-1"></i>{{ service.views_count }}
+                                    </span>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-collection display-4 d-block mb-2"></i>
+                                لا توجد خدمات
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Requests -->
+                <div class="col-12" data-aos="fade-up" data-aos-delay="400">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="bi bi-clock-history text-primary me-2"></i>
+                                آخر الطلبات الواردة
+                            </h5>
+                            <a href="{% url 'dashboard:manage_requests' %}" class="btn btn-outline-primary btn-sm">
+                                عرض الكل <i class="bi bi-arrow-left ms-1"></i>
+                            </a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table data-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th><i class="bi bi-hash me-1"></i>#</th>
+                                            <th><i class="bi bi-collection me-1"></i>الخدمة</th>
+                                            <th><i class="bi bi-person me-1"></i>العميل</th>
+                                            <th><i class="bi bi-flag me-1"></i>الحالة</th>
+                                            <th><i class="bi bi-calendar me-1"></i>التاريخ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for req in recent_requests %}
+                                        <tr>
+                                            <td class="fw-bold">#{{ req.id }}</td>
+                                            <td>
+                                                <a href="#" class="text-decoration-none">{{ req.service.title|truncatewords:5 }}</a>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                        {{ req.customer.username|slice:":1"|upper }}
+                                                    </div>
+                                                    {{ req.customer.username }}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge {{ req.get_status_badge_class }}">
+                                                    {{ req.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td class="text-muted">{{ req.created_at|date:"d/m/Y" }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted py-5">
+                                                <i class="bi bi-inbox display-3 d-block mb-2 opacity-50"></i>
+                                                لا توجد طلبات
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

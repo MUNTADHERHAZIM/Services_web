@@ -1,0 +1,780 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}الرئيسية - منصة الخدمات الاحترافية{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root{
+    --p1:#667eea;
+    --p2:#764ba2;
+    --bg:#f8f9fa;
+    --card:#fff;
+    --text:#111827;
+    --muted:#6b7280;
+    --border:#e5e7eb;
+    --shadow:0 10px 25px rgba(2,6,23,.08);
+    --r:16px;
+  }
+
+  /* Safety for RTL */
+  .home-page{
+    direction: rtl;
+    unicode-bidi: plaintext;
+  }
+
+  /* Hero */
+  .hero-section {
+    background: linear-gradient(135deg, var(--p1) 0%, var(--p2) 100%);
+    color: white;
+    padding: 100px 0 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-section::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 110px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120'%3E%3Cpath fill='%23ffffff' d='M0,0V7.23C0,65.52,268.63,112.77,600,112.77S1200,65.52,1200,7.23V0Z'%3E%3C/path%3E%3C/svg%3E") no-repeat bottom;
+    background-size: cover;
+    pointer-events:none;
+  }
+
+  .hero-title {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 1.25rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.15rem;
+    opacity: 0.92;
+    margin-bottom: 2rem;
+    max-width: 560px;
+  }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in-up {
+    animation: fadeInUp 0.8s ease-out forwards;
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .fade-in-up{ animation:none; opacity:1; }
+    .stat-card, .feature-card, .service-card, .category-card{ transition:none; }
+  }
+
+  /* Stats */
+  .stats-section { background: var(--bg); padding: 60px 0; }
+
+  .stat-card {
+    text-align: center;
+    padding: 30px 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.06);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    height: 100%;
+  }
+
+  .stat-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12); }
+
+  .stat-number {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--p1) 0%, var(--p2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Features */
+  .features-section { padding: 80px 0; }
+
+  .feature-card {
+    text-align: center;
+    padding: 40px 30px;
+    border-radius: var(--r);
+    transition: all 0.25s ease;
+    height: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  }
+
+  .feature-card:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.10); }
+
+  .feature-icon {
+    width: 78px;
+    height: 78px;
+    background: linear-gradient(135deg, var(--p1) 0%, var(--p2) 100%);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    color: white;
+    margin: 0 auto 22px;
+  }
+
+  /* How it works */
+  .how-it-works {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 80px 0;
+  }
+
+  .step-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px 30px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    height: 100%;
+  }
+
+  .step-number {
+    width: 58px;
+    height: 58px;
+    background: linear-gradient(135deg, var(--p1) 0%, var(--p2) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: white;
+    margin: 0 auto 18px;
+  }
+
+  /* Category cards */
+  .category-card {
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 30px 20px;
+    text-align: center;
+    transition: all 0.25s ease;
+    background: var(--card);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.06);
+    height: 100%;
+  }
+
+  .category-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+    background: linear-gradient(135deg, var(--p1) 0%, var(--p2) 100%);
+    color: white;
+  }
+
+  .category-card:hover h5,
+  .category-card:hover .badge { color: white !important; }
+
+  .category-icon { font-size: 3rem; color: var(--p1); margin-bottom: 15px; }
+  .category-card:hover .category-icon { color: white; }
+
+  /* Services */
+  .service-card {
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    overflow: hidden;
+    transition: all 0.25s ease;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    height: 100%;
+  }
+  .service-card:hover { transform: translateY(-6px); box-shadow: 0 16px 35px rgba(0, 0, 0, 0.14); }
+
+  /* ✅ Fix: لا تجعل صورة البطاقة 50% (كانت تسبب شكل غريب/تداخل) */
+  .service-card .card-img-top {
+    width: 100% !important;
+    height: 220px !important;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+
+  .price-tag {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--p1);
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
+  }
+
+  /* CTA */
+  .cta-section {
+    background: linear-gradient(135deg, var(--p1) 0%, var(--p2) 100%);
+    color: white;
+    padding: 80px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    top: -45%;
+    right: -10%;
+    width: 520px;
+    height: 520px;
+    background: rgba(255, 255, 255, 0.10);
+    border-radius: 50%;
+    pointer-events:none;
+  }
+
+  /* RTL icon spacing fix: استخدم ms بدل me عند الاتجاه RTL */
+  .home-page .me-2{ margin-right: 0 !important; margin-left: .5rem !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="home-page">
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-6">
+          <div class="fade-in-up" data-aos="fade-up" data-aos-duration="1000">
+            <h1 class="hero-title">
+              اكتشف أفضل الخدمات
+              <span class="d-block">الرقمية في مكان واحد</span>
+            </h1>
+            <p class="hero-subtitle">
+              منصة احترافية تجمع لك أفضل الخدمات من مقدمين موثوقين وموثقين.
+              ابحث، قارن، واطلب بكل سهولة وأمان.
+            </p>
+            <div class="d-flex gap-3 flex-wrap">
+              <a href="{% url 'services:service_list' %}" class="btn btn-light btn-lg px-5" data-aos="fade-up" data-aos-delay="200">
+                <i class="bi bi-search me-2"></i>تصفح الخدمات
+              </a>
+              {% if not user.is_authenticated %}
+              <a href="{% url 'accounts:register' %}" class="btn btn-outline-light btn-lg px-5" data-aos="fade-up" data-aos-delay="400">
+                <i class="bi bi-person-plus me-2"></i>انضم إلينا
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6 d-none d-lg-block text-center">
+          <div class="fade-in-up" style="animation-delay:.25s" data-aos="fade-up" data-aos-delay="500">
+            <svg viewBox="0 0 500 400" style="max-height: 400px;">
+              <rect x="50" y="80" width="400" height="280" rx="20" fill="#f8f9fa" />
+              <rect x="70" y="100" width="360" height="40" rx="10" fill="#667eea" />
+              <circle cx="100" cy="120" r="8" fill="white" />
+              <rect x="120" cy="115" width="200" height="10" rx="5" fill="white" opacity="0.7" />
+
+              <rect x="80" y="160" width="100" height="80" rx="10" fill="white" />
+              <rect x="90" y="170" width="80" height="30" rx="5" fill="#e0e0e0" />
+              <rect x="90" y="210" width="60" height="8" rx="4" fill="#d0d0d0" />
+              <rect x="90" y="225" width="40" height="8" rx="4" fill="#d0d0d0" />
+
+              <rect x="200" y="160" width="100" height="80" rx="10" fill="white" />
+              <rect x="210" y="170" width="80" height="30" rx="5" fill="#e0e0e0" />
+              <rect x="210" y="210" width="60" height="8" rx="4" fill="#d0d0d0" />
+              <rect x="210" y="225" width="40" height="8" rx="4" fill="#d0d0d0" />
+
+              <rect x="320" y="160" width="100" height="80" rx="10" fill="white" />
+              <rect x="330" y="170" width="80" height="30" rx="5" fill="#e0e0e0" />
+              <rect x="330" y="210" width="60" height="8" rx="4" fill="#d0d0d0" />
+              <rect x="330" y="225" width="40" height="8" rx="4" fill="#d0d0d0" />
+
+              <circle cx="250" cy="310" r="30" fill="#764ba2" />
+              <circle cx="250" cy="305" r="12" fill="white" />
+              <path d="M 230 330 Q 230 320 250 320 Q 270 320 270 330" fill="white" />
+
+              <polygon points="100,40 105,50 115,50 107,56 110,66 100,60 90,66 93,56 85,50 95,50" fill="#ffc107" />
+              <polygon points="400,50 405,60 415,60 407,66 410,76 400,70 390,76 393,66 385,60 395,60" fill="#ffc107" />
+              <polygon points="450,120 453,126 459,126 454,130 456,136 450,132 444,136 446,130 441,126 447,126" fill="#ffc107" />
+            </svg>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="stats-section">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+          <div class="stat-card">
+            <i class="bi bi-collection display-4 text-primary mb-3"></i>
+            <div class="stat-number counter" data-target="{{ stats.services_count|default:150 }}">0</div>
+            <p class="text-muted mb-0">خدمة متاحة</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+          <div class="stat-card">
+            <i class="bi bi-people-fill display-4 text-success mb-3"></i>
+            <div class="stat-number counter" data-target="{{ stats.clients_count|default:500 }}">0</div>
+            <p class="text-muted mb-0">عميل سعيد</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+          <div class="stat-card">
+            <i class="bi bi-patch-check-fill display-4 text-info mb-3"></i>
+            <div class="stat-number counter" data-target="{{ stats.providers_count|default:50 }}">0</div>
+            <p class="text-muted mb-0">مقدم خدمة موثق</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
+          <div class="stat-card">
+            <i class="bi bi-star-fill display-4 text-warning mb-3"></i>
+            <div class="stat-number">4.9</div>
+            <p class="text-muted mb-0">تقييم متوسط</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features-section">
+    <div class="container">
+      <div class="text-center mb-5" data-aos="fade-up">
+        <h2 class="fw-bold mb-3">لماذا تختارنا؟</h2>
+        <p class="text-muted lead">نوفر لك أفضل تجربة مع ميزات احترافية</p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="bi bi-shield-check"></i></div>
+            <h4 class="mb-3">توثيق موثوق</h4>
+            <p class="text-muted">جميع مقدمي الخدمات موثقون ومراجعون من قبل فريقنا</p>
+          </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="bi bi-credit-card"></i></div>
+            <h4 class="mb-3">دفع آمن</h4>
+            <p class="text-muted">نظام دفع آمن ومحمي بأحدث تقنيات الأمان</p>
+          </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="bi bi-headset"></i></div>
+            <h4 class="mb-3">دعم 24/7</h4>
+            <p class="text-muted">فريق دعم متاح على مدار الساعة لمساعدتك</p>
+          </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="bi bi-star-fill"></i></div>
+            <h4 class="mb-3">تقييمات موثوقة</h4>
+            <p class="text-muted">تقييمات حقيقية من عملاء فعليين</p>
+          </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="bi bi-lightning-charge"></i></div>
+            <h4 class="mb-3">تنفيذ سريع</h4>
+            <p class="text-muted">خدمات بجودة عالية وتنفيذ في الوقت المحدد</p>
+          </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="600">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="bi bi-graph-up"></i></div>
+            <h4 class="mb-3">تتبع الطلبات</h4>
+            <p class="text-muted">تتبع حالة طلبك خطوة بخطوة بسهولة</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="how-it-works">
+    <div class="container">
+      <div class="text-center mb-5" data-aos="fade-up">
+        <h2 class="fw-bold mb-3">كيف يعمل النظام؟</h2>
+        <p class="text-muted lead">أربع خطوات بسيطة للحصول على خدمتك</p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <i class="bi bi-search display-4 text-primary mb-3"></i>
+            <h5 class="mb-3">ابحث</h5>
+            <p class="text-muted">تصفح الخدمات واختر ما يناسب احتياجاتك</p>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <i class="bi bi-chat-dots display-4 text-success mb-3"></i>
+            <h5 class="mb-3">اطلب</h5>
+            <p class="text-muted">قدم طلبك مع جميع التفاصيل المطلوبة</p>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <i class="bi bi-gear-fill display-4 text-info mb-3"></i>
+            <h5 class="mb-3">تنفيذ</h5>
+            <p class="text-muted">تابع تقدم طلبك حتى الاكتمال</p>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="400">
+          <div class="step-card">
+            <div class="step-number">4</div>
+            <i class="bi bi-star-fill display-4 text-warning mb-3"></i>
+            <h5 class="mb-3">قيّم</h5>
+            <p class="text-muted">شارك تجربتك مع الآخرين</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Categories -->
+  {% if categories %}
+  <section class="py-5">
+    <div class="container">
+      <div class="text-center mb-5" data-aos="fade-up">
+        <h2 class="fw-bold mb-3">تصفح حسب التصنيف</h2>
+        <p class="text-muted">اختر التصنيف المناسب لاحتياجاتك</p>
+      </div>
+
+      <div class="row g-4">
+        {% for category in categories %}
+        <div class="col-lg-3 col-md-4 col-6" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:1 }}00">
+          <a href="{% url 'services:category_detail' category.slug %}" class="text-decoration-none">
+            <div class="category-card">
+              <div class="category-icon">
+                <i class="bi {{ category.icon|default:'bi-folder' }}"></i>
+              </div>
+              <h5 class="mb-2">{{ category.name }}</h5>
+              <span class="badge bg-light text-dark">{{ category.get_services_count }} خدمة</span>
+            </div>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Featured Services -->
+  {% if featured_services %}
+  <section class="py-5 bg-light">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
+        <div>
+          <h2 class="fw-bold mb-0">خدمات مميزة</h2>
+          <p class="text-muted mb-0">أفضل الخدمات المختارة لك</p>
+        </div>
+        <a href="{% url 'services:service_list' %}" class="btn btn-outline-primary">
+          عرض الكل <i class="bi bi-arrow-left ms-2"></i>
+        </a>
+      <div class="row g-4">
+        {% for service in featured_services %}
+        <div class="col-lg-4 col-md-6">
+          <div class="card service-card h-100">
+            <div class="position-relative">
+              {% if service.cover_image %}
+                <img src="{{ service.cover_image.url }}" class="card-img-top" alt="{{ service.title }}" loading="lazy">
+              {% elif service.image %}
+                <img src="{{ service.image.url }}" class="card-img-top" alt="{{ service.title }}" loading="lazy">
+              {% else %}
+                <div class="card-img-top d-flex align-items-center justify-content-center"
+                     style="height:220px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                  <i class="bi bi-image text-white display-4" style="opacity:.6;"></i>
+                </div>
+              {% endif %}
+
+              {% if service.is_featured %}
+              <span class="badge bg-warning position-absolute top-0 start-0 m-3">
+                <i class="bi bi-star-fill"></i> مميز
+              </span>
+              {% endif %}
+
+              <span class="badge bg-primary position-absolute top-0 end-0 m-3">
+                {{ service.category.name }}
+              </span>
+
+              {% if service.avg_rating > 0 %}
+              <div class="position-absolute bottom-0 start-0 m-3">
+                <span class="badge bg-dark bg-opacity-75">
+                  <i class="bi bi-star-fill text-warning"></i> {{ service.avg_rating }}
+                </span>
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title">{{ service.title }}</h5>
+              <p class="card-text text-muted small">{{ service.summary|truncatewords:20 }}</p>
+              
+              {% if service.provider %}
+              <div class="d-flex align-items-center mb-3">
+                {% if service.provider.avatar %}
+                  <img src="{{ service.provider.avatar.url }}" class="rounded-circle me-2" width="30" height="30" alt="{{ service.provider.display_name }}">
+                {% endif %}
+                <span class="small text-muted">{{ service.provider.display_name }}</span>
+                {% if service.provider.is_verified %}
+                  <i class="bi bi-patch-check-fill text-primary ms-1" title="مقدم موثق"></i>
+                {% endif %}
+              </div>
+              {% endif %}
+
+              <div class="mt-auto d-flex justify-content-between align-items-center">
+                {% if service.price %}
+                  <span class="text-primary fw-bold fs-5">{{ service.price|floatformat:0 }} د.ع</span>
+                {% else %}
+                  <span class="text-muted small">السعر حسب الطلب</span>
+                {% endif %}
+
+                <a href="{% url 'services:service_detail' service.slug %}" class="btn btn-primary btn-sm">
+                  عرض التفاصيل <i class="bi bi-arrow-left"></i>
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Top Providers Section -->
+  {% if top_providers %}
+  <section class="py-5">
+    <div class="container">
+      <div class="text-center mb-5" data-aos="fade-up">
+        <h2 class="fw-bold mb-3">أفضل مقدمي الخدمات</h2>
+        <p class="text-muted">مقدمين موثوقين ثقة العملاء</p>
+      </div>
+
+      <div class="row g-4">
+        {% for provider in top_providers %}
+        <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:1 }}00">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-4">
+              <div class="position-relative d-inline-block mb-3">
+                {% if provider.avatar %}
+                  <img src="{{ provider.avatar.url }}" class="rounded-circle" width="100" height="100" alt="{{ provider.display_name }}" style="object-fit: cover;">
+                {% else %}
+                  <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto" style="width:100px;height:100px;">
+                    <i class="bi bi-person-fill text-white display-4"></i>
+                  </div>
+                {% endif %}
+                {% if provider.is_verified %}
+                  <span class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-1" title="مقدم موثق">
+                    <i class="bi bi-patch-check-fill"></i>
+                  </span>
+                {% endif %}
+              </div>
+              
+              <h5 class="mb-1">{{ provider.display_name }}</h5>
+              {% if provider.title %}
+                <p class="text-muted small mb-2">{{ provider.title }}</p>
+              {% endif %}
+              
+              <div class="mb-3">
+                <span class="badge bg-warning text-dark">
+                  <i class="bi bi-star-fill"></i> {{ provider.get_average_rating|default:0 }}
+                </span>
+                <span class="text-muted small">({{ provider.get_total_reviews|default:0 }} تقييم)</span>
+              </div>
+              
+              <div class="d-flex justify-content-center gap-2">
+                {% if provider.website %}
+                  <a href="{{ provider.website }}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="bi bi-globe"></i></a>
+                {% endif %}
+                {% if provider.linkedin %}
+                  <a href="{{ provider.linkedin }}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="bi bi-linkedin"></i></a>
+                {% endif %}
+              </div>
+            </div>
+            <div class="card-footer bg-transparent border-0 text-center pb-4">
+              <a href="{% url 'services:provider_detail' provider.user.username %}" class="btn btn-outline-primary btn-sm">
+                عرض الخدمات <i class="bi bi-arrow-left"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Testimonials Section -->
+  <section class="py-5 bg-light">
+    <div class="container">
+      <div class="text-center mb-5" data-aos="fade-up">
+        <h2 class="fw-bold mb-3">آراء عملائنا</h2>
+        <p class="text-muted">شاركنا تجربتك معنا</p>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width:50px;height:50px;">
+                  أ
+                </div>
+                <div class="ms-3">
+                  <h6 class="mb-0">أحمد محمد</h6>
+                  <small class="text-muted">العراق - بغداد</small>
+                </div>
+              </div>
+              <div class="text-warning mb-2">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+              </div>
+              <p class="text-muted">تجربة ممتازة! الخدمة كانت احترافية والتسليم في الوقت المحدد. أنصح الجميع بالتعامل مع هذه المنصة.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="bg-success rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width:50px;height:50px;">
+                  س
+                </div>
+                <div class="ms-3">
+                  <h6 class="mb-0">سارة علي</h6>
+                  <small class="text-muted">العراق - النجف</small>
+                </div>
+              </div>
+              <div class="text-warning mb-2">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-half"></i>
+              </div>
+              <p class="text-muted">مقدمو الخدمات هنا محترفون جداً. حصلت على ما طلبت بدقة عالية وأسعار مناسبة جداً.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="bg-info rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width:50px;height:50px;">
+                  ر
+                </div>
+                <div class="ms-3">
+                  <h6 class="mb-0">رضا Hussein</h6>
+                  <small class="text-muted">العراق - البصرة</small>
+                </div>
+              </div>
+              <div class="text-warning mb-2">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+              </div>
+              <p class="text-muted">منصة موثوقة وخدمات متميزة. الدعم الفني متفاعل وسريع في حل أي مشكلة.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container text-center position-relative">
+      <h2 class="fw-bold mb-4">هل لديك خدمة تريد تقديمها؟</h2>
+      <p class="lead mb-4 opacity-90">انضم إلينا كمقدم خدمات وابدأ بعرض خدماتك للآلاف من العملاء</p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="{% url 'accounts:register' %}?type=provider" class="btn btn-light btn-lg px-5">
+          <i class="bi bi-person-plus me-2"></i>انضم كمقدم خدمة
+        </a>
+        <a href="{% url 'core:contact' %}" class="btn btn-outline-light btn-lg px-5">
+          <i class="bi bi-envelope me-2"></i>تواصل معنا
+        </a>
+      </div>
+    </div>
+  </section>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Animated Counter (safe + supports 0/undefined)
+  document.addEventListener('DOMContentLoaded', function () {
+    const counters = document.querySelectorAll('.counter');
+    if (!counters.length) return;
+
+    const animateCounter = (counter) => {
+      const raw = counter.getAttribute('data-target');
+      const target = Number(raw);
+      if (!Number.isFinite(target) || target <= 0) {
+        counter.textContent = raw ? raw : '0';
+        return;
+      }
+
+      const duration = 1400;
+      const start = performance.now();
+
+      const step = (now) => {
+        const p = Math.min((now - start) / duration, 1);
+        const value = Math.floor(p * target);
+        counter.textContent = value.toLocaleString('ar-IQ') + '+';
+        if (p < 1) requestAnimationFrame(step);
+        else counter.textContent = target.toLocaleString('ar-IQ') + '+';
+      };
+
+      requestAnimationFrame(step);
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          animateCounter(entry.target);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.4 });
+
+    counters.forEach(c => observer.observe(c));
+  });
+</script>
+{% endblock %}

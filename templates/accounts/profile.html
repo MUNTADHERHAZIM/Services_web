@@ -1,0 +1,462 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}الملف الشخصي - {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 60px 0;
+        margin-bottom: 30px;
+    }
+
+    .profile-avatar {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: white;
+        color: #667eea;
+        font-size: 4rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        margin: 0 auto;
+    }
+
+    .verification-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-top: 15px;
+    }
+
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        margin-bottom: 25px;
+    }
+
+    .card-header {
+        background: white;
+        border-bottom: 2px solid #f8f9fa;
+        padding: 20px 25px;
+    }
+
+    .card-header h5 {
+        margin: 0;
+        color: #2d3748;
+    }
+
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-left: 10px;
+    }
+
+    .progress-wrapper {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .progress {
+        height: 25px;
+        border-radius: 50px;
+        overflow: visible;
+    }
+
+    .progress-bar {
+        border-radius: 50px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .info-item {
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #718096;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .info-value {
+        color: #2d3748;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .stat-card {
+        text-align: center;
+        padding: 20px;
+        border-radius: 10px;
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-4 text-center text-md-start">
+                <div class="profile-avatar">
+                    {{ user.username|slice:":1"|upper }}
+                </div>
+            </div>
+            <div class="col-md-8 text-center text-md-start mt-4 mt-md-0">
+                <h1 class="mb-2">{{ user.get_full_name|default:user.username }}</h1>
+                <p class="mb-3 opacity-75">
+                    <i class="bi bi-envelope me-2"></i>{{ user.email }}
+                </p>
+
+                {% if verification_status %}
+                <span class="verification-badge bg-{{ verification_status.class }}">
+                    <i class="bi {{ verification_status.icon }}"></i>
+                    {{ verification_status.label }}
+                </span>
+                {% endif %}
+
+                {% if provider and provider.is_verified %}
+                <span class="verification-badge bg-success">
+                    <i class="bi bi-patch-check-fill"></i>
+                    مقدم خدمة موثق
+                </span>
+                {% endif %}
+
+                <div class="mt-4">
+                    <a href="{% url 'accounts:profile_edit' %}" class="btn btn-light btn-lg me-2">
+                        <i class="bi bi-pencil me-2"></i>تعديل الملف
+                    </a>
+                    <a href="{% url 'accounts:logout' %}" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-box-arrow-right me-2"></i>تسجيل الخروج
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- اكتمال الملف -->
+            {% if user_profile %}
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="mb-3">
+                        <span class="section-icon bg-primary text-white">
+                            <i class="bi bi-clipboard-check"></i>
+                        </span>
+                        اكتمال الملف الشخصي
+                    </h5>
+
+                    <div class="progress-wrapper">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>نسبة الاكتمال</span>
+                            <span class="fw-bold">{{ completion_percentage }}%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar {% if completion_percentage >= 80 %}bg-success{% elif completion_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                                style="width: {{ completion_percentage }}%">
+                                {{ completion_percentage }}%
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if completion_percentage < 100 %} <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>أكمل ملفك الشخصي للحصول على أفضل تجربة</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- إحصائيات سريعة -->
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    <span class="section-icon bg-info text-white">
+                        <i class="bi bi-graph-up"></i>
+                    </span>
+                    إحصائيات سريعة
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="stat-card bg-light">
+                            <div class="stat-number text-primary">{{ user.service_requests.count }}</div>
+                            <div class="text-muted">طلباتي</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-card bg-light">
+                            <div class="stat-number text-warning">{{ unread_notifications }}</div>
+                            <div class="text-muted">إشعارات</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-lg-8">
+        <!-- المعلومات الشخصية -->
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    <span class="section-icon bg-purple text-white">
+                        <i class="bi bi-person-circle"></i>
+                    </span>
+                    المعلومات الشخصية
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">اسم المستخدم</span>
+                            <div class="info-value">{{ user.username }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">البريد الإلكتروني</span>
+                            <div class="info-value">{{ user.email }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">الاسم الأول</span>
+                            <div class="info-value">{{ user.first_name|default:'غير محدد' }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">اسم العائلة</span>
+                            <div class="info-value">{{ user.last_name|default:'غير محدد' }}</div>
+                        </div>
+                    </div>
+                    {% if user_profile %}
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">تاريخ الميلاد</span>
+                            <div class="info-value">{{ user_profile.date_of_birth|default:'غير محدد' }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">الجنس</span>
+                            <div class="info-value">{{ user_profile.get_gender_display|default:'غير محدد' }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- معلومات التواصل والعنوان -->
+        {% if user_profile %}
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    <span class="section-icon bg-success text-white">
+                        <i class="bi bi-telephone"></i>
+                    </span>
+                    معلومات التواصل والعنوان
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">رقم الهاتف</span>
+                            <div class="info-value">{{ user_profile.phone_number|default:'غير محدد' }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">رقم هاتف بديل</span>
+                            <div class="info-value">{{ user_profile.alternate_phone|default:'غير محدد' }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">المدينة</span>
+                            <div class="info-value">{{ user_profile.city|default:'غير محدد' }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">الحي/المنطقة</span>
+                            <div class="info-value">{{ user_profile.district|default:'غير محدد' }}</div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="info-item">
+                            <span class="info-label">العنوان التفصيلي</span>
+                            <div class="info-value">{{ user_profile.address|default:'غير محدد' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- معلومات التحقق من الهوية -->
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    <span class="section-icon bg-warning text-white">
+                        <i class="bi bi-shield-check"></i>
+                    </span>
+                    معلومات التحقق من الهوية
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">نوع الوثيقة</span>
+                            <div class="info-value">{{ user_profile.get_id_type_display|default:'غير محدد' }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">رقم الوثيقة</span>
+                            <div class="info-value">{{ user_profile.get_masked_id_number|default:'غير محدد' }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">حالة التحقق</span>
+                            <div class="info-value">
+                                <span class="badge bg-{{ verification_status.class }}">
+                                    <i class="bi {{ verification_status.icon }}"></i>
+                                    {{ verification_status.label }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% if user_profile.verified_at %}
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">تاريخ التحقق</span>
+                            <div class="info-value">{{ user_profile.verified_at|date:"d/m/Y" }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if not user_profile.id_verified %}
+                <div class="alert alert-warning mt-3 mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    {% if user_profile.id_document %}
+                    <strong>قيد المراجعة:</strong> تم استلام وثيقتك وجاري مراجعتها من قبل فريقنا.
+                    {% else %}
+                    <strong>إجراء مطلوب:</strong> قم برفع وثيقة هويتك لإكمال عملية التحقق.
+                    <a href="{% url 'accounts:profile_edit' %}" class="alert-link">تحديث الملف</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- آخر الطلبات -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <span class="section-icon bg-primary text-white">
+                        <i class="bi bi-clock-history"></i>
+                    </span>
+                    آخر الطلبات
+                </h5>
+                <a href="{% url 'requests:my_requests' %}" class="btn btn-sm btn-outline-primary">
+                    عرض الكل
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_requests %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>الخدمة</th>
+                                <th>الحالة</th>
+                                <th>التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in recent_requests %}
+                            <tr>
+                                <td class="fw-semibold">#{{ req.id }}</td>
+                                <td>
+                                    <a href="{% url 'requests:request_detail' req.pk %}" class="text-decoration-none">
+                                        {{ req.service.title|truncatewords:5 }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge {{ req.get_status_badge_class }}">
+                                        {{ req.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="text-muted">{{ req.created_at|date:"d/m/Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox display-4 d-block mb-3"></i>
+                    <p>لا توجد طلبات سابقة</p>
+                    <a href="{% url 'services:service_list' %}" class="btn btn-primary mt-2">
+                        <i class="bi bi-plus-circle me-2"></i>تصفح الخدمات
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

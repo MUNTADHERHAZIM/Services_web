@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% block title %}تفاصيل الطلب #{{ request_obj.id }} - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">الرئيسية</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'requests:my_requests' %}">طلباتي</a></li>
+            <li class="breadcrumb-item active">طلب #{{ request_obj.id }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0 fw-bold">طلب #{{ request_obj.id }}</h4>
+                    <span class="badge {{ request_obj.get_status_badge_class }} fs-6">
+                        {{ request_obj.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <!-- Service Info -->
+                    <div class="d-flex align-items-center mb-4 pb-4 border-bottom">
+                        {% if request_obj.service.cover_image %}
+                        <img src="{{ request_obj.service.cover_image.url }}" class="rounded me-3"
+                            style="width: 100px; height: 80px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-gradient rounded me-3 d-flex align-items-center justify-content-center"
+                            style="width: 100px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="bi bi-image text-white fs-3"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h5 class="mb-1">
+                                <a href="{% url 'services:service_detail' request_obj.service.slug %}"
+                                    class="text-decoration-none text-dark">
+                                    {{ request_obj.service.title }}
+                                </a>
+                            </h5>
+                            <p class="text-muted mb-0 small">
+                                <i class="bi bi-person me-1"></i>{{ request_obj.service.provider.display_name }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Request Details -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted">تاريخ الطلب</small>
+                            <p class="mb-0 fw-semibold">{{ request_obj.created_at|date:"d M Y - H:i" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted">آخر تحديث</small>
+                            <p class="mb-0 fw-semibold">{{ request_obj.updated_at|date:"d M Y - H:i" }}</p>
+                        </div>
+                        {% if request_obj.contact_phone %}
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted">رقم التواصل</small>
+                            <p class="mb-0 fw-semibold" dir="ltr">{{ request_obj.contact_phone }}</p>
+                        </div>
+                        {% endif %}
+                        {% if request_obj.contact_email %}
+                        <div class="col-md-6 mb-3">
+                            <small class="text-muted">البريد الإلكتروني</small>
+                            <p class="mb-0 fw-semibold">{{ request_obj.contact_email }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if request_obj.customer_notes %}
+                    <div class="mb-4">
+                        <h6 class="fw-bold">ملاحظات العميل</h6>
+                        <div class="bg-light p-3 rounded">
+                            {{ request_obj.customer_notes|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if request_obj.staff_notes %}
+                    <div class="mb-4">
+                        <h6 class="fw-bold">ملاحظات الموظف</h6>
+                        <div class="bg-info bg-opacity-10 p-3 rounded">
+                            {{ request_obj.staff_notes|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Actions -->
+                    <div class="d-flex gap-2 flex-wrap">
+                        {% if can_cancel %}
+                        <a href="{% url 'requests:cancel_request' request_obj.pk %}" class="btn btn-outline-danger">
+                            <i class="bi bi-x-circle me-2"></i>إلغاء الطلب
+                        </a>
+                        {% endif %}
+                        {% if can_update_status %}
+                        <a href="{% url 'requests:update_status' request_obj.pk %}" class="btn btn-primary">
+                            <i class="bi bi-pencil me-2"></i>تحديث الحالة
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status History -->
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-clock-history text-primary me-2"></i>سجل الحالات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if status_history %}
+                    <div class="timeline">
+                        {% for history in status_history %}
+                        <div class="d-flex mb-4 {% if not forloop.last %}pb-4 border-bottom{% endif %}">
+                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3"
+                                style="width: 40px; height: 40px; min-width: 40px;">
+                                <i class="bi bi-arrow-left-right text-white"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="fw-bold">
+                                        {{ history.get_from_status_display }} ← {{ history.get_to_status_display }}
+                                    </span>
+                                    <small class="text-muted">{{ history.created_at|date:"d/m/Y H:i" }}</small>
+                                </div>
+                                <small class="text-muted">
+                                    بواسطة: {{ history.changed_by.username|default:"النظام" }}
+                                </small>
+                                {% if history.notes %}
+                                <p class="mt-2 mb-0 small bg-light p-2 rounded">{{ history.notes }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center mb-0">لا يوجد سجل تغييرات</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card sticky-top" style="top: 100px;">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <span class="badge {{ request_obj.get_status_badge_class }} fs-5 px-4 py-2">
+                            {{ request_obj.get_status_display }}
+                        </span>
+                    </div>
+                    <p class="text-muted">حالة طلبك الحالية</p>
+                    <hr>
+                    <a href="{% url 'requests:my_requests' %}" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-arrow-right me-2"></i>العودة لطلباتي
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

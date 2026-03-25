@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}تعهد وإقرار مقدم خدمة - {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .agreement-container {
+        max-width: 900px;
+        margin: 40px auto;
+        background: white;
+        padding: 60px;
+        border: 2px solid #333;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        direction: rtl;
+    }
+
+    .agreement-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 3px solid #667eea;
+    }
+
+    .agreement-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .agreement-subtitle {
+        color: #666;
+        font-size: 1.1rem;
+    }
+
+    .form-section {
+        margin: 30px 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 20px;
+    }
+
+    .clause-item {
+        padding: 15px;
+        margin: 10px 0;
+        background: white;
+        border-right: 4px solid #667eea;
+        border-radius: 5px;
+    }
+
+    .signature-box {
+        border: 2px dashed #333;
+        padding: 30px;
+        margin: 20px 0;
+        text-align: center;
+        background: #f8f9fa;
+    }
+
+    .print-btn {
+        background: #667eea;
+        color: white;
+        padding: 15px 40px;
+        border: none;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    @media print {
+        .no-print {
+            display: none;
+        }
+
+        .agreement-container {
+            box-shadow: none;
+            border: 1px solid #333;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="agreement-container">
+
+        <div class="agreement-header">
+            <div class="agreement-title">نموذج تعهد وإقرار</div>
+            <div class="agreement-subtitle">مقدم خدمة (فني) - منصة {{ SITE_NAME }}</div>
+            <div class="agreement-subtitle">محافظة البصرة - جمهورية العراق</div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" id="agreementForm">
+            {% csrf_token %}
+
+            <!-- معلومات المتعهد -->
+            <div class="form-section">
+                <h3 class="section-title">بيانات المتعهد</h3>
+                <p><strong>إني الموقع أدناه،</strong></p>
+
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">الاسم الكامل:</label>
+                        {{ form.full_name }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">رقم البطاقة الموحدة:</label>
+                        {{ form.national_id }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">رقم الهاتف:</label>
+                        {{ form.phone_number }}
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">عنوان السكن الكامل:</label>
+                        {{ form.address }}
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">التخصص المهني:</label>
+                        {{ form.specialty }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- البنود -->
+            <div class="form-section">
+                <h3 class="section-title">أقر وأتعهد بكامل أهليتي القانونية والشرعية بالالتزام بالبنود التالية:</h3>
+
+                <!-- البند الأول -->
+                <div class="clause-item">
+                    <h5 class="fw-bold mb-3">أولاً: الالتزام بالسلوك العام والأمان</h5>
+                    <ul>
+                        <li>أتعهد بحسن السيرة والسلوك واحترام حرمة المنازل وخصوصية العملاء والالتزام بالآداب العامة
+                            المتبعة في محافظة البصرة.</li>
+                        <li>أتحمل المسؤولية القانونية والجنائية الكاملة عن أي فعل يصدر مني يمس أمن العميل أو ممتلكاته.
+                        </li>
+                        <li>أقر بأن المنصة هي وسيط للإعلان فقط ولا تتحمل أدنى مسؤولية عن أفعالي الشخصية.</li>
+                    </ul>
+                    <div class="form-check mt-3">
+                        {{ form.conduct_agreement }}
+                        <label class="form-check-label fw-bold" for="{{ form.conduct_agreement.id_for_label }}">
+                            أوافق على البند الأول ✓
+                        </label>
+                    </div>
+                </div>
+
+                <!-- البند الثاني -->
+                <div class="clause-item">
+                    <h5 class="fw-bold mb-3">ثانياً: الالتزام بالمعايير المهنية والأسعار</h5>
+                    <ul>
+                        <li>أتعهد بالالتزام التام بقائمة الأسعار الثابتة المحددة من قبل المنصة.</li>
+                        <li>عدم المطالبة بأي مبالغ إضافية من العميل تحت أي ظرف (أجور نقل أو غيرها) إلا في حال شراء مواد
+                            احتياطية وبموجب وصل رسمي.</li>
+                        <li>أتعهد بتقديم الخدمة بأعلى جودة ممكنة، وفي حال وجود خلل في التنفيذ، ألتزم بالعودة لإصلاحه
+                            مجاناً خلال فترة الضمان المحددة.</li>
+                    </ul>
+                    <div class="form-check mt-3">
+                        {{ form.professional_standards }}
+                        <label class="form-check-label fw-bold" for="{{ form.professional_standards.id_for_label }}">
+                            أوافق على البند الثاني ✓
+                        </label>
+                    </div>
+                </div>
+
+                <!-- البند الثالث -->
+                <div class="clause-item">
+                    <h5 class="fw-bold mb-3">ثالثاً: الالتزام المالي تجاه المنصة</h5>
+                    <ul>
+                        <li>أقر بأن للمنصة عمولة مستقطعة بنسبة
+                            <span class="fw-bold text-danger">{{ commission_percentage|default:"10" }}%</span>
+                            أو مبلغ ثابت قدره
+                            <span class="fw-bold text-danger">{{ commission_fixed|default:"0" }} دينار</span>
+                            عن كل طلب يتم عن طريقها.
+                        </li>
+                        <li>أتعهد بعدم الاتفاق مع العميل "خارج المنصة" للتهرب من دفع العمولة.</li>
+                        <li>في حال ثبت ذلك، يحق لإدارة المنصة حظري نهائياً ومطالبتي بالتعويض المالي عن جميع الطلبات
+                            السابقة.</li>
+                    </ul>
+                    <div class="form-check mt-3">
+                        {{ form.commission_agreement }}
+                        <label class="form-check-label fw-bold" for="{{ form.commission_agreement.id_for_label }}">
+                            أوافق على البند الثالث ✓
+                        </label>
+                    </div>
+                </div>
+
+                <!-- البند الرابع -->
+                <div class="clause-item">
+                    <h5 class="fw-bold mb-3">رابعاً: سرية البيانات والتواصل</h5>
+                    <ul>
+                        <li>أتعهد بعدم استخدام بيانات العملاء (أرقام الهواتف أو العناوين) لأي غرض شخصي أو ترويجي خارج
+                            إطار المهمة الموكلة إلي عبر المنصة.</li>
+                        <li>الالتزام بحماية خصوصية العميل وعدم التقاط صور أو نشر معلومات عن منزله.</li>
+                    </ul>
+                    <div class="form-check mt-3">
+                        {{ form.privacy_agreement }}
+                        <label class="form-check-label fw-bold" for="{{ form.privacy_agreement.id_for_label }}">
+                            أوافق على البند الرابع ✓
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- الوثائق المطلوبة -->
+            <div class="form-section">
+                <h3 class="section-title">الوثائق المطلوبة</h3>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-card-image me-2"></i>صورة البطاقة الموحدة (الوجه الأمامي):
+                        </label>
+                        {{ form.id_card_front }}
+                        {% if form.id_card_front.errors %}
+                        <div class="text-danger small">{{ form.id_card_front.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-card-image me-2"></i>صورة البطاقة الموحدة (الوجه الخلفي):
+                        </label>
+                        {{ form.id_card_back }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-pen me-2"></i>صورة التوقيع:
+                        </label>
+                        {{ form.signature_image }}
+                        <small class="text-muted d-block">قم بالتوقيع على ورقة بيضاء والتقط صورة</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-fingerprint me-2"></i>صورة بصمة الإبهام:
+                        </label>
+                        {{ form.thumbprint_image }}
+                        <small class="text-muted d-block">اختياري</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- التوقيع -->
+            <div class="signature-box">
+                <p class="fw-bold mb-4">وعلى هذا أوقع وأتعهد...</p>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>توقيع الفني:</strong> ...........................</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>التاريخ:</strong> {{ current_date|date:"d/m/Y" }}</p>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <p><strong>بصمة الإبهام:</strong></p>
+                    <div style="width: 100px; height: 100px; border: 2px solid #333; margin: 10px auto;"></div>
+                </div>
+            </div>
+
+            <!-- أزرار الإجراءات -->
+            <div class="text-center mt-5 no-print">
+                <button type="button" class="btn btn-outline-secondary btn-lg me-2" onclick="window.print()">
+                    <i class="bi bi-printer me-2"></i>طباعة
+                </button>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-check-circle me-2"></i>إرسال التعهد
+                </button>
+            </div>
+
+            <!-- ختم المنصة -->
+            <div class="text-center mt-5">
+                <div
+                    style="border: 3px solid #667eea; width: 200px; height: 200px; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; background: rgba(102, 126, 234, 0.1);">
+                    <div class="text-center">
+                        <strong>ختم المنصة</strong><br>
+                        <small>في حال الموافقة</small>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // التحقق من الموافقة على جميع البنود قبل الإرسال
+    document.getElementById('agreementForm').addEventListener('submit', function (e) {
+        const checkboxes = this.querySelectorAll('input[type="checkbox"]');
+        let allChecked = true;
+
+        checkboxes.forEach(checkbox => {
+            if (!checkbox.checked) {
+                allChecked = false;
+            }
+        });
+
+        if (!allChecked) {
+            e.preventDefault();
+            alert('يرجى الموافقة على جميع البنود قبل الإرسال');
+        }
+    });
+</script>
+{% endblock %}

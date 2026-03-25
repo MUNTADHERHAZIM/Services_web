@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block title %}إدارة الخدمات - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">
+            <i class="bi bi-collection text-primary me-2"></i>إدارة الخدمات
+        </h2>
+        <a href="{% url 'admin:services_service_add' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>إضافة خدمة
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="بحث بالعنوان أو المقدم..."
+                        value="{{ search_query }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="category" class="form-select">
+                        <option value="">جميع التصنيفات</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.slug }}" {% if request.GET.category == cat.slug %}selected{% endif %}>
+                            {{ cat.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="is_active" class="form-select">
+                        <option value="">كل الحالات</option>
+                        <option value="1" {% if request.GET.is_active == '1' %}selected{% endif %}>نشط</option>
+                        <option value="0" {% if request.GET.is_active == '0' %}selected{% endif %}>غير نشط</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search me-1"></i>بحث
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Services Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>الخدمة</th>
+                            <th>التصنيف</th>
+                            <th>المقدم</th>
+                            <th>السعر</th>
+                            <th>المشاهدات</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for service in services %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'services:service_detail' service.slug %}" target="_blank">
+                                    {{ service.title|truncatewords:5 }}
+                                </a>
+                                {% if service.is_featured %}
+                                <span class="badge bg-warning text-dark">مميز</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ service.category.name|default:'-' }}</td>
+                            <td>{{ service.provider.display_name }}</td>
+                            <td>{{ service.get_display_price }}</td>
+                            <td>{{ service.views_count }}</td>
+                            <td>
+                                {% if service.is_active %}
+                                <span class="badge bg-success">نشط</span>
+                                {% else %}
+                                <span class="badge bg-danger">غير نشط</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'admin:services_service_change' service.pk %}"
+                                    class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="post" action="{% url 'dashboard:toggle_service' service.pk %}"
+                                    class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                        class="btn btn-sm btn-outline-{% if service.is_active %}warning{% else %}success{% endif %}">
+                                        <i class="bi bi-{% if service.is_active %}pause{% else %}play{% endif %}"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">لا توجد خدمات</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابق</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} من {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالي</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

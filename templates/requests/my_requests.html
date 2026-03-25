@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block title %}طلباتي - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">
+            <i class="bi bi-list-check text-primary me-2"></i>طلباتي
+        </h2>
+        <a href="{% url 'services:service_list' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>طلب خدمة جديدة
+        </a>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="card mb-4">
+        <div class="card-body py-2">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'requests:my_requests' %}"
+                    class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                    الكل
+                </a>
+                {% for value, label in status_choices %}
+                <a href="?status={{ value }}"
+                    class="btn btn-sm {% if current_status == value %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                    {{ label }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Requests List -->
+    {% if requests %}
+    <div class="row g-4">
+        {% for req in requests %}
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge {{ req.get_status_badge_class }}">
+                            {{ req.get_status_display }}
+                        </span>
+                        <small class="text-muted">{{ req.created_at|date:"d/m/Y H:i" }}</small>
+                    </div>
+
+                    <h5 class="card-title">
+                        <a href="{% url 'requests:request_detail' req.pk %}" class="text-decoration-none text-dark">
+                            {{ req.service.title }}
+                        </a>
+                    </h5>
+
+                    {% if req.service.category %}
+                    <span class="badge bg-light text-dark mb-2">{{ req.service.category.name }}</span>
+                    {% endif %}
+
+                    {% if req.customer_notes %}
+                    <p class="text-muted small mb-0">{{ req.customer_notes|truncatewords:15 }}</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0">
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'requests:request_detail' req.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye me-1"></i>التفاصيل
+                        </a>
+                        {% if req.can_be_canceled %}
+                        <a href="{% url 'requests:cancel_request' req.pk %}" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-x-circle me-1"></i>إلغاء
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link"
+                    href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
+                <a class="page-link"
+                    href="?page={{ num }}{% if current_status %}&status={{ current_status }}{% endif %}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-inbox display-1 text-muted mb-4"></i>
+        <h3>لا توجد طلبات</h3>
+        <p class="text-muted">لم تقم بطلب أي خدمة بعد</p>
+        <a href="{% url 'services:service_list' %}" class="btn btn-primary">
+            <i class="bi bi-search me-2"></i>تصفح الخدمات
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}تعديل الملف الشخصي - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-edit-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 40px 0;
+        margin-bottom: 30px;
+    }
+
+    .profile-card {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .profile-image-upload {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        margin: 0 auto 20px;
+    }
+
+    .profile-image-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #667eea;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .profile-image-overlay {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: #667eea;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .profile-image-overlay:hover {
+        background: #764ba2;
+        transform: scale(1.1);
+    }
+
+    .section-header {
+        background: #f8f9fa;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border-left: 4px solid #667eea;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<div class="profile-edit-section">
+    <div class="container">
+        <div class="text-center text-white">
+            <h2><i class="bi bi-pencil-square me-2"></i>تعديل الملف الشخصي</h2>
+            <p class="mb-0">قم بتحديث معلوماتك الشخصية</p>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card profile-card border-0">
+                <div class="card-body p-4">
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <!-- Profile Picture -->
+                        <div class="text-center mb-4">
+                            <div class="profile-image-upload">
+                                {% if user.profile.profile_picture %}
+                                <img src="{{ user.profile.profile_picture.url }}" alt="Profile"
+                                    class="profile-image-preview" id="imagePreview">
+                                {% else %}
+                                <img src="https://via.placeholder.com/150/667eea/ffffff?text=صورة" alt="Profile"
+                                    class="profile-image-preview" id="imagePreview">
+                                {% endif %}
+                                <label for="id_profile_picture" class="profile-image-overlay">
+                                    <i class="bi bi-camera-fill text-white"></i>
+                                </label>
+                                <input type="file" id="id_profile_picture" name="profile_picture" class="d-none"
+                                    accept="image/*" onchange="previewImage(event)">
+                            </div>
+                            <p class="text-muted small">انقر على الكاميرا لتغيير الصورة</p>
+                        </div>
+
+                        <!-- Personal Information -->
+                        <div class="section-header">
+                            <h5 class="mb-0"><i class="bi bi-person-fill me-2"></i>المعلومات الشخصية</h5>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">الاسم الأول</label>
+                                <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">اسم العائلة</label>
+                                <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">تاريخ الميلاد</label>
+                                <input type="date" name="date_of_birth" class="form-control"
+                                    value="{{ user.profile.date_of_birth|date:'Y-m-d' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">الجنس</label>
+                                <select name="gender" class="form-select">
+                                    <option value="">اختر...</option>
+                                    <option value="male" {% if user.profile.gender == 'male' %}selected{% endif %}>ذكر
+                                    </option>
+                                    <option value="female" {% if user.profile.gender == 'female' %}selected{% endif %}>
+                                        أنثى</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="section-header">
+                            <h5 class="mb-0"><i class="bi bi-telephone-fill me-2"></i>معلومات الاتصال</h5>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">البريد الإلكتروني</label>
+                                <input type="email" name="email" class="form-control" value="{{ user.email }}" required
+                                    dir="ltr">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">رقم الهاتف</label>
+                                <input type="text" name="phone_number" class="form-control"
+                                    value="{{ user.profile.phone_number }}" placeholder="07XXXXXXXXX">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">رقم هاتف بديل</label>
+                                <input type="text" name="alternate_phone" class="form-control"
+                                    value="{{ user.profile.alternate_phone }}" placeholder="اختياري">
+                            </div>
+                        </div>
+
+                        <!-- Address Information -->
+                        <div class="section-header">
+                            <h5 class="mb-0"><i class="bi bi-geo-alt-fill me-2"></i>العنوان</h5>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">المحافظة</label>
+                                <input type="text" name="city" class="form-control" value="{{ user.profile.city }}"
+                                    placeholder="مثل: بغداد، البصرة">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">الحي/المنطقة</label>
+                                <input type="text" name="district" class="form-control"
+                                    value="{{ user.profile.district }}" placeholder="مثل: الكرادة">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">العنوان التفصيلي</label>
+                                <textarea name="address" class="form-control" rows="3"
+                                    placeholder="العنوان الكامل...">{{ user.profile.address }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Professional Information (for providers) -->
+                        {% if user.profile.is_provider %}
+                        <div class="section-header">
+                            <h5 class="mb-0"><i class="bi bi-briefcase-fill me-2"></i>المعلومات المهنية</h5>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">التخصص/الوظيفة</label>
+                                <input type="text" name="specialty" class="form-control"
+                                    value="{{ user.provider.specialty|default:'' }}"
+                                    placeholder="مثل: صباغ، نجار، كهربائي">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">نبذة تعريفية</label>
+                                <textarea name="bio" class="form-control" rows="4"
+                                    placeholder="اكتب نبذة عن نفسك وخبراتك...">{{ user.provider.bio|default:'' }}</textarea>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'accounts:profile' %}" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-x-circle me-2"></i>إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle me-2"></i>حفظ التغييرات
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('imagePreview').src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+</script>
+{% endblock %}

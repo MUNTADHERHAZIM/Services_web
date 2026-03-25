@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}إدارة التصنيفات - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-tags-fill me-2"></i>إدارة التصنيفات</h2>
+        <a href="{% url 'dashboard:admin' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-right me-2"></i>العودة للوحة التحكم
+        </a>
+    </div>
+
+    <!-- Categories Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>الترتيب</th>
+                            <th>الأيقونة</th>
+                            <th>الاسم</th>
+                            <th>الوصف</th>
+                            <th>عدد الخدمات</th>
+                            <th>الحالة</th>
+                            <th>تاريخ الإنشاء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-secondary">{{ category.order }}</span>
+                            </td>
+                            <td>
+                                {% if category.icon %}
+                                <i class="bi {{ category.icon }} fs-4 text-primary"></i>
+                                {% else %}
+                                <i class="bi bi-folder fs-4 text-muted"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ category.name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ category.slug }}</small>
+                            </td>
+                            <td>{{ category.description|truncatewords:10 }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ category.services_count }}</span>
+                            </td>
+                            <td>
+                                {% if category.is_active %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>نشط</span>
+                                {% else %}
+                                <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>معطل</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ category.created_at|date:"Y-m-d" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                لا توجد تصنيفات
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابق</a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }}</span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالي</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

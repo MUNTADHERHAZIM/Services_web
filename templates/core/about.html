@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}من نحن - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-5">
+                <i class="bi bi-info-circle display-3 text-primary mb-3"></i>
+                <h1 class="fw-bold">من نحن</h1>
+                <p class="lead text-muted">تعرف على منصتنا وما نقدمه لك</p>
+            </div>
+
+            <div class="card">
+                <div class="card-body p-5">
+                    <h3 class="fw-bold mb-4">رسالتنا</h3>
+                    <p class="text-muted">
+                        نسعى لتقديم منصة متكاملة تجمع بين مقدمي الخدمات والعملاء بطريقة سهلة وموثوقة.
+                        نهدف إلى توفير تجربة مميزة لجميع المستخدمين من خلال واجهة سهلة الاستخدام
+                        ونظام متكامل لإدارة الخدمات والطلبات.
+                    </p>
+
+                    <hr class="my-4">
+
+                    <h3 class="fw-bold mb-4">لماذا تختارنا؟</h3>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-shield-check text-primary fs-3"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h5>موثوقية</h5>
+                                    <p class="text-muted mb-0">جميع مقدمي الخدمات موثقون ومعتمدون.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-lightning text-primary fs-3"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h5>سرعة</h5>
+                                    <p class="text-muted mb-0">استجابة سريعة ومتابعة فورية للطلبات.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-star text-primary fs-3"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h5>جودة</h5>
+                                    <p class="text-muted mb-0">خدمات عالية الجودة بأسعار مناسبة.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <i class="bi bi-headset text-primary fs-3"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h5>دعم</h5>
+                                    <p class="text-muted mb-0">فريق دعم متاح لمساعدتك دائماً.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

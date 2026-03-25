@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{{ SITE_DESCRIPTION }}">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#25ebb6">
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="/media/profiles/pictures/icon-512.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/media/profiles/pictures/icon-512.png">
+    <meta property="og:locale" content="ar_IQ">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ SITE_NAME }}">
+    <meta property="og:title" content="{{ SITE_NAME }}">
+    <meta property="og:description" content="{{ SITE_DESCRIPTION }}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ SITE_NAME }}">
+    <meta name="twitter:description" content="{{ SITE_DESCRIPTION }}">
+    <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
+
+    <!-- Bootstrap 5 RTL CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- Google Fonts - Tajawal -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "{{ SITE_NAME|default:'منصة الخدمات' }}",
+      "url": "{{ request.scheme }}://{{ request.get_host }}/",
+      "inLanguage": "ar-IQ",
+      "description": "{{ SITE_DESCRIPTION|default:'منصة متكاملة لعرض وطلب الخدمات' }}"
+    }
+    </script>
+
+    <style>
+        :root {
+            --primary-color: #25ebb6;
+            --secondary-color: #1e5e30;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1e293b;
+            --light-bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Card Styles */
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-img-top {
+            border-radius: 16px 16px 0 0;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        /* Button Styles */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        /* Badge Styles */
+        .badge {
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 8px;
+        }
+
+        /* Footer Styles */
+        .footer {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            margin-top: auto;
+            position: relative;
+        }
+
+        .footer-link {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-link:hover {
+            color: #25ebb6;
+            transform: translateX(-5px);
+        }
+
+        .footer-icon {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .footer-icon:hover {
+            background: rgba(37, 235, 182, 0.2);
+            transform: scale(1.1);
+        }
+
+        .footer .btn-outline-light {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .footer .btn-outline-light:hover {
+            background: linear-gradient(135deg, #25ebb6 0%, #1e5e30 100%);
+            border-color: transparent;
+            transform: translateY(-3px);
+        }
+
+        /* Form Styles */
+        .form-control,
+        .form-select {
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            padding: 12px 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 80px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Category Card */
+        .category-card {
+            text-align: center;
+            padding: 30px;
+            border-radius: 16px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .category-card:hover {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+
+        .category-card:hover .category-icon {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .category-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        /* Alerts */
+        .alert {
+            border: none;
+            border-radius: 12px;
+        }
+
+        /* Rating Stars */
+        .rating {
+            color: #fbbf24;
+        }
+
+        /* Pagination */
+        .pagination .page-link {
+            border: none;
+            border-radius: 10px;
+            margin: 0 3px;
+            color: var(--dark-color);
+        }
+
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+
+        /* Service Card */
+        .service-card .price-tag {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: var(--success-color);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        /* Sidebar Filter */
+        .filter-sidebar {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            position: sticky;
+            top: 100px;
+        }
+
+        /* Dashboard Stats Card */
+        .stats-card {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 25px;
+        }
+
+        .stats-card.success {
+            background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+        }
+
+        .stats-card.warning {
+            background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+        }
+
+        .stats-card.danger {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        /* Status Badge Colors */
+        .status-new {
+            background-color: var(--primary-color);
+        }
+
+        .status-in_review {
+            background-color: #06b6d4;
+        }
+
+        .status-approved {
+            background-color: var(--success-color);
+        }
+
+        .status-rejected {
+            background-color: var(--danger-color);
+        }
+
+        .status-in_progress {
+            background-color: var(--warning-color);
+            color: #000;
+        }
+
+        .status-done {
+            background-color: #22c55e;
+        }
+
+        .status-canceled {
+            background-color: #64748b;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Skeleton Loading */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast-notification {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInRight 0.3s ease;
+            min-width: 300px;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Better Button Hover */
+        .btn-hover-lift {
+            transition: all 0.3s ease;
+        }
+
+        .btn-hover-lift:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Image Lazy Load Placeholder */
+        .lazy-image {
+            background: #f0f0f0;
+            min-height: 200px;
+        }
+
+        .lazy-image.loaded {
+            background: transparent;
+        }
+
+        /* Card Hover Lift */
+        .card-hover-lift {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover-lift:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Pulse Animation for Important Elements */
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Smooth Scroll Behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'core:home' %}">
+                <i class="bi bi-grid-3x3-gap-fill me-2"></i>{{ SITE_NAME }}
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:home' %}">
+                            <i class="bi bi-house-fill me-1"></i> الرئيسية
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'services:service_list' %}">
+                            <i class="bi bi-collection me-1"></i> الخدمات
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:about' %}">
+                            <i class="bi bi-info-circle me-1"></i> من نحن
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:contact' %}">
+                            <i class="bi bi-envelope me-1"></i> اتصل بنا
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                    {% if user.is_staff %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard:home' %}">
+                            <i class="bi bi-speedometer2 me-1"></i> لوحة التحكم
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'requests:my_requests' %}">
+                            <i class="bi bi-list-check me-1"></i> طلباتي
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i> {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                                    <i class="bi bi-person me-2"></i> الملف الشخصي
+                                </a></li>
+                            <li><a class="dropdown-item" href="{% url 'requests:notifications' %}">
+                                    <i class="bi bi-bell me-2"></i> الإشعارات
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="{% url 'admin:index' %}">
+                                    <i class="bi bi-gear me-2"></i> لوحة الإدارة
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
+                                    <i class="bi bi-box-arrow-right me-2"></i> تسجيل الخروج
+                                </a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'accounts:login' %}">
+                            <i class="bi bi-box-arrow-in-left me-1"></i> تسجيل الدخول
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-light text-primary px-3 ms-2" href="{% url 'accounts:register' %}">
+                            <i class="bi bi-person-plus me-1"></i> إنشاء حساب
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {% if message.tags == 'success' %}
+            <i class="bi bi-check-circle-fill me-2"></i>
+            {% elif message.tags == 'danger' or message.tags == 'error' %}
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            {% elif message.tags == 'warning' %}
+            <i class="bi bi-exclamation-circle-fill me-2"></i>
+            {% else %}
+            <i class="bi bi-info-circle-fill me-2"></i>
+            {% endif %}
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="flex-grow-1 pb-5">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer py-5 mt-5 position-relative overflow-hidden">
+        <!-- Wave Pattern SVG -->
+        <div class="position-absolute top-0 start-0 w-100" style="transform: translateY(-100%);">
+            <svg viewBox="0 0 1200 120" preserveAspectRatio="none" style="height: 120px; width: 100%;">
+                <path
+                    d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z"
+                    opacity=".25" fill="currentColor"></path>
+                <path
+                    d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z"
+                    opacity=".5" fill="currentColor"></path>
+                <path
+                    d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z"
+                    fill="currentColor"></path>
+            </svg>
+        </div>
+
+        <div class="container position-relative">
+            <div class="row g-4">
+                <!-- About Section with SVG -->
+                <div class="col-lg-4 mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="footer-icon me-3">
+                            <svg width="50" height="50" viewBox="0 0 24 24" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="url(#grad1)" stroke="white"
+                                    stroke-width="1.5" />
+                                <path d="M2 17L12 22L22 17" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+                                <path d="M2 12L12 17L22 12" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+                                <defs>
+                                    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#25ebb6;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#1e5e30;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <h5 class="fw-bold mb-0 text-white">{{ SITE_NAME }}</h5>
+                    </div>
+                    <p class="text-white-50 pe-3">
+                        منصة متكاملة لعرض وطلب الخدمات بكل سهولة وأمان.
+                        نربط العملاء بمقدمي الخدمات الموثوقين في البصرة.
+                    </p>
+                    <!-- Social Media -->
+                    <div class="mt-4">
+                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle me-2"
+                            style="width: 40px; height: 40px; padding: 8px;">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle me-2"
+                            style="width: 40px; height: 40px; padding: 8px;">
+                            <i class="bi bi-twitter"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle me-2"
+                            style="width: 40px; height: 40px; padding: 8px;">
+                            <i class="bi bi-instagram"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle"
+                            style="width: 40px; height: 40px; padding: 8px;">
+                            <i class="bi bi-linkedin"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <h6 class="fw-bold mb-4 text-white">
+                        <i class="bi bi-link-45deg me-2"></i>روابط سريعة
+                    </h6>
+                    <ul class="list-unstyled footer-links">
+                        <li class="mb-2">
+                            <a href="{% url 'core:home' %}" class="footer-link">
+                                <i class="bi bi-chevron-left me-2"></i>الرئيسية
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{% url 'services:service_list' %}" class="footer-link">
+                                <i class="bi bi-chevron-left me-2"></i>الخدمات
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{% url 'core:about' %}" class="footer-link">
+                                <i class="bi bi-chevron-left me-2"></i>من نحن
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{% url 'core:contact' %}" class="footer-link">
+                                <i class="bi bi-chevron-left me-2"></i>اتصل بنا
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{% url 'core:terms_of_service' %}" class="footer-link">
+                                <i class="bi bi-file-text me-2"></i>شروط الاستخدام
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- My Account -->
+                <div class="col-lg-2 col-md-4 mb-4">
+                    <h6 class="fw-bold mb-4 text-white">
+                        <i class="bi bi-person-circle me-2"></i>حسابي
+                    </h6>
+                    <ul class="list-unstyled footer-links">
+                        {% if user.is_authenticated %}
+                        <li class="mb-2">
+                            <a href="{% url 'accounts:profile' %}" class="footer-link">
+                                <i class="bi bi-chevron-left me-2"></i>الملف الشخصي
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{% url 'requests:my_requests' %}" class="footer-link">
+                                <i class="bi bi-chevron-left me-2"></i>طلباتي
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="mb-2">
+                            <a href="{% url 'accounts:login' %}" class="footer-link">
+                                <i class="bi bi-chevron-left me-2"></i>تسجيل الدخول
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{% url 'accounts:register' %}" class="footer-link">
+                                <i class="bi bi-chevron-left me-2"></i>إنشاء حساب
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <!-- Contact Info with illustration -->
+                <div class="col-lg-4 col-md-4 mb-4">
+                    <h6 class="fw-bold mb-4 text-white">
+                        <i class="bi bi-telephone-fill me-2"></i>تواصل معنا
+                    </h6>
+                    <ul class="list-unstyled footer-links">
+                        <li class="mb-3 d-flex align-items-start">
+                            <i class="bi bi-geo-alt-fill me-3 mt-1" style="font-size: 1.2rem; color: #25ebb6;"></i>
+                            <span class="text-white-50">البصرة، العراق</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-center">
+                            <i class="bi bi-envelope-fill me-3" style="font-size: 1.2rem; color: #25ebb6;"></i>
+                            <a href="mailto:info@services.com" class="footer-link">info@services.com</a>
+                        </li>
+                        <li class="mb-3 d-flex align-items-center">
+                            <i class="bi bi-telephone-fill me-3" style="font-size: 1.2rem; color: #25ebb6;"></i>
+                            <a href="tel:+9647700000000" class="footer-link">+964 770 000 0000</a>
+                        </li>
+                    </ul>
+
+                    <!-- Service illustration SVG -->
+                    <div class="mt-4 text-center">
+                        <svg width="150" height="100" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Background circles -->
+                            <circle cx="100" cy="75" r="60" fill="rgba(37, 235, 182, 0.1)" />
+                            <circle cx="100" cy="75" r="45" fill="rgba(37, 235, 182, 0.15)" />
+
+                            <!-- Service icons -->
+                            <g transform="translate(70, 50)">
+                                <circle cx="30" cy="25" r="20" fill="#25ebb6" opacity="0.8" />
+                                <path d="M30 15 L30 35 M20 25 L40 25" stroke="white" stroke-width="3"
+                                    stroke-linecap="round" />
+                            </g>
+
+                            <!-- Connecting lines -->
+                            <path d="M60 60 Q100 40 140 60" stroke="#25ebb6" stroke-width="2" fill="none"
+                                opacity="0.5" />
+                            <path d="M60 90 Q100 110 140 90" stroke="#25ebb6" stroke-width="2" fill="none"
+                                opacity="0.5" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Copyright -->
+            <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-2 mb-md-0 text-white-50">
+                        <i class="bi bi-c-circle me-1"></i>
+                        2026 {{ SITE_NAME }}. جميع الحقوق محفوظة.
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <p class="mb-0 text-white-50">
+                        <i class="bi bi-code-slash me-2"></i> تم التطوير بواسطة <strong class="text-white">MUNTADHER HAZIM THAMER </strong>
+                        <i class="bi bi-heart-fill text-danger ms-2"></i>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decorative elements -->
+        <div class="position-absolute bottom-0 start-0 opacity-25">
+            <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="0" cy="200" r="100" fill="url(#footerGrad)" />
+            </svg>
+        </div>
+        <div class="position-absolute top-0 end-0 opacity-25">
+            <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="200" cy="0" r="100" fill="url(#footerGrad)" />
+                <defs>
+                    <linearGradient id="footerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#25ebb6;stop-opacity:0.3" />
+                        <stop offset="100%" style="stop-color:#1e5e30;stop-opacity:0.3" />
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- AOS Animation Library -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <script>
+        // Initialize AOS animations
+        AOS.init({
+            duration: 800,
+            once: true,
+            offset: 100
+        });
+
+        // Lazy loading for images
+        document.addEventListener('DOMContentLoaded', function() {
+            const lazyImages = document.querySelectorAll('img[data-src]');
+            
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.classList.add('loaded');
+                        observer.unobserve(img);
+                    }
+                });
+            });
+
+            lazyImages.forEach(img => imageObserver.observe(img));
+        });
+
+        // Counter animation for stats
+        function animateCounter(element, target) {
+            let current = 0;
+            const increment = target / 50;
+            const duration = 2000;
+            const stepTime = duration / 50;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.textContent = target;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(current);
+                }
+            }, stepTime);
+        }
+
+        // Initialize counters when they come into view
+        document.addEventListener('DOMContentLoaded', function() {
+            const counters = document.querySelectorAll('.counter[data-target]');
+            
+            const counterObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const counter = entry.target;
+                        const target = parseInt(counter.dataset.target);
+                        animateCounter(counter, target);
+                        counterObserver.unobserve(counter);
+                    }
+                });
+            });
+
+            counters.forEach(counter => counterObserver.observe(counter));
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

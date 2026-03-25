@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}لوحة تحكم العميل - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient-primary text-white border-0 shadow">
+                <div class="card-body p-4">
+                    <h2 class="mb-2"><i class="bi bi-speedometer2 me-2"></i>مرحباً، {{
+                        user.get_full_name|default:user.username }}</h2>
+                    <p class="mb-0 opacity-75">لوحة التحكم الخاصة بك - تتبع طلباتك وخدماتك المفضلة</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                <i class="bi bi-clock-history text-warning fs-2"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-0">{{ pending_requests }}</h3>
+                            <p class="text-muted mb-0">طلبات قيد الانتظار</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                                <i class="bi bi-arrow-repeat text-info fs-2"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-0">{{ in_progress_requests }}</h3>
+                            <p class="text-muted mb-0">قيد التنفيذ</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                <i class="bi bi-check-circle text-success fs-2"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-0">{{ completed_requests }}</h3>
+                            <p class="text-muted mb-0">مكتملة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Requests -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-list-task me-2"></i>آخر الطلبات</h5>
+                        <a href="{% url 'services:service_list' %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-circle me-2"></i>طلب خدمة جديدة
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if my_requests %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>رقم الطلب</th>
+                                    <th>الخدمة</th>
+                                    <th>الحالة</th>
+                                    <th>التاريخ</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in my_requests %}
+                                <tr>
+                                    <td><strong>#{{ request.id }}</strong></td>
+                                    <td>{{ request.service.title }}</td>
+                                    <td>
+                                        {% if request.status == 'new' %}
+                                        <span class="badge bg-warning">جديد</span>
+                                        {% elif request.status == 'in_progress' %}
+                                        <span class="badge bg-info">قيد التنفيذ</span>
+                                        {% elif request.status == 'done' %}
+                                        <span class="badge bg-success">مكتمل</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ request.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ request.created_at|date:"Y-m-d" }}</td>
+                                    <td>
+                                        <a href="{% url 'requests:track_request' request.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye me-1"></i>عرض
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+                        <p class="text-muted">لا توجد طلبات بعد</p>
+                        <a href="{% url 'services:service_list' %}" class="btn btn-primary">
+                            <i class="bi bi-search me-2"></i>تصفح الخدمات
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+</style>
+{% endblock %}

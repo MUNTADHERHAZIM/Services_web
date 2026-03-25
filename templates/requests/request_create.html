@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}طلب خدمة - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'core:home' %}">الرئيسية</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'services:service_list' %}">الخدمات</a></li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'services:service_detail' service.slug %}">{{ service.title|truncatewords:5
+                            }}</a>
+                    </li>
+                    <li class="breadcrumb-item active">طلب الخدمة</li>
+                </ol>
+            </nav>
+
+            <div class="row">
+                <!-- Service Summary -->
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            {% if service.cover_image %}
+                            <img src="{{ service.cover_image.url }}" class="img-fluid rounded mb-3"
+                                style="max-height: 150px; object-fit: cover;" alt="{{ service.title }}">
+                            {% else %}
+                            <div class="bg-gradient rounded d-flex align-items-center justify-content-center mb-3"
+                                style="height: 150px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="bi bi-image text-white display-4"></i>
+                            </div>
+                            {% endif %}
+                            <h5 class="fw-bold">{{ service.title }}</h5>
+                            {% if service.price %}
+                            <h4 class="text-primary">{{ service.price }} ر.س</h4>
+                            {% endif %}
+                            <p class="text-muted small">{{ service.summary|truncatewords:20 }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Request Form -->
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            <h4 class="mb-0 fw-bold">
+                                <i class="bi bi-send text-primary me-2"></i>طلب الخدمة
+                            </h4>
+                        </div>
+                        <div class="card-body p-4">
+                            <form method="post">
+                                {% csrf_token %}
+
+                                <div class="mb-4">
+                                    <label for="id_customer_notes" class="form-label fw-semibold">
+                                        ملاحظات إضافية
+                                    </label>
+                                    {{ form.customer_notes }}
+                                    <small class="text-muted">
+                                        يمكنك إضافة أي تفاصيل أو متطلبات خاصة بطلبك
+                                    </small>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="id_contact_phone" class="form-label fw-semibold">
+                                            رقم التواصل
+                                        </label>
+                                        {{ form.contact_phone }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="id_contact_email" class="form-label fw-semibold">
+                                            البريد الإلكتروني
+                                        </label>
+                                        {{ form.contact_email }}
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    سيتم التواصل معك لتأكيد الطلب وتحديد التفاصيل
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="bi bi-send me-2"></i>إرسال الطلب
+                                    </button>
+                                    <a href="{% url 'services:service_detail' service.slug %}"
+                                        class="btn btn-outline-secondary">
+                                        <i class="bi bi-arrow-right me-2"></i>العودة للخدمة
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,607 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}إنشاء حساب - {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .registration-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 60px 0;
+    }
+
+    .registration-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, .30);
+        overflow: hidden;
+    }
+
+    /* ✅ FIX: كان عندك text-center بدون خاصية */
+    .registration-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        padding: 40px;
+        text-align: center;
+    }
+
+    .registration-header i {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: .9;
+    }
+
+    .registration-body {
+        padding: 40px;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #667eea;
+        margin: 30px 0 20px;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #667eea;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-title:first-of-type {
+        margin-top: 0;
+    }
+
+    .section-title i {
+        font-size: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+    }
+
+    .form-control,
+    .form-select {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 12px 15px;
+        transition: all .2s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 .2rem rgba(102, 126, 234, .25);
+    }
+
+    .file-upload-wrapper {
+        position: relative;
+        background: #f8f9fa;
+        border: 3px dashed #dee2e6;
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        transition: all .2s ease;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .file-upload-wrapper:hover {
+        border-color: #667eea;
+        background: #f0f2ff;
+    }
+
+    .file-upload-wrapper.has-file {
+        border-color: #28a745;
+        background: #d4edda;
+    }
+
+    .file-upload-icon {
+        font-size: 3rem;
+        color: #667eea;
+        margin-bottom: 15px;
+    }
+
+    .file-upload-text {
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+
+    .file-upload-hint {
+        font-size: .875rem;
+        color: #6c757d;
+    }
+
+    #file-preview {
+        max-width: 100%;
+        max-height: 300px;
+        margin-top: 20px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, .2);
+        display: none;
+    }
+
+    .btn-register {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 15px 40px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-radius: 50px;
+        transition: all .2s ease;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, .40);
+    }
+
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, .60);
+    }
+
+    .text-muted-custom {
+        color: #6c757d;
+        font-size: .875rem;
+    }
+
+    .required-badge {
+        color: #dc3545;
+        font-size: .75rem;
+        margin-left: 6px;
+    }
+
+    /* RTL */
+    .optional-badge {
+        color: #6c757d;
+        font-size: .75rem;
+        background: #e9ecef;
+        padding: 2px 8px;
+        border-radius: 20px;
+        margin-left: 6px;
+        /* RTL */
+    }
+
+    /* RTL spacing fix for bootstrap icons (اختياري) */
+    .me-2 {
+        margin-right: 0 !important;
+        margin-left: .5rem !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="registration-container" dir="rtl">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-xl-7">
+                <div class="registration-card">
+
+                    <div class="registration-header">
+                        <i class="bi bi-person-plus-fill"></i>
+                        <h1 class="mb-2">إنشاء حساب جديد</h1>
+
+                        <div class="mb-4 p-4 bg-light rounded-3 text-dark">
+                            <label class="form-label fw-bold mb-3">
+                                <i class="bi bi-person-badge me-2"></i>اختر نوع الحساب
+                            </label>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <input type="radio" class="btn-check" name="user_type" id="type_customer"
+                                        value="customer" checked>
+                                    <label class="btn btn-outline-primary w-100 p-3 text-end" for="type_customer">
+                                        <i class="bi bi-person-circle fs-2 d-block mb-2"></i>
+                                        <div class="fw-bold">عميل</div>
+                                        <small class="text-muted">أريد طلب خدمات</small>
+                                    </label>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <input type="radio" class="btn-check" name="user_type" id="type_provider"
+                                        value="provider">
+                                    <label class="btn btn-outline-success w-100 p-3 text-end" for="type_provider">
+                                        <i class="bi bi-tools fs-2 d-block mb-2"></i>
+                                        <div class="fw-bold">مقدم خدمة</div>
+                                        <small class="text-muted">أريد تقديم خدمات</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="mb-0 opacity-75">انضم إلينا واستمتع بخدماتنا الاحترافية</p>
+                    </div>
+
+                    <div class="registration-body">
+                        <form method="post" enctype="multipart/form-data" id="registration-form" novalidate>
+                            {% csrf_token %}
+
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                {{ form.non_field_errors }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endif %}
+
+                            <!-- المعلومات الأساسية -->
+                            <div class="section-title">
+                                <i class="bi bi-person-circle"></i>
+                                <span>المعلومات الأساسية</span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_first_name" class="form-label"><span
+                                            class="required-badge">*</span>الاسم الأول</label>
+                                    {{ form.first_name }}
+                                    {% if form.first_name.errors %}
+                                    <div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_last_name" class="form-label"><span
+                                            class="required-badge">*</span>اسم العائلة</label>
+                                    {{ form.last_name }}
+                                    {% if form.last_name.errors %}
+                                    <div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_username" class="form-label"><span class="required-badge">*</span>اسم
+                                    المستخدم</label>
+                                {{ form.username }}
+                                {% if form.username.errors %}
+                                <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- ✅ FIX: كان حقل البريد داخل if errors لاسم المستخدم (كسر HTML) -->
+                            <div class="mb-3">
+                                <label for="id_email" class="form-label"><span class="required-badge">*</span>البريد
+                                    الإلكتروني</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- كلمة المرور -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_password1" class="form-label"><span
+                                            class="required-badge">*</span>كلمة المرور</label>
+                                    {{ form.password1 }}
+                                    {% if form.password1.errors %}
+                                    <div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_password2" class="form-label"><span
+                                            class="required-badge">*</span>تأكيد كلمة المرور</label>
+                                    {{ form.password2 }}
+                                    {% if form.password2.errors %}
+                                    <div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- معلومات التواصل -->
+                            <div class="section-title">
+                                <i class="bi bi-telephone-fill"></i>
+                                <span>معلومات التواصل</span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_phone" class="form-label"><span class="required-badge">*</span>رقم
+                                        الهاتف</label>
+                                    {{ form.phone }}
+                                    {% if form.phone.errors %}
+                                    <div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>
+                                    {% else %}
+                                    {% if form.phone.help_text %}
+                                    <div class="text-muted-custom mt-1">{{ form.phone.help_text }}</div>
+                                    {% endif %}
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_alternate_phone" class="form-label"><span
+                                            class="optional-badge">اختياري</span>رقم هاتف بديل</label>
+                                    {{ form.alternate_phone }}
+                                    {% if form.alternate_phone.errors %}
+                                    <div class="text-danger small mt-1">{{ form.alternate_phone.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- ✅ FIX: كان عندك phone مكرر وغير متسق (form.phone) حذفناه. إن تحتاجه فعلاً ضعه هنا بشكل صحيح. -->
+
+                            <!-- العنوان -->
+                            <div class="section-title">
+                                <i class="bi bi-geo-alt-fill"></i>
+                                <span>العنوان</span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_city" class="form-label"><span
+                                            class="required-badge">*</span>المدينة</label>
+                                    {{ form.city }}
+                                    {% if form.city.errors %}
+                                    <div class="text-danger small mt-1">{{ form.city.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_district" class="form-label"><span
+                                            class="required-badge">*</span>الحي / المنطقة</label>
+                                    {{ form.district }}
+                                    {% if form.district.errors %}
+                                    <div class="text-danger small mt-1">{{ form.district.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_address" class="form-label"><span class="required-badge">*</span>العنوان
+                                    التفصيلي</label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                <div class="text-danger small mt-1">{{ form.address.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_postal_code" class="form-label"><span
+                                        class="optional-badge">اختياري</span>الرمز البريدي</label>
+                                {{ form.postal_code }}
+                                {% if form.postal_code.errors %}
+                                <div class="text-danger small mt-1">{{ form.postal_code.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- وثيقة الهوية -->
+                            <div class="section-title">
+                                <i class="bi bi-card-checklist"></i>
+                                <span>وثيقة الهوية (إجباري)</span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_id_type" class="form-label"><span class="required-badge">*</span>نوع
+                                        الوثيقة</label>
+                                    {{ form.id_type }}
+                                    {% if form.id_type.errors %}
+                                    <div class="text-danger small mt-1">{{ form.id_type.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_id_number" class="form-label"><span
+                                            class="required-badge">*</span>رقم الوثيقة</label>
+                                    {{ form.id_number }}
+                                    {% if form.id_number.errors %}
+                                    <div class="text-danger small mt-1">{{ form.id_number.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_id_document" class="form-label"><span class="required-badge">*</span>صورة
+                                    الوثيقة</label>
+
+                                <div class="file-upload-wrapper" id="file-upload-wrapper">
+                                    <i class="bi bi-cloud-upload file-upload-icon"></i>
+                                    <div class="file-upload-text" id="file-upload-text">
+                                        <strong>اضغط هنا لرفع صورة الهوية/الجواز/الإقامة</strong>
+                                    </div>
+                                    <div class="file-upload-hint">JPG, PNG, أو PDF - حد أقصى 5MB</div>
+                                    <img id="file-preview" alt="معاينة الوثيقة">
+                                </div>
+
+                                {{ form.id_document }}
+                                {% if form.id_document.errors %}
+                                <div class="text-danger small mt-2">{{ form.id_document.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- معلومات إضافية -->
+                            <div class="section-title">
+                                <i class="bi bi-info-circle-fill"></i>
+                                <span>معلومات إضافية (اختيارية)</span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_date_of_birth" class="form-label"><span
+                                            class="optional-badge">اختياري</span>تاريخ الميلاد</label>
+                                    {{ form.date_of_birth }}
+                                    {% if form.date_of_birth.errors %}
+                                    <div class="text-danger small mt-1">{{ form.date_of_birth.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_gender" class="form-label"><span
+                                            class="optional-badge">اختياري</span>الجنس</label>
+                                    {{ form.gender }}
+                                    {% if form.gender.errors %}
+                                    <div class="text-danger small mt-1">{{ form.gender.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info mt-4">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>ملاحظة:</strong> سيتم مراجعة بياناتك والتحقق من هويتك من قبل فريقنا قريباً.
+                            </div>
+
+                            <button type="submit" class="btn btn-register btn-primary w-100 mt-4" id="submit-btn">
+                                <i class="bi bi-check-circle me-2"></i>إنشاء الحساب
+                            </button>
+
+                        </form>
+
+                        <hr class="my-4">
+
+                        <div class="text-center">
+                            <p class="mb-0 text-muted">
+                                لديك حساب بالفعل؟
+                                <a href="{% url 'accounts:login' %}" class="fw-bold text-decoration-none">سجل دخولك من
+                                    هنا</a>
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const fileInput = document.getElementById('id_id_document');
+        const wrapper = document.getElementById('file-upload-wrapper');
+        const preview = document.getElementById('file-preview');
+        const text = document.getElementById('file-upload-text');
+        const form = document.getElementById('registration-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const usernameInput = document.getElementById('id_username');
+        const emailInput = document.getElementById('id_email');
+
+        if (fileInput) fileInput.style.display = 'none';
+
+        // فتح اختيار الملف عند الضغط على الصندوق
+        if (wrapper && fileInput) {
+            wrapper.addEventListener('click', () => fileInput.click());
+        }
+
+        // معاينة الملف
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+
+                wrapper.classList.add('has-file');
+                text.innerHTML = `<strong>تم اختيار:</strong> ${file.name}`;
+
+                if (file.type && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        preview.src = ev.target.result;
+                        preview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    preview.style.display = 'none';
+                    preview.removeAttribute('src');
+                }
+            });
+        }
+
+        // التحقق من اسم المستخدم
+        if (usernameInput) {
+            let usernameTimeout;
+            const usernameParent = usernameInput.parentElement;
+
+            usernameInput.addEventListener('input', (e) => {
+                clearTimeout(usernameTimeout);
+                const username = e.target.value.trim();
+
+                // إزالة رسائل سابقة
+                const oldMsg = usernameParent.querySelector('.availability-msg');
+                if (oldMsg) oldMsg.remove();
+
+                if (username.length < 3) return;
+
+                usernameTimeout = setTimeout(() => {
+                    fetch(`/accounts/ajax/check-username/?username=${encodeURIComponent(username)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            const msgDiv = document.createElement('div');
+                            msgDiv.className = 'availability-msg small mt-2';
+
+                            if (data.available) {
+                                msgDiv.className += ' text-success';
+                                msgDiv.innerHTML = `<i class="bi bi-check-circle me-1"></i>${data.message}`;
+                            } else {
+                                msgDiv.className += ' text-danger';
+                                msgDiv.innerHTML = `<i class="bi bi-x-circle me-1"></i>${data.message}`;
+
+                                if (data.suggestions && data.suggestions.length > 0) {
+                                    msgDiv.innerHTML += '<br><small>اقتراحات: ';
+                                    data.suggestions.forEach((sug, i) => {
+                                        msgDiv.innerHTML += `<a href="#" class="username-suggestion text-primary me-2" data-username="${sug}">${sug}</a>`;
+                                    });
+                                    msgDiv.innerHTML += '</small>';
+                                }
+                            }
+
+                            usernameParent.appendChild(msgDiv);
+
+                            // إضافة event listeners للاقتراحات
+                            document.querySelectorAll('.username-suggestion').forEach(link => {
+                                link.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    usernameInput.value = e.target.dataset.username;
+                                    usernameInput.dispatchEvent(new Event('input'));
+                                });
+                            });
+                        });
+                }, 500);
+            });
+        }
+
+        // التحقق من البريد الإلكتروني
+        if (emailInput) {
+            let emailTimeout;
+            const emailParent = emailInput.parentElement;
+
+            emailInput.addEventListener('blur', (e) => {
+                clearTimeout(emailTimeout);
+                const email = e.target.value.trim();
+
+                const oldMsg = emailParent.querySelector('.availability-msg');
+                if (oldMsg) oldMsg.remove();
+
+                if (!email || !email.includes('@')) return;
+
+                emailTimeout = setTimeout(() => {
+                    fetch(`/accounts/ajax/check-email/?email=${encodeURIComponent(email)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            const msgDiv = document.createElement('div');
+                            msgDiv.className = 'availability-msg small mt-2';
+
+                            if (data.available) {
+                                msgDiv.className += ' text-success';
+                                msgDiv.innerHTML = `<i class="bi bi-check-circle me-1"></i>${data.message}`;
+                            } else {
+                                msgDiv.className += ' text-warning';
+                                msgDiv.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>${data.message}`;
+                            }
+
+                            emailParent.appendChild(msgDiv);
+                        });
+                }, 500);
+            });
+        }
+
+        // منع الإرسال عدة مرات
+        if (form) {
+            form.addEventListener('submit', () => {
+                if (!submitBtn) return;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>جاري الإنشاء...';
+            });
+        }
+    });
+</script>
+{% endblock %}
