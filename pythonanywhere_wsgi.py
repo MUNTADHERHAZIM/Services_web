@@ -8,8 +8,8 @@ import os
 import sys
 
 # 1. تحديد مسار المشروع (استبدل 'yourusername' باسم المستخدم الخاص بك في PythonAnywhere)
-# اسم مجلد المشروع الافتراضي إذا رفعت المشروع كـ ail_project أو services_web
-project_home = '/home/yourusername/ail_project'
+# اسم المجلد هو Services_web لأنك قمت بعمل clone للمستودع بهذا الاسم
+project_home = '/home/yourusername/Services_web'
 
 if project_home not in sys.path:
     sys.path.append(project_home)
