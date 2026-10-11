@@ -1,0 +1,139 @@
+{
+  "id": "khidamati-pwa-v1",
+  "name": "خدماتي - المنصة الاحترافية للخدمات المصغرة",
+  "short_name": "خدماتي",
+  "description": "منصة عربية رائدة لربط أمهر المستقلين ومقدمي الخدمات المعتمدين بالعملاء والشركات بكل موثوقية وسرعة.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui",
+    "window-controls-overlay"
+  ],
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#10b981",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": [
+    "business",
+    "shopping",
+    "productivity",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "/static/images/pwa/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/pwa/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/pwa/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/pwa/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/pwa/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/pwa/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/pwa/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/pwa/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/pwa/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/static/images/pwa/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "سوق الخدمات",
+      "short_name": "الخدمات",
+      "description": "تصفح آلاف الخدمات الاحترافية والعروض الحصرية",
+      "url": "/services/?source=pwa_shortcut",
+      "icons": [
+        {
+          "src": "/static/images/pwa/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "متابعة طلباتي",
+      "short_name": "طلباتي",
+      "description": "استعراض ومتابعة حالات طلباتك المباشرة",
+      "url": "/requests/?source=pwa_shortcut",
+      "icons": [
+        {
+          "src": "/static/images/pwa/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "الخدمات المفضلة",
+      "short_name": "المفضلة",
+      "description": "استعراض الخدمات المحفوظة في قائمتك المفضلة",
+      "url": "/favorites/?source=pwa_shortcut",
+      "icons": [
+        {
+          "src": "/static/images/pwa/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "محفظتي الرقمية",
+      "short_name": "المحفظة",
+      "description": "إدارة الرصيد والمعاملات والشحن السريع",
+      "url": "/wallet/?source=pwa_shortcut",
+      "icons": [
+        {
+          "src": "/static/images/pwa/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

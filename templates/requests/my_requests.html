@@ -60,6 +60,12 @@
                         {% endif %}
                     </div>
 
+                    {% if req.status == 'canceled' and req.cancellation_reason %}
+                    <div class="alert alert-danger bg-opacity-10 border-0 rounded-3 py-2 px-3 my-2 small text-danger">
+                        <i class="bi bi-x-octagon me-1"></i><strong>سبب الإلغاء:</strong> {{ req.get_cancellation_reason_display }}
+                    </div>
+                    {% endif %}
+
                     {% if req.customer_notes %}
                     <p class="text-muted small mb-0 text-truncate-3">{{ req.customer_notes }}</p>
                     {% endif %}
@@ -67,12 +73,15 @@
                 <div class="card-footer bg-light border-0 p-4 pt-0">
                     <hr class="mt-0 mb-3 opacity-10">
                     <div class="d-flex gap-2">
-                        <a href="{% url 'requests:request_detail' req.pk %}" class="btn btn-sm btn-primary rounded-pill px-4 flex-grow-1">
+                        <a href="{% url 'requests:request_detail' req.pk %}" class="btn btn-sm btn-primary rounded-pill px-3 flex-grow-1">
                             <i class="bi bi-eye me-1"></i>التفاصيل
                         </a>
+                        <a href="{% url 'wallet:request_receipt' req.pk %}" class="btn btn-sm btn-outline-success rounded-pill px-3" title="الوصل المالي المعتمد">
+                            <i class="bi bi-receipt me-1"></i>الوصل
+                        </a>
                         {% if req.can_be_canceled %}
-                        <a href="{% url 'requests:cancel_request' req.pk %}" class="btn btn-sm btn-outline-danger rounded-pill px-3">
-                            <i class="bi bi-x-circle"></i>
+                        <a href="{% url 'requests:cancel_request' req.pk %}" class="btn btn-sm btn-outline-danger rounded-pill px-3" title="إلغاء الطلب">
+                            <i class="bi bi-x-circle me-1"></i>إلغاء
                         </a>
                         {% endif %}
                     </div>

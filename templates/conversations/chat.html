@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}محادثة مع {{ other_user.get_full_name|default:other_user.username }} - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Chat Card Container -->
+            <div class="card border bg-card shadow-sm overflow-hidden d-flex flex-column" style="height: 75vh; border-radius: 20px;">
+                <!-- Chat Header -->
+                <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-body-tertiary">
+                    <div class="d-flex align-items-center gap-3">
+                        <a href="{% url 'conversations:inbox' %}" class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 34px; height: 34px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-success text-white fw-bold" style="width: 42px; height: 42px;">
+                            {{ other_user.username|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0">{{ other_user.get_full_name|default:other_user.username }}</h6>
+                            <span class="text-success small"><i class="bi bi-circle-fill" style="font-size: 0.55rem;"></i> متاح الآن</span>
+                        </div>
+                    </div>
+
+                    {% if conversation.service %}
+                    <div class="d-none d-md-block text-end">
+                        <span class="text-muted small d-block">بخصوص الخدمة:</span>
+                        <a href="{% url 'services:service_detail' conversation.service.slug %}" class="fw-bold small text-success text-decoration-none">
+                            {{ conversation.service.title|truncatechars:40 }}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Messages Feed -->
+                <div class="p-4 flex-grow-1 overflow-y-auto d-flex flex-column gap-3" id="messagesContainer" style="background: var(--bg-surface, #f8fafc);">
+                    {% for msg in messages_list %}
+                    <div class="d-flex flex-column {% if msg.sender == user %}align-items-end{% else %}align-items-start{% endif %}">
+                        <div class="p-3 shadow-xs {% if msg.sender == user %}bg-success text-white{% else %}bg-card text-main border{% endif %}" 
+                             style="max-width: 75%; border-radius: 16px; {% if msg.sender == user %}border-bottom-left-radius: 4px;{% else %}border-bottom-right-radius: 4px;{% endif %}">
+                            <p class="mb-1" style="white-space: pre-wrap; font-size: 0.95rem;">{{ msg.content }}</p>
+                            <span class="small {% if msg.sender == user %}text-white-50{% else %}text-muted{% endif %}" style="font-size: 0.72rem;">
+                                {{ msg.created_at|date:"H:i" }}
+                                {% if msg.sender == user %}
+                                <i class="bi bi-check2-all ms-1"></i>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center my-auto py-5 text-muted">
+                        <i class="bi bi-chat-heart fs-1 d-block mb-2 text-success opacity-50"></i>
+                        <p class="mb-0">بداية محادثتك مع {{ other_user.username }}</p>
+                        <small>ناقش تفاصيل الخدمة والاتفاق بأمان عبر المنصة</small>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Chat Input Form -->
+                <div class="p-3 border-top bg-card">
+                    <form action="{% url 'conversations:send_message' conversation.id %}" method="post" class="d-flex align-items-center gap-2">
+                        {% csrf_token %}
+                        <input type="text" name="content" class="form-control rounded-pill px-4 py-2" placeholder="اكتب رسالتك هنا..." required autocomplete="off" autofocus>
+                        <button type="submit" class="btn btn-primary-custom rounded-circle p-0" style="width: 44px; height: 44px; flex-shrink: 0;" title="إرسال">
+                            <i class="bi bi-send-fill fs-5" style="transform: scaleX(-1);"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Scroll to bottom of messages container automatically
+    const container = document.getElementById('messagesContainer');
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
+</script>
+{% endblock %}

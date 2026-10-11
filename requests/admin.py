@@ -26,29 +26,35 @@ class ServiceRequestAdmin(admin.ModelAdmin):
     """إدارة طلبات الخدمات"""
     list_display = [
         'id', 'service_link', 'customer_link', 'status_badge', 
-        'contact_info', 'created_at', 'updated_at'
+        'cancellation_summary', 'contact_info', 'created_at', 'updated_at'
     ]
-    list_filter = ['status', 'created_at', 'service__category']
+    list_filter = ['status', 'cancellation_reason', 'created_at', 'canceled_at', 'service__category']
     search_fields = [
         'id', 'service__title', 'customer__username', 
-        'customer__email', 'contact_phone', 'contact_email'
+        'customer__email', 'contact_phone', 'contact_email',
+        'cancellation_notes'
     ]
     autocomplete_fields = ['service', 'customer']
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at', 'canceled_at', 'canceled_by']
     date_hierarchy = 'created_at'
     inlines = [StatusHistoryInline]
     list_per_page = 20
     save_on_top = True
 
     fieldsets = (
-        ('معلومات الطلب', {
-            'fields': ('service', 'customer', 'status')
+        ('معلومات الطلب الأساسية', {
+            'fields': ('service', 'customer', 'status', 'price', 'discount_amount', 'coupon')
         }),
         ('معلومات التواصل', {
             'fields': ('contact_phone', 'contact_email')
         }),
-        ('الملاحظات', {
+        ('الملاحظات والتعليمات', {
             'fields': ('customer_notes', 'staff_notes')
+        }),
+        ('بيانات وتفاصيل الإلغاء (في حال تم إلغاء الطلب)', {
+            'fields': ('cancellation_reason', 'cancellation_notes', 'canceled_at', 'canceled_by'),
+            'classes': ('collapse',),
+            'description': 'توثيق أسباب الإلغاء الرسمية التي يقدمها العميل أو الإدارة.',
         }),
         ('معلومات النظام', {
             'fields': ('created_at', 'updated_at'),
@@ -82,6 +88,20 @@ class ServiceRequestAdmin(admin.ModelAdmin):
             color, label
         )
     status_badge.short_description = 'الحالة'
+
+    def cancellation_summary(self, obj):
+        if obj.status == 'canceled':
+            reason_text = obj.get_cancellation_reason_display() or 'غير محدد'
+            by_str = f" ({obj.canceled_by.username})" if obj.canceled_by else ""
+            hint = f' title="{obj.cancellation_notes}"' if obj.cancellation_notes else ''
+            return format_html(
+                '<span class="badge bg-danger text-wrap" style="max-width: 220px; font-size: 0.78rem;"{}>⚠️ {}{}</span>',
+                mark_safe(hint),
+                reason_text,
+                by_str
+            )
+        return mark_safe('<span class="text-muted">-</span>')
+    cancellation_summary.short_description = 'بيانات الإلغاء'
 
     def contact_info(self, obj):
         info = []
@@ -191,12 +211,24 @@ class StatusHistoryAdmin(admin.ModelAdmin):
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
     """إدارة الإشعارات"""
-    list_display = ['title', 'user', 'notification_type', 'is_read_badge', 'created_at']
+    list_display = ['title', 'user', 'type_badge', 'is_read_badge', 'created_at']
     list_filter = ['notification_type', 'is_read', 'created_at']
     search_fields = ['title', 'message', 'user__username']
     autocomplete_fields = ['user']
     readonly_fields = ['created_at']
     date_hierarchy = 'created_at'
+
+    def type_badge(self, obj):
+        badges = {
+            'request_new': ('primary', 'طلب جديد'),
+            'request_status': ('info', 'تحديث حالة'),
+            'request_canceled': ('danger', 'إلغاء طلب ⚠️'),
+            'request_comment': ('success', 'تعليق جديد'),
+            'system': ('secondary', 'نظام'),
+        }
+        color, label = badges.get(obj.notification_type, ('secondary', obj.get_notification_type_display()))
+        return format_html('<span class="badge bg-{}">{}</span>', color, label)
+    type_badge.short_description = 'النوع'
 
     def is_read_badge(self, obj):
         if obj.is_read:

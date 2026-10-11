@@ -12,7 +12,7 @@ from django.conf import settings
 from django.db.models import Q
 
 from .models import ServiceRequest, StatusHistory, Notification
-from .forms import ServiceRequestForm, UpdateStatusForm
+from .forms import ServiceRequestForm, UpdateStatusForm, RequestCancelForm
 from services.models import Service
 
 
@@ -38,13 +38,52 @@ class ServiceRequestCreateView(LoginRequiredMixin, CreateView):
         context['service'] = self.service
         return context
 
+    def post(self, request, *args, **kwargs):
+        # التحقق من الكابتشا الأمني
+        from core.captcha import verify_captcha_response
+        captcha_token = request.POST.get('captcha_token')
+        captcha_code = request.POST.get('captcha_code')
+
+        is_valid, err_msg = verify_captcha_response(captcha_token, captcha_code)
+        if not is_valid:
+            messages.error(request, err_msg)
+            return self.get(request, *args, **kwargs)
+
+        return super().post(request, *args, **kwargs)
+
     def form_valid(self, form):
+        from decimal import Decimal
         form.instance.service = self.service
         form.instance.customer = self.request.user
+
+        base_price = self.service.price or Decimal('0')
+        form.instance.price = base_price
+        form.instance.discount_amount = Decimal('0')
+
+        coupon_code = self.request.POST.get('coupon_code', '').strip().upper()
+        if coupon_code:
+            from core.models import Coupon
+            coupon = Coupon.objects.filter(code__iexact=coupon_code).first()
+            if coupon:
+                is_valid, _ = coupon.is_valid_for(base_price)
+                if is_valid:
+                    discount = coupon.calculate_discount(base_price)
+                    form.instance.coupon = coupon
+                    form.instance.discount_amount = discount
+                    form.instance.price = max(Decimal('0'), base_price - discount)
+                    coupon.used_count += 1
+                    coupon.save(update_fields=['used_count'])
         
         # حفظ الطلب
         response = super().form_valid(form)
         
+        # إنشاء الوصل والفاتورة المالية الرسمية وحفظها في النظام
+        try:
+            from wallet.models import Receipt
+            Receipt.create_or_get_for_request(self.object)
+        except Exception:
+            pass
+
         # إنشاء إشعار للمقدم
         Notification.objects.create(
             user=self.service.provider.user,
@@ -54,7 +93,15 @@ class ServiceRequestCreateView(LoginRequiredMixin, CreateView):
             link=self.object.get_absolute_url()
         )
         
-        messages.success(self.request, 'تم تقديم طلبك بنجاح! سيتم التواصل معك قريباً.')
+        currency = getattr(self.service, 'currency', 'IQD')
+        if form.instance.discount_amount > 0:
+            if currency == 'USD':
+                disc_str = f"${form.instance.discount_amount}"
+            else:
+                disc_str = f"{int(form.instance.discount_amount):,} د.ع"
+            messages.success(self.request, f'تم تقديم طلبك بنجاح مع تطبيق خصم قدره {disc_str}!')
+        else:
+            messages.success(self.request, 'تم تقديم طلبك بنجاح! سيتم التواصل معك قريباً.')
         return response
 
     def get_success_url(self):
@@ -174,23 +221,31 @@ class UpdateRequestStatusView(LoginRequiredMixin, UserPassesTestMixin, UpdateVie
 
 class CancelRequestView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     """
-    إلغاء طلب الخدمة (للعميل فقط)
+    إلغاء طلب الخدمة مع تسجيل أسباب احترافية وإشعار الإدارة ومقدم الخدمة
     """
     model = ServiceRequest
-    fields = []
+    form_class = RequestCancelForm
     template_name = 'requests/cancel_confirm.html'
 
     def test_func(self):
         obj = self.get_object()
         return (
-            obj.customer == self.request.user and 
+            (obj.customer == self.request.user or self.request.user.is_staff) and 
             obj.can_be_canceled()
         )
 
     def form_valid(self, form):
-        self.object.update_status('canceled', self.request.user, 'تم الإلغاء بواسطة العميل')
-        messages.success(self.request, 'تم إلغاء الطلب بنجاح.')
-        return redirect('requests:my_requests')
+        reason = form.cleaned_data['cancellation_reason']
+        notes = form.cleaned_data.get('cancellation_notes', '')
+        
+        self.object.cancel_order(
+            reason=reason,
+            notes=notes,
+            canceled_by=self.request.user,
+            request=self.request
+        )
+        messages.success(self.request, 'تم إلغاء الطلب بنجاح، وتم إرسال تفاصيل وأسباب الإلغاء لإدارة المنصة ومقدم الخدمة.')
+        return redirect('requests:request_detail', pk=self.object.pk)
 
 
 class NotificationsListView(LoginRequiredMixin, ListView):

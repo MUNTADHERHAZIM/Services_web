@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}وصل مالي رسمي #{{ receipt.receipt_number }} - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-md-5">
+
+    <!-- Top Action Bar (Hidden when printing) -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 receipt-no-print">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'core:home' %}">الرئيسية</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'wallet:my_wallet' %}">المحفظة المالية</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'wallet:my_receipts' %}">سجل الفواتير</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ receipt.receipt_number }}</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <a href="{% url 'wallet:my_receipts' %}" class="btn btn-outline-secondary rounded-pill px-3">
+                <i class="bi bi-arrow-right me-1"></i> فواتيري
+            </a>
+            <button type="button" class="btn btn-outline-primary rounded-pill px-3" onclick="copyVerifyUrl()" title="نسخ رابط التحقق الرقمي">
+                <i class="bi bi-link-45deg me-1"></i> <span id="copyBtnText">نسخ رابط الوصل</span>
+            </button>
+            <a href="{% url 'wallet:receipt_verify' receipt.verification_token %}" target="_blank" class="btn btn-outline-success rounded-pill px-3">
+                <i class="bi bi-patch-check-fill me-1"></i> التحقق الرقمي
+            </a>
+            <button type="button" class="btn btn-primary-custom rounded-pill px-4 fw-bold shadow-sm" onclick="window.print()">
+                <i class="bi bi-printer-fill me-1"></i> طباعة الوصل / حفظ PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Official Receipt Card -->
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden position-relative receipt-card" id="printableReceiptArea" style="background: #ffffff; color: #1e293b;">
+
+        <!-- Subtle Security Pattern Top Bar -->
+        <div style="height: 8px; background: linear-gradient(90deg, #10b981 0%, #059669 40%, #0ea5e9 70%, #6366f1 100%);"></div>
+
+        <div class="card-body p-4 p-md-5 position-relative">
+
+            <!-- Security Watermark Background Stamp -->
+            <div class="position-absolute start-50 top-50 translate-middle pointer-events-none select-none text-center receipt-watermark-stamp"
+                 style="opacity: 0.035; z-index: 0; transform: translate(-50%, -50%) rotate(-25deg); pointer-events: none;">
+                <div style="font-size: 5rem; font-weight: 900; letter-spacing: 4px; color: #059669; border: 12px double #059669; padding: 20px 40px; border-radius: 30px; text-transform: uppercase;">
+                    OFFICIAL RECEIPT<br>معتمد وموثق
+                </div>
+            </div>
+
+            <!-- Receipt Header -->
+            <div class="row align-items-center pb-4 mb-4 border-bottom position-relative" style="z-index: 1;">
+                <div class="col-md-7 mb-4 mb-md-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="brand-icon-box shadow-sm" style="width: 56px; height: 56px; font-size: 1.7rem; border-radius: 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); display: flex; align-items: center; justify-content: center; color: #fff;">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.5px;">مـنـصـة خَـدَمَـاتـي</h3>
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2-5 py-1 rounded-pill small fw-bold">
+                                    <i class="bi bi-patch-check-fill me-1"></i> وثيقة مالية رسمية معتمدة
+                                </span>
+                            </div>
+                            <p class="text-muted small mb-0 mt-1">المنصة العراقية الأولى للخدمات الرقمية المصغرة والعمل الحر الموثوق</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-5 text-md-end">
+                    <div class="d-inline-block text-start text-md-end">
+                        <div class="text-muted small fw-semibold">رقم الوصل المرجعي (Receipt No):</div>
+                        <div class="fs-4 fw-bold font-monospace text-primary mb-1">{{ receipt.receipt_number }}</div>
+                        <div class="small text-muted">
+                            <i class="bi bi-calendar3 me-1"></i> <strong>تاريخ الإصدار:</strong> {{ receipt.issued_at|date:"d M Y - H:i" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Receipt Meta Highlights (Type & Status Banner) -->
+            <div class="row g-3 mb-4 position-relative" style="z-index: 1;">
+                <div class="col-sm-6 col-md-3">
+                    <div class="p-3 rounded-4 bg-light border h-100">
+                        <span class="text-muted small d-block mb-1">نوع المعاملة</span>
+                        <div class="fw-bold text-dark fs-6">
+                            {% if receipt.receipt_type == 'order' %}
+                                <i class="bi bi-bag-check-fill text-primary me-1"></i> {{ receipt.get_receipt_type_display }}
+                            {% elif receipt.receipt_type == 'deposit' %}
+                                <i class="bi bi-arrow-down-circle-fill text-success me-1"></i> {{ receipt.get_receipt_type_display }}
+                            {% elif receipt.receipt_type == 'withdrawal' %}
+                                <i class="bi bi-arrow-up-circle-fill text-danger me-1"></i> {{ receipt.get_receipt_type_display }}
+                            {% else %}
+                                <i class="bi bi-receipt text-info me-1"></i> {{ receipt.get_receipt_type_display }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-md-3">
+                    <div class="p-3 rounded-4 bg-light border h-100">
+                        <span class="text-muted small d-block mb-1">حالة المعاملة</span>
+                        <div>
+                            {% if receipt.status == 'completed' %}
+                                <span class="badge bg-success px-3 py-2 rounded-pill fs-7 fw-bold">
+                                    <i class="bi bi-check-circle-fill me-1"></i> معتمد ومكتمل (Paid & Approved)
+                                </span>
+                            {% elif receipt.status == 'pending' %}
+                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fs-7 fw-bold">
+                                    <i class="bi bi-clock-history me-1"></i> قيد التدقيق والمعالجة
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger px-3 py-2 rounded-pill fs-7 fw-bold">
+                                    <i class="bi bi-x-circle-fill me-1"></i> ملغي / مسترد (Cancelled)
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-md-3">
+                    <div class="p-3 rounded-4 bg-light border h-100">
+                        <span class="text-muted small d-block mb-1">طريقة الدفع والتحويل</span>
+                        <div class="fw-bold text-dark fs-6 text-truncate" title="{{ receipt.payment_method_name }}">
+                            <i class="bi bi-credit-card-2-front text-primary me-1"></i> {{ receipt.payment_method_name }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-md-3">
+                    <div class="p-3 rounded-4 bg-light border h-100">
+                        <span class="text-muted small d-block mb-1">المرجع المالي للحوالة</span>
+                        <div class="fw-bold text-primary font-monospace fs-6 text-truncate" title="{{ receipt.payment_reference }}">
+                            {{ receipt.payment_reference|default:"مباشر من المحفظة" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parties Information (From / To) -->
+            <div class="row g-4 mb-4 pb-4 border-bottom position-relative" style="z-index: 1;">
+                <!-- Payer Info -->
+                <div class="col-md-6">
+                    <div class="p-3 rounded-4 border bg-body-tertiary h-100">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.85rem;">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <h6 class="fw-bold mb-0 text-dark">بيانات العميل / صاحب الحساب</h6>
+                        </div>
+                        <div class="ps-4">
+                            <div class="fw-bold fs-6 text-dark">{{ receipt.user.get_full_name|default:receipt.user.username }}</div>
+                            <div class="small text-muted mb-1"><i class="bi bi-at me-1"></i>اسم المستخدم: <strong>@{{ receipt.user.username }}</strong></div>
+                            {% if receipt.user.email %}
+                            <div class="small text-muted mb-1"><i class="bi bi-envelope me-1"></i>{{ receipt.user.email }}</div>
+                            {% endif %}
+                            {% if receipt.metadata.customer_phone %}
+                            <div class="small text-muted"><i class="bi bi-telephone me-1"></i><span dir="ltr">{{ receipt.metadata.customer_phone }}</span></div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Platform / Beneficiary Info -->
+                <div class="col-md-6">
+                    <div class="p-3 rounded-4 border bg-body-tertiary h-100">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.85rem;">
+                                <i class="bi bi-building"></i>
+                            </div>
+                            <h6 class="fw-bold mb-0 text-dark">
+                                {% if receipt.counterpart_user %}
+                                    بيانات مقدم الخدمة / الطرف الثاني
+                                {% else %}
+                                    الجهة المصدرة للوصل والضمان
+                                {% endif %}
+                            </h6>
+                        </div>
+                        <div class="ps-4">
+                            {% if receipt.counterpart_user %}
+                                <div class="fw-bold fs-6 text-dark">{{ receipt.counterpart_user.get_full_name|default:receipt.counterpart_user.username }}</div>
+                                <div class="small text-muted mb-1">حساب موثق لدى منصة خدماتي (@{{ receipt.counterpart_user.username }})</div>
+                                <div class="small text-success fw-semibold"><i class="bi bi-shield-lock-fill me-1"></i>معاملة مالية محمية بنظام الضمان الداخلي</div>
+                            {% else %}
+                                <div class="fw-bold fs-6 text-dark">الإدارة المالية - منصة خدماتي</div>
+                                <div class="small text-muted mb-1">جمهورية العراق - بغداد - الحسابات المركزية</div>
+                                <div class="small text-muted"><i class="bi bi-globe me-1"></i>سجل العمليات المالية والتحويل المعتمد</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Itemized Table -->
+            <div class="table-responsive mb-4 position-relative" style="z-index: 1;">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="py-3 px-3" style="width: 50%;">بيان العملية / الخدمة</th>
+                            <th class="py-3 text-center" style="width: 15%;">النوع / الصنف</th>
+                            <th class="py-3 text-center" style="width: 15%;">المبلغ ($)</th>
+                            <th class="py-3 text-center" style="width: 20%;">المعادل بالدينار العراقي</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="p-3">
+                                <div class="fw-bold text-dark fs-6">{{ receipt.title }}</div>
+                                {% if receipt.metadata.service_title %}
+                                <div class="small text-muted mt-1">الخدمة: <strong>{{ receipt.metadata.service_title }}</strong></div>
+                                {% endif %}
+                                {% if receipt.metadata.category_name %}
+                                <div class="small text-muted">التصنيف: <span class="badge bg-secondary bg-opacity-10 text-secondary">{{ receipt.metadata.category_name }}</span></div>
+                                {% endif %}
+                                {% if receipt.metadata.transaction_reference %}
+                                <div class="small text-muted font-monospace mt-1">إشعار الحوالة: #{{ receipt.metadata.transaction_reference }}</div>
+                                {% endif %}
+                                {% if receipt.metadata.coupon_code %}
+                                <div class="small text-success mt-1"><i class="bi bi-ticket-perforated-fill me-1"></i>تم استخدام كوبون خصم: <strong>{{ receipt.metadata.coupon_code }}</strong></div>
+                                {% endif %}
+                            </td>
+                            <td class="text-center fw-semibold text-secondary">
+                                {{ receipt.get_receipt_type_display }}
+                            </td>
+                            <td class="text-center fw-bold fs-6 text-dark">
+                                ${{ receipt.subtotal|floatformat:2|intcomma }}
+                            </td>
+                            <td class="text-center font-monospace fw-bold text-dark">
+                                {% widthratio receipt.subtotal 1 receipt.exchange_rate as subtotal_iqd %}
+                                {{ subtotal_iqd|intcomma }} د.ع
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Financial Summary Totals & QR Verification Box -->
+            <div class="row align-items-center g-4 mb-4 pb-4 border-bottom position-relative" style="z-index: 1;">
+                <!-- QR Code & Security Validation Box -->
+                <div class="col-md-6 order-2 order-md-1">
+                    <div class="p-3 rounded-4 border bg-white shadow-xs d-flex align-items-center gap-3">
+                        <div class="p-2 bg-light rounded-3 border" style="width: 110px; height: 110px; min-width: 110px; display: flex; align-items: center; justify-content: center;">
+                            {% if receipt.qr_code_svg %}
+                                <div style="width: 100%; height: 100%;">
+                                    {{ receipt.qr_code_svg|safe }}
+                                </div>
+                            {% else %}
+                                <i class="bi bi-qr-code fs-1 text-muted"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="badge bg-success bg-opacity-10 text-success mb-1 fw-bold">
+                                <i class="bi bi-shield-check me-1"></i> كود التحقق الرقمي الفوري
+                            </div>
+                            <div class="small text-muted mb-1" style="font-size: 0.8rem;">
+                                امسح رمز الـ QR بكاميرا الهاتف للتحقق المباشر من صحة هذا الوصل في قاعدة بيانات النظام.
+                            </div>
+                            <div class="font-monospace text-muted small" style="font-size: 0.72rem; word-break: break-all;">
+                                UUID: {{ receipt.verification_token }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Totals Calculation -->
+                <div class="col-md-6 order-1 order-md-2">
+                    <div class="p-4 rounded-4 border bg-body-tertiary">
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                            <span class="text-muted">المبلغ الإجمالي الأساسي:</span>
+                            <span class="fw-semibold text-dark">${{ receipt.subtotal|floatformat:2|intcomma }}</span>
+                        </div>
+
+                        {% if receipt.discount_amount > 0 %}
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom text-success">
+                            <span><i class="bi bi-tag-fill me-1"></i> الخصم المطبق:</span>
+                            <span class="fw-bold">-${{ receipt.discount_amount|floatformat:2|intcomma }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if receipt.tax_or_fee > 0 %}
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                            <span class="text-muted">الرسوم والعمولات:</span>
+                            <span class="fw-semibold text-dark">${{ receipt.tax_or_fee|floatformat:2|intcomma }}</span>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between align-items-center mb-2 pt-1">
+                            <span class="fs-6 fw-bold text-dark">المبلغ النهائي الصافي (USD):</span>
+                            <span class="fs-4 fw-bolder text-primary">${{ receipt.total_amount|floatformat:2|intcomma }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <span class="small text-muted">المعادل بالدينار العراقي (سعر الصرف 1$ = {{ receipt.exchange_rate|floatformat:0 }} د.ع):</span>
+                            <span class="fs-5 fw-bold text-success font-monospace">{{ receipt.amount_iqd|floatformat:0|intcomma }} د.ع</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes, Terms & Official Seal -->
+            <div class="row align-items-center g-4 position-relative" style="z-index: 1;">
+                <div class="col-md-8">
+                    <h6 class="fw-bold text-dark mb-2">
+                        <i class="bi bi-info-circle-fill text-primary me-1"></i> شروط ومعلومات الوصل المالي:
+                    </h6>
+                    <p class="text-muted small mb-2 lh-base">
+                        {{ receipt.notes|default:"هذا الوصل وثيقة مالية إلكترونية صادرة من منصة خدماتي، ومحفوظة رسمياً في سجلات النظام. تخضع المعاملة لسياسة حماية المشتري وحفظ حقوق الطرفين." }}
+                    </p>
+                    <div class="small text-muted font-monospace" style="font-size: 0.73rem;">
+                        <i class="bi bi-key-fill text-secondary me-1"></i> البصمة الرقمية المشفرة (SHA-256 Hash):
+                        <span class="text-secondary d-block mt-0-5 text-break">{{ receipt.security_hash }}</span>
+                    </div>
+                </div>
+
+                <!-- Digital Stamp & Signature Graphics -->
+                <div class="col-md-4 text-center text-md-end">
+                    <div class="d-inline-block text-center p-3 rounded-4 border bg-white shadow-xs" style="min-width: 170px;">
+                        <div class="text-muted small fw-bold mb-1">الختم الرقمي والاعتماد</div>
+                        <div class="my-2">
+                            <!-- Official Circular Stamp Icon -->
+                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle border border-3 border-success p-2" style="width: 76px; height: 76px;">
+                                <div class="text-success text-center">
+                                    <i class="bi bi-patch-check-fill fs-3 d-block"></i>
+                                    <span style="font-size: 0.6rem; font-weight: 900; letter-spacing: 0.5px; display: block;">VERIFIED</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fw-bold text-dark small">منصة خَـدَمَـاتـي</div>
+                        <div class="text-muted" style="font-size: 0.68rem;">قسم الحسابات والرقابة المالية</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Receipt Bottom Strip -->
+        <div class="card-footer bg-light border-top p-3 px-md-5 text-center text-muted small d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+            <div>منصة خدماتي © {{ receipt.issued_at|date:"Y" }} - جميع الحقوق محفوظة</div>
+            <div class="d-flex align-items-center gap-2">
+                <span>وثيقة إلكترونية لا تحتاج إلى توقيع خطي</span>
+                <span>•</span>
+                <a href="{% url 'wallet:receipt_verify' receipt.verification_token %}" class="text-decoration-none text-primary fw-bold">فحص الوصل المباشر</a>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Interactive Toast for copy link -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3 receipt-no-print" style="z-index: 11000;">
+    <div id="receiptToast" class="toast align-items-center text-bg-success border-0 rounded-4 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body fw-bold">
+                <i class="bi bi-clipboard-check-fill me-2 fs-5"></i> تم نسخ رابط التحقق من الوصل بنجاح!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyVerifyUrl() {
+    const url = "{{ full_verify_url }}";
+    navigator.clipboard.writeText(url).then(() => {
+        const toastEl = document.getElementById('receiptToast');
+        if (toastEl) {
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+        const btn = document.getElementById('copyBtnText');
+        if (btn) {
+            const original = btn.innerText;
+            btn.innerText = 'تم النسخ!';
+            setTimeout(() => { btn.innerText = original; }, 2500);
+        }
+    }).catch(err => {
+        alert('رابط الوصل: ' + url);
+    });
+}
+</script>
+{% endblock %}

@@ -16,6 +16,13 @@ from requests.models import ServiceRequest
 from accounts.models import Provider, UserProfile
 from accounts.decorators import customer_required, provider_required, admin_required
 
+import json
+from django.utils import timezone
+from datetime import timedelta
+from analytics.models import ServiceView, SearchAnalytics, ProviderStats
+from wallet.models import Wallet, Transaction
+
+
 
 
 
@@ -85,6 +92,7 @@ class ProviderDashboardView(TemplateView):
                 }
             )
         
+        provider_profile = user.provider_profile
         context['is_approved'] = user.profile.provider_approved
         
         context['my_services'] = Service.objects.filter(
@@ -104,7 +112,46 @@ class ProviderDashboardView(TemplateView):
         context['completed'] = my_requests.filter(status='done').count()
         context['recent_requests'] = my_requests[:10]
         
+        # إحصائيات المزود والمحفظة الافتراضية
+        stats, _ = ProviderStats.objects.get_or_create(provider=provider_profile)
+        context['provider_stats'] = stats
+        
+        wallet, _ = Wallet.objects.get_or_create(user=user)
+        context['wallet'] = wallet
+        context['recent_transactions'] = Transaction.objects.filter(wallet=wallet).order_by('-created_at')[:5]
+        
+        # بيانات الرسم البياني للمشاهدات في آخر 7 أيام
+        today = timezone.localdate()
+        seven_days_ago = today - timedelta(days=6)
+        
+        my_views_data = ServiceView.objects.filter(
+            service__provider=provider_profile,
+            viewed_at__date__gte=seven_days_ago
+        ).annotate(
+            date=TruncDate('viewed_at')
+        ).values('date').annotate(
+            count=Count('id')
+        ).order_by('date')
+        
+        my_views_by_date = { (seven_days_ago + timedelta(days=i)): 0 for i in range(7) }
+        for entry in my_views_data:
+            my_views_by_date[entry['date']] = entry['count']
+            
+        context['provider_views_dates'] = json.dumps([date.strftime('%Y-%m-%d') for date in my_views_by_date.keys()])
+        context['provider_views_counts'] = json.dumps(list(my_views_by_date.values()))
+        
+        # بيانات الرسم البياني لحالات الطلبات الخاصة بالمزود
+        status_choices = dict(ServiceRequest.Status.choices)
+        p_requests_by_status = my_requests.values('status').annotate(count=Count('id'))
+        p_status_counts = {choice: 0 for choice in status_choices.keys()}
+        for item in p_requests_by_status:
+            p_status_counts[item['status']] = item['count']
+            
+        context['provider_status_labels'] = json.dumps([str(status_choices.get(k, k)) for k, v in p_status_counts.items() if v > 0])
+        context['provider_status_values'] = json.dumps([v for v in p_status_counts.values() if v > 0])
+        
         return context
+
 
 
 @method_decorator(provider_required, name='dispatch')
@@ -178,7 +225,44 @@ class DashboardHomeView(StaffRequiredMixin, TemplateView):
             status__in=['new', 'in_review']
         ).count()
         
+        # بيانات الرسم البياني للمشاهدات الأسبوعية للموقع بالكامل
+        today = timezone.localdate()
+        seven_days_ago = today - timedelta(days=6)
+        
+        views_data = ServiceView.objects.filter(
+            viewed_at__date__gte=seven_days_ago
+        ).annotate(
+            date=TruncDate('viewed_at')
+        ).values('date').annotate(
+            count=Count('id')
+        ).order_by('date')
+        
+        views_by_date = { (seven_days_ago + timedelta(days=i)): 0 for i in range(7) }
+        for entry in views_data:
+            views_by_date[entry['date']] = entry['count']
+            
+        context['chart_views_dates'] = json.dumps([date.strftime('%Y-%m-%d') for date in views_by_date.keys()])
+        context['chart_views_counts'] = json.dumps(list(views_by_date.values()))
+        
+        # بيانات الرسم البياني لحالات الطلبات العامة
+        status_choices = dict(ServiceRequest.Status.choices)
+        status_counts = {choice: 0 for choice in status_choices.keys()}
+        for item in context['requests_by_status']:
+            status_counts[item['status']] = item['count']
+            
+        context['chart_status_labels'] = json.dumps([str(status_choices.get(k, k)) for k, v in status_counts.items() if v > 0])
+        context['chart_status_values'] = json.dumps([v for v in status_counts.values() if v > 0])
+        
+        # بيانات الرسم البياني للخدمات الأكثر طلباً
+        top_requested = Service.objects.annotate(
+            req_count=Count('requests')
+        ).filter(req_count__gt=0).order_by('-req_count')[:5]
+        
+        context['chart_top_services_labels'] = json.dumps([s.title[:15] + '...' if len(s.title) > 15 else s.title for s in top_requested])
+        context['chart_top_services_values'] = json.dumps([s.req_count for s in top_requested])
+        
         return context
+
 
 
 class ManageServicesView(StaffRequiredMixin, ListView):

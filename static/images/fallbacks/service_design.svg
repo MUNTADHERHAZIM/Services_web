@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="designBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#180e29" />
+      <stop offset="50%" stop-color="#2a0845" />
+      <stop offset="100%" stop-color="#6441a5" />
+    </linearGradient>
+    <linearGradient id="brushGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff007f" />
+      <stop offset="50%" stop-color="#7928ca" />
+      <stop offset="100%" stop-color="#4338ca" />
+    </linearGradient>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#designBg)" />
+
+  <circle cx="180" cy="160" r="140" fill="#ec4899" filter="blur(70px)" opacity="0.3" />
+  <circle cx="620" cy="320" r="160" fill="#8b5cf6" filter="blur(80px)" opacity="0.35" />
+
+  <g transform="translate(180, 75)">
+    <rect width="440" height="350" rx="20" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.2)" stroke-width="1.5" />
+    
+    <!-- Art Palette & Pen -->
+    <g transform="translate(140, 50)">
+      <!-- Palette shape -->
+      <path d="M 80 10 C 130 10, 160 50, 160 90 C 160 140, 110 160, 70 160 C 50 160, 30 150, 20 135 C 10 120, 15 105, 30 95 C 45 85, 45 75, 35 65 C 20 50, 30 10, 80 10 Z" fill="url(#brushGrad)" opacity="0.9" />
+      <!-- Color dots on palette -->
+      <circle cx="65" cy="40" r="8" fill="#facc15" />
+      <circle cx="105" cy="45" r="8" fill="#06b6d4" />
+      <circle cx="130" cy="80" r="8" fill="#10b981" />
+      <circle cx="115" cy="120" r="8" fill="#f43f5e" />
+      <circle cx="75" cy="130" r="12" fill="#2a0845" />
+
+      <!-- Pen / Vector tool -->
+      <path d="M 0 140 L 40 100 L 50 110 L 10 150 Z" fill="#ffffff" />
+      <polygon points="0,140 10,150 -5,155" fill="#facc15" />
+    </g>
+
+    <text x="220" y="275" font-family="'Tajawal', 'Segoe UI', sans-serif" font-size="22" font-weight="bold" fill="#ffffff" text-anchor="middle">تصميم جرافيك وهوية بصرية</text>
+    <text x="220" y="305" font-family="'Tajawal', 'Segoe UI', sans-serif" font-size="14" fill="#cbd5e1" text-anchor="middle">شعارات احترافية • موك اب • UI/UX</text>
+  </g>
+</svg>

@@ -8,18 +8,30 @@ from django.db.models import Count
 from .models import Category, Tag, Service, ServiceImage, Review, ServicePackage, ServiceFeature, ServiceFAQ, ProviderPortfolio, Testimonial
 
 
+class SubcategoryInline(admin.TabularInline):
+    """إدارة التصنيفات الفرعية من داخل التصنيف الرئيسي"""
+    model = Category
+    fk_name = 'parent'
+    extra = 1
+    fields = ['name', 'slug', 'icon', 'order', 'is_active']
+    prepopulated_fields = {'slug': ('name',)}
+    verbose_name = 'تصنيف فرعي'
+    verbose_name_plural = 'التصنيفات الفرعية'
+
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    """إدارة التصنيفات"""
-    list_display = ['name', 'slug', 'icon_preview', 'services_count', 'is_active_badge', 'order']
-    list_filter = ['is_active', 'created_at']
-    search_fields = ['name', 'description']
+    """إدارة التصنيفات الرئيسية والفرعية"""
+    list_display = ['name', 'parent', 'slug', 'icon_preview', 'services_count', 'is_active_badge', 'order']
+    list_filter = ['is_active', 'parent', 'created_at']
+    search_fields = ['name', 'slug', 'description']
     prepopulated_fields = {'slug': ('name',)}
     ordering = ['order', 'name']
+    inlines = [SubcategoryInline]
     
     fieldsets = (
         ('المعلومات الأساسية', {
-            'fields': ('name', 'slug', 'description')
+            'fields': ('parent', 'name', 'slug', 'description')
         }),
         ('المظهر', {
             'fields': ('icon', 'image')
@@ -31,7 +43,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
     def icon_preview(self, obj):
         if obj.icon:
-            return format_html('<i class="{}"></i> {}', obj.icon, obj.icon)
+            return format_html('<i class="{} fs-5 me-1"></i> <code>{}</code>', obj.icon, obj.icon)
         return '-'
     icon_preview.short_description = 'الأيقونة'
 
@@ -77,11 +89,11 @@ class ServiceImageInline(admin.TabularInline):
 class ServiceAdmin(admin.ModelAdmin):
     """إدارة الخدمات"""
     list_display = [
-        'title', 'category', 'provider', 'price_display', 
+        'title', 'category', 'provider', 'currency', 'price_display', 'discount_badge',
         'is_active_badge', 'is_featured_badge', 'views_count', 
         'avg_rating_display', 'created_at'
     ]
-    list_filter = ['is_active', 'is_featured', 'category', 'created_at']
+    list_filter = ['currency', 'is_active', 'is_featured', 'category', 'created_at']
     search_fields = ['title', 'summary', 'description', 'provider__display_name']
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ['tags']
@@ -98,8 +110,8 @@ class ServiceAdmin(admin.ModelAdmin):
         ('المحتوى', {
             'fields': ('summary', 'description')
         }),
-        ('السعر والمدة', {
-            'fields': ('price', 'price_note', 'duration')
+        ('السعر والتخفيضات والعملة', {
+            'fields': ('currency', 'price', 'original_price', 'discount_end_date', 'price_note', 'duration')
         }),
         ('الوسائط', {
             'fields': ('cover_image', 'cover_preview')
@@ -119,6 +131,12 @@ class ServiceAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+    def discount_badge(self, obj):
+        if obj.is_on_sale:
+            return format_html('<span class="badge bg-danger">خصم {}%</span>', obj.discount_percentage)
+        return '-'
+    discount_badge.short_description = 'العرض'
 
     def cover_preview(self, obj):
         if obj.cover_image:

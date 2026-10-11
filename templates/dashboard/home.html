@@ -217,40 +217,59 @@
             </div>
 
             <div class="row g-4">
-                <!-- Requests by Status -->
-                <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
-                    <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-header bg-white border-0 pt-4 px-4">
+            <!-- Charts Section -->
+            <div class="row g-4 mb-4">
+                <!-- 1. Weekly views line/area chart (col-lg-8) -->
+                <div class="col-lg-8" data-aos="fade-up" data-aos-delay="100">
+                    <div class="card border-0 shadow-sm rounded-4 h-100">
+                        <div class="card-header border-0 pt-4 px-4">
                             <h5 class="mb-0 fw-bold">
-                                <i class="bi bi-graph-up text-primary me-2"></i>
-                                الطلبات حسب الحالة
+                                <i class="bi bi-eye-fill text-primary me-2"></i>
+                                تحليل المشاهدات الأسبوعي للمنصة
                             </h5>
                         </div>
                         <div class="card-body">
-                            {% for item in requests_by_status %}
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span class="fw-semibold">{{ item.status_display }}</span>
-                                    <span class="badge bg-primary rounded-pill">{{ item.count }}</span>
-                                </div>
-                                <div class="status-progress">
-                                    <div class="progress-bar bg-primary" style="width: {% widthratio item.count stats.requests_count 100 %}%"></div>
-                                </div>
-                            </div>
-                            {% empty %}
-                            <div class="text-center text-muted py-4">
-                                <i class="bi bi-inbox display-4 d-block mb-2"></i>
-                                لا توجد طلبات
-                            </div>
-                            {% endfor %}
+                            <div id="views-chart" style="min-height: 350px;"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Top Services -->
+                <!-- 2. Request status doughnut chart (col-lg-4) -->
+                <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="card border-0 shadow-sm rounded-4 h-100">
+                        <div class="card-header border-0 pt-4 px-4">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="bi bi-pie-chart-fill text-success me-2"></i>
+                                توزيع حالات الطلبات
+                            </h5>
+                        </div>
+                        <div class="card-body d-flex flex-column justify-content-center">
+                            <div id="status-chart" style="min-height: 300px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <!-- 3. Top requested services bar chart (col-lg-6) -->
                 <div class="col-lg-6" data-aos="fade-up" data-aos-delay="300">
-                    <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-header bg-white border-0 pt-4 px-4">
+                    <div class="card border-0 shadow-sm rounded-4 h-100">
+                        <div class="card-header border-0 pt-4 px-4">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="bi bi-graph-up-arrow text-warning me-2"></i>
+                                الخدمات الأكثر طلباً
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="top-services-chart" style="min-height: 300px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Top viewed services list (col-lg-6) -->
+                <div class="col-lg-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="card border-0 shadow-sm rounded-4 h-100">
+                        <div class="card-header border-0 pt-4 px-4">
                             <h5 class="mb-0 fw-bold">
                                 <i class="bi bi-star-fill text-warning me-2"></i>
                                 الخدمات الأكثر مشاهدة
@@ -258,15 +277,15 @@
                         </div>
                         <div class="card-body">
                             {% for service in top_services %}
-                            <div class="d-flex align-items-center p-3 bg-light rounded mb-2">
+                            <div class="d-flex align-items-center p-3 bg-light rounded-4 mb-2 hover-shadow transition">
                                 <div class="flex-grow-1">
-                                    <span class="fw-semibold d-block">{{ service.title|truncatewords:5 }}</span>
+                                    <span class="fw-semibold d-block text-dark">{{ service.title|truncatewords:6 }}</span>
                                     <small class="text-muted">
                                         <i class="bi bi-person me-1"></i>{{ service.provider.display_name }}
                                     </small>
                                 </div>
                                 <div class="text-end">
-                                    <span class="badge bg-info">
+                                    <span class="badge bg-info bg-opacity-10 text-info px-3 py-2 rounded-pill">
                                         <i class="bi bi-eye me-1"></i>{{ service.views_count }}
                                     </span>
                                 </div>
@@ -280,11 +299,13 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
 
                 <!-- Recent Requests -->
                 <div class="col-12" data-aos="fade-up" data-aos-delay="400">
                     <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                        <div class="card-header border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                             <h5 class="mb-0 fw-bold">
                                 <i class="bi bi-clock-history text-primary me-2"></i>
                                 آخر الطلبات الواردة
@@ -346,3 +367,150 @@
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<!-- ApexCharts CDN -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Weekly views chart (Area Chart)
+        var viewsDates = JSON.parse('{{ chart_views_dates|safe }}');
+        var viewsCounts = JSON.parse('{{ chart_views_counts|safe }}');
+        
+        var viewsOptions = {
+            chart: {
+                type: 'area',
+                height: 350,
+                toolbar: { show: false },
+                fontFamily: 'Tajawal, sans-serif'
+            },
+            colors: ['#25ebb6'],
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 3 },
+            series: [{
+                name: 'المشاهدات',
+                data: viewsCounts
+            }],
+            xaxis: {
+                categories: viewsDates,
+                labels: {
+                    style: { colors: '#64748b' }
+                }
+            },
+            yaxis: {
+                labels: {
+                    style: { colors: '#64748b' }
+                }
+            },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.45,
+                    opacityTo: 0.05,
+                    stops: [0, 100]
+                }
+            },
+            grid: {
+                borderColor: '#f1f5f9',
+                strokeDashArray: 4
+            },
+            tooltip: {
+                theme: 'light',
+                x: { format: 'dd/MM/yyyy' }
+            }
+        };
+        
+        var viewsChart = new ApexCharts(document.querySelector("#views-chart"), viewsOptions);
+        viewsChart.render();
+        
+        // 2. Request status chart (Doughnut Chart)
+        var statusLabels = JSON.parse('{{ chart_status_labels|safe }}');
+        var statusValues = JSON.parse('{{ chart_status_values|safe }}');
+        
+        var statusOptions = {
+            chart: {
+                type: 'donut',
+                height: 300,
+                fontFamily: 'Tajawal, sans-serif'
+            },
+            labels: statusLabels,
+            series: statusValues,
+            colors: ['#25ebb6', '#10b981', '#f59e0b', '#ef4444', '#64748b', '#3b82f6', '#8b5cf6'],
+            legend: {
+                position: 'bottom',
+                horizontalAlign: 'center',
+                labels: { colors: '#64748b' }
+            },
+            dataLabels: { enabled: true },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '70%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'إجمالي الطلبات',
+                                color: '#64748b',
+                                formatter: function (w) {
+                                    return w.globals.seriesTotals.reduce((a, b) => a + b, 0)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        
+        var statusChart = new ApexCharts(document.querySelector("#status-chart"), statusOptions);
+        statusChart.render();
+
+        // 3. Top requested services chart (Bar Chart)
+        var serviceLabels = JSON.parse('{{ chart_top_services_labels|safe }}');
+        var serviceValues = JSON.parse('{{ chart_top_services_values|safe }}');
+        
+        var servicesOptions = {
+            chart: {
+                type: 'bar',
+                height: 300,
+                toolbar: { show: false },
+                fontFamily: 'Tajawal, sans-serif'
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 8,
+                    horizontal: true,
+                    barHeight: '60%',
+                    distributed: true
+                }
+            },
+            colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+            series: [{
+                name: 'الطلبات',
+                data: serviceValues
+            }],
+            xaxis: {
+                categories: serviceLabels,
+                labels: {
+                    show: true,
+                    style: { colors: '#64748b' }
+                }
+            },
+            yaxis: {
+                labels: {
+                    style: { colors: '#64748b' }
+                }
+            },
+            legend: { show: false },
+            grid: {
+                borderColor: '#f1f5f9',
+                strokeDashArray: 4
+            }
+        };
+        
+        var servicesChart = new ApexCharts(document.querySelector("#top-services-chart"), servicesOptions);
+        servicesChart.render();
+    });
+</script>
+{% endblock %}

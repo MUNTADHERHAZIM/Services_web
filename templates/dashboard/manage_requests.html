@@ -59,6 +59,13 @@
                                 <span class="badge {{ req.get_status_badge_class }}">
                                     {{ req.get_status_display }}
                                 </span>
+                                {% if req.status == 'canceled' and req.cancellation_reason %}
+                                <div class="mt-1">
+                                    <small class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 text-wrap" style="font-size: 0.75rem;" title="{{ req.cancellation_notes }}">
+                                        <i class="bi bi-x-circle me-1"></i>{{ req.get_cancellation_reason_display }}
+                                    </small>
+                                </div>
+                                {% endif %}
                             </td>
                             <td>{{ req.created_at|date:"d/m/Y H:i" }}</td>
                             <td>

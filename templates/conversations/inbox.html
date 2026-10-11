@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}صندوق المحادثات والرسائل - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom" data-aos="fade-up">
+        <div>
+            <h1 class="h3 fw-bold mb-1"><i class="bi bi-chat-dots-fill text-success me-2"></i> الرسائل والمحادثات المباشرة</h1>
+            <p class="text-muted small mb-0">تواصل مباشر مع المستقلين والعملاء لمناقشة تفاصيل الخدمات والاتفاقيات</p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border bg-card shadow-sm overflow-hidden" style="border-radius: 18px;" data-aos="fade-up">
+                <div class="list-group list-group-flush">
+                    {% for conv in conversations %}
+                    {% with other=conv|default:None %}
+                    <a href="{% url 'conversations:chat_detail' conv.id %}" class="list-group-item list-group-item-action p-3 d-flex align-items-center gap-3 transition">
+                        <!-- Avatar -->
+                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-success text-white fw-bold" style="width: 48px; height: 48px; font-size: 1.15rem; flex-shrink: 0;">
+                            {% if conv.sender == user %}
+                                {{ conv.receiver.username|slice:":1"|upper }}
+                            {% else %}
+                                {{ conv.sender.username|slice:":1"|upper }}
+                            {% endif %}
+                        </div>
+
+                        <!-- Content Info -->
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <h6 class="fw-bold mb-0 text-truncate">
+                                    {% if conv.sender == user %}
+                                        {{ conv.receiver.get_full_name|default:conv.receiver.username }}
+                                    {% else %}
+                                        {{ conv.sender.get_full_name|default:conv.sender.username }}
+                                    {% endif %}
+                                </h6>
+                                <span class="small text-muted">{{ conv.updated_at|date:"Y-m-d H:i" }}</span>
+                            </div>
+
+                            {% if conv.service %}
+                            <div class="badge bg-secondary-subtle text-secondary small mb-1">
+                                <i class="bi bi-tag-fill me-1"></i> {{ conv.service.title|truncatechars:35 }}
+                            </div>
+                            {% endif %}
+
+                            <p class="text-muted small mb-0 text-truncate">
+                                {% if conv.last_message %}
+                                    {% if conv.last_message.sender == user %}أنت: {% endif %}{{ conv.last_message.content }}
+                                {% else %}
+                                    محادثة جديدة...
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <!-- Unread Indicator -->
+                        <div>
+                            {% if conv.sender == user and conv.sender_unread_count > 0 %}
+                            <span class="badge rounded-pill bg-danger">{{ conv.sender_unread_count }}</span>
+                            {% elif conv.receiver == user and conv.receiver_unread_count > 0 %}
+                            <span class="badge rounded-pill bg-danger">{{ conv.receiver_unread_count }}</span>
+                            {% endif %}
+                            <i class="bi bi-chevron-left text-muted small ms-2"></i>
+                        </div>
+                    </a>
+                    {% endwith %}
+                    {% empty %}
+                    <div class="text-center py-5">
+                        <div class="d-inline-flex p-4 rounded-circle bg-success-subtle text-success fs-1 mb-3">
+                            <i class="bi bi-chat-square-text"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">لا توجد محادثات نشطة حالياً</h5>
+                        <p class="text-muted small mb-3">يمكنك بدء محادثة مباشرة مع أي مستقل من خلال صفحة تفاصيل الخدمة الخاصة به.</p>
+                        <a href="{% url 'services:service_list' %}" class="btn btn-primary-custom btn-sm">
+                            <i class="bi bi-search"></i> تصفح الخدمات
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

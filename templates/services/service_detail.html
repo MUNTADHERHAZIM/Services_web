@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load humanize currency_tags %}
 {% block title %}{{ service.title }} - {{ SITE_NAME }}{% endblock %}
 
 {% block extra_css %}
@@ -8,26 +9,27 @@
     padding-bottom: 100px;
 }
 .package-card {
-    border: 2px solid #e5e7eb;
+    border: 2px solid var(--border-color);
+    background: var(--bg-card);
     border-radius: 16px;
     padding: 25px;
     transition: all 0.3s ease;
     height: 100%;
 }
 .package-card:hover {
-    border-color: #667eea;
+    border-color: var(--brand-primary);
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-md);
 }
 .package-card.featured {
-    border-color: #667eea;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    border-color: var(--brand-primary);
+    background: rgba(16, 185, 129, 0.06);
 }
 .package-badge {
     position: absolute;
     top: -12px;
     right: 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
     color: white;
     padding: 5px 15px;
     border-radius: 20px;
@@ -38,25 +40,26 @@
     display: flex;
     align-items: flex-start;
     padding: 10px 0;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-color);
 }
 .feature-item:last-child {
     border-bottom: none;
 }
 .feature-item i {
-    color: #10b981;
+    color: var(--brand-primary);
     margin-left: 10px;
     font-size: 1.2rem;
 }
 .faq-item {
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     margin-bottom: 15px;
     overflow: hidden;
 }
 .faq-question {
     padding: 20px;
-    background: #f8f9fa;
+    background: var(--bg-surface);
+    color: var(--text-main);
     cursor: pointer;
     display: flex;
     justify-content: space-between;
@@ -65,6 +68,8 @@
 }
 .faq-answer {
     padding: 20px;
+    background: var(--bg-card);
+    color: var(--text-muted);
     display: none;
 }
 .faq-item.active .faq-answer {
@@ -157,7 +162,7 @@
 
             <!-- Service Description -->
             <div class="card mb-4">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="mb-0 fw-bold">
                         <i class="bi bi-file-text me-2 text-primary"></i>وصف الخدمة
                     </h5>
@@ -172,7 +177,7 @@
             <!-- Service Features -->
             {% if service.features.all %}
             <div class="card mb-4">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="mb-0 fw-bold">
                         <i class="bi bi-check-circle me-2 text-primary"></i>مميزات الخدمة
                     </h5>
@@ -204,7 +209,7 @@
             <!-- Service Packages -->
             {% if service.packages.all %}
             <div class="card mb-4">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="mb-0 fw-bold">
                         <i class="bi bi-box-seam me-2 text-primary"></i>باقات الخدمة
                     </h5>
@@ -252,7 +257,7 @@
             <!-- FAQs -->
             {% if service.faqs.all %}
             <div class="card mb-4">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="mb-0 fw-bold">
                         <i class="bi bi-question-circle me-2 text-primary"></i>الأسئلة الشائعة
                     </h5>
@@ -276,7 +281,7 @@
             <!-- Service Images Gallery -->
             {% if service.images.all %}
             <div class="card mb-4">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="mb-0 fw-bold">
                         <i class="bi bi-images me-2 text-primary"></i>معرض الصور
                     </h5>
@@ -302,7 +307,7 @@
             <!-- Reviews -->
             {% if reviews %}
             <div class="card mb-4">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold">
                         <i class="bi bi-chat-quote me-2 text-primary"></i>التقييمات
                     </h5>
@@ -367,14 +372,27 @@
                 <!-- Price & Request Card -->
                 <div class="card mb-4">
                 <div class="card-body">
-                    {% if service.price %}
+                    {% if service.is_on_sale %}
+                    <div class="p-3 mb-4 rounded-4 text-center text-white shadow-sm" style="background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);">
+                        <span class="badge bg-white text-danger px-3 py-1 rounded-pill fw-bold mb-2">
+                            <i class="bi bi-fire"></i> عرض خاص لفترة محدودة 🔥
+                        </span>
+                        <div class="d-flex justify-content-center align-items-center gap-2 mb-1 flex-wrap">
+                            <span class="text-white-50 text-decoration-line-through fs-5">{{ service|service_orig_price:user_currency }}</span>
+                            <h2 class="fw-bold mb-0 text-white">{{ service|service_price:user_currency }}</h2>
+                        </div>
+                        <div class="small opacity-90 mb-2">{{ service|service_sec_price:user_currency }}</div>
+                        <div class="badge bg-warning text-dark fw-bold">خصم {{ service.discount_percentage }}%</div>
+                    </div>
+                    {% elif service.price %}
                     <div class="text-center mb-4">
-                        <span class="text-muted">السعر يبدأ من</span>
-                        <h2 class="fw-bold text-primary mb-0">
-                            {{ service.price|floatformat:0 }} <small class="fs-5">د.ع</small>
+                        <span class="text-muted d-block small">السعر يبدأ من</span>
+                        <h2 class="fw-bold text-success mb-1">
+                            {{ service|service_price:user_currency }}
                         </h2>
+                        <div class="text-muted small mb-1">{{ service|service_sec_price:user_currency }}</div>
                         {% if service.price_note %}
-                        <small class="text-muted">{{ service.price_note }}</small>
+                        <small class="badge bg-body-secondary text-muted">{{ service.price_note }}</small>
                         {% endif %}
                     </div>
                     {% else %}
@@ -441,11 +459,12 @@
                     {% endif %}
                     
                     <div class="d-flex gap-2 mt-3">
-                        <button class="btn btn-outline-secondary flex-grow-1" onclick="shareService()">
-                            <i class="bi bi-share"></i> مشاركة
+                        <button class="btn btn-outline-secondary flex-grow-1 py-2 rounded-3" onclick="shareService()">
+                            <i class="bi bi-share me-1"></i> مشاركة
                         </button>
-                        <button class="btn btn-outline-danger flex-grow-1" onclick="saveService()">
-                            <i class="bi bi-heart"></i> حفظ
+                        <button type="button" class="btn flex-grow-1 py-2 rounded-3 btn-favorite-trigger btn-favorite-detail {% if service.id in user_favorite_ids %}active{% endif %}" data-service-id="{{ service.id }}" style="position: static !important; transform: none !important;">
+                            <i class="bi bi-heart{% if service.id in user_favorite_ids %}-fill text-white{% else %} text-danger{% endif %} me-1"></i>
+                            <span>{% if service.id in user_favorite_ids %}محفوظ{% else %}حفظ{% endif %}</span>
                         </button>
                     </div>
                 </div>
@@ -453,7 +472,7 @@
 
             <!-- Provider Card -->
             <div class="card mb-4">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="mb-0 fw-bold">
                         <i class="bi bi-person-badge me-2 text-primary"></i>مقدم الخدمة
                     </h5>
@@ -520,15 +539,26 @@
                     </div>
 
                     <a href="{% url 'services:provider_detail' service.provider.user.username %}"
-                        class="btn btn-outline-primary w-100">
+                        class="btn btn-outline-primary w-100 mb-2">
                         <i class="bi bi-eye me-2"></i>عرض الملف الكامل
                     </a>
+                    {% if user.is_authenticated and user != service.provider.user %}
+                    <a href="{% url 'conversations:start_conversation' service.provider.user.id %}?service_id={{ service.id }}"
+                        class="btn btn-outline-success w-100">
+                        <i class="bi bi-chat-dots me-2"></i>تواصل مع البائع
+                    </a>
+                    {% elif not user.is_authenticated %}
+                    <a href="{% url 'accounts:login' %}?next={% url 'services:service_detail' service.slug %}"
+                        class="btn btn-outline-success w-100">
+                        <i class="bi bi-chat-dots me-2"></i>تسجيل الدخول للمراسلة
+                    </a>
+                    {% endif %}
                 </div>
             </div>
 
             <!-- Safety Tips -->
             <div class="card mb-4">
-                <div class="card-header bg-white">
+                <div class="card-header">
                     <h5 class="mb-0 fw-bold">
                         <i class="bi bi-shield-check me-2 text-success"></i>نصائح الأمان
                     </h5>
@@ -558,42 +588,164 @@
         </div>
     </div>
 
-    <!-- Related Services -->
+    <!-- 1. Related & Recommended Services (Same Category) -->
     {% if related_services %}
-    <div class="mt-5 pb-5">
-        <h3 class="fw-bold mb-4">
-            <i class="bi bi-grid me-2 text-primary"></i>خدمات مشابهة
-        </h3>
+    <div class="mt-5 pt-4 border-top">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1 fs-4 text-dark-emphasis">
+                    <i class="bi bi-grid-fill me-2 text-success"></i>خدمات مشابهة ومقترحة
+                </h3>
+                <p class="text-muted small mb-0">خدمات متميزة أخرى ضمن تصنيف <span class="fw-bold text-success">{{ service.category.name }}</span> قد تهمك</p>
+            </div>
+            <a href="{% url 'services:category_detail' service.category.slug %}" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                تصفح الكل <i class="bi bi-arrow-left ms-1"></i>
+            </a>
+        </div>
+
         <div class="row g-4">
             {% for rel_service in related_services %}
             <div class="col-md-6 col-lg-3">
-                <div class="card service-card h-100">
-                    <div class="position-relative">
+                <div class="card h-100 border rounded-4 overflow-hidden shadow-xs hover-lift transition-all">
+                    <!-- Image Wrap -->
+                    <div class="position-relative overflow-hidden" style="height: 160px;">
                         {% if rel_service.cover_image %}
-                        <img src="{{ rel_service.cover_image.url }}" class="card-img-top" alt="{{ rel_service.title }}" style="height: 180px; object-fit: cover;">
+                        <img src="{{ rel_service.cover_image.url }}" class="w-100 h-100 object-fit-cover" alt="{{ rel_service.title }}" loading="lazy">
+                        {% elif rel_service.image %}
+                        <img src="{{ rel_service.image.url }}" class="w-100 h-100 object-fit-cover" alt="{{ rel_service.title }}" loading="lazy">
+                        {% elif rel_service.get_cover_image_url %}
+                        <img src="{{ rel_service.get_cover_image_url }}" class="w-100 h-100 object-fit-cover" alt="{{ rel_service.title }}" loading="lazy">
                         {% else %}
-                        <div class="card-img-top bg-gradient d-flex align-items-center justify-content-center"
-                            style="height: 180px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                            <i class="bi bi-image text-white display-4"></i>
+                        <div class="w-100 h-100 bg-gradient d-flex align-items-center justify-content-center bg-success-subtle text-success">
+                            <i class="bi bi-image display-6"></i>
                         </div>
                         {% endif %}
                         
-                        {% if rel_service.avg_rating > 0 %}
-                        <span class="badge bg-dark position-absolute bottom-0 start-0 m-2">
-                            <i class="bi bi-star-fill text-warning"></i> {{ rel_service.avg_rating }}
+                        {% if rel_service.is_featured %}
+                        <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2 shadow-xs fw-bold px-2 py-1 rounded-pill small">
+                            <i class="bi bi-star-fill text-dark me-1"></i>مميز
+                        </span>
+                        {% endif %}
+
+                        {% if rel_service.is_on_sale %}
+                        <span class="badge bg-danger text-white position-absolute top-0 start-0 m-2 shadow-xs fw-bold px-2 py-1 rounded-pill small">
+                            خصم {{ rel_service.discount_percentage }}%
                         </span>
                         {% endif %}
                     </div>
-                    <div class="card-body">
-                        <h6 class="card-title">
-                            <a href="{% url 'services:service_detail' rel_service.slug %}"
-                                class="text-decoration-none text-dark stretched-link">
-                                {{ rel_service.title|truncatewords:6 }}
+
+                    <!-- Card Body -->
+                    <div class="card-body p-3 d-flex flex-column">
+                        <h6 class="card-title fw-bold fs-6 mb-2">
+                            <a href="{% url 'services:service_detail' rel_service.slug %}" class="text-decoration-none text-dark-emphasis text-reset stretched-link">
+                                {{ rel_service.title|truncatewords:8 }}
                             </a>
                         </h6>
-                        {% if rel_service.price %}
-                        <span class="text-primary fw-bold">{{ rel_service.price|floatformat:0 }} د.ع</span>
+
+                        <!-- Provider Info -->
+                        {% if rel_service.provider %}
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            {% if rel_service.provider.get_avatar_url %}
+                            <img src="{{ rel_service.provider.get_avatar_url }}" class="rounded-circle" style="width: 24px; height: 24px; object-fit: cover;" alt="{{ rel_service.provider.display_name }}">
+                            {% else %}
+                            <div class="rounded-circle bg-success text-white small d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; font-size: 0.65rem;">
+                                {{ rel_service.provider.display_name|slice:":1" }}
+                            </div>
+                            {% endif %}
+                            <span class="small text-muted text-truncate">{{ rel_service.provider.display_name }}</span>
+                        </div>
                         {% endif %}
+
+                        <!-- Footer: Rating & Price Separated -->
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-auto">
+                            <div>
+                                <span class="small text-muted d-block" style="font-size: 0.7rem;">السعر</span>
+                                <span class="fw-bold text-success">
+                                    {{ rel_service|service_price:user_currency }}
+                                </span>
+                            </div>
+
+                            <div class="badge bg-body-tertiary text-dark-emphasis border d-inline-flex align-items-center gap-1 px-2 py-1">
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <span class="fw-bold">{{ rel_service.avg_rating|default:"5.0"|floatformat:1 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 2. More Services By Same Provider -->
+    {% if provider_services %}
+    <div class="mt-5 pb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1 fs-4 text-dark-emphasis">
+                    <i class="bi bi-person-workspace me-2 text-primary"></i>المزيد من خدمات {{ service.provider.display_name }}
+                </h3>
+                <p class="text-muted small mb-0">أعمال وخدمات احترافية أخرى مقدمة من نفس المستقل</p>
+            </div>
+            <a href="{% url 'services:provider_detail' service.provider.user.username %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                الملف الشخصي <i class="bi bi-arrow-left ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for p_service in provider_services %}
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border rounded-4 overflow-hidden shadow-xs hover-lift transition-all">
+                    <!-- Image Wrap -->
+                    <div class="position-relative overflow-hidden" style="height: 160px;">
+                        {% if p_service.cover_image %}
+                        <img src="{{ p_service.cover_image.url }}" class="w-100 h-100 object-fit-cover" alt="{{ p_service.title }}" loading="lazy">
+                        {% elif p_service.image %}
+                        <img src="{{ p_service.image.url }}" class="w-100 h-100 object-fit-cover" alt="{{ p_service.title }}" loading="lazy">
+                        {% elif p_service.get_cover_image_url %}
+                        <img src="{{ p_service.get_cover_image_url }}" class="w-100 h-100 object-fit-cover" alt="{{ p_service.title }}" loading="lazy">
+                        {% else %}
+                        <div class="w-100 h-100 bg-gradient d-flex align-items-center justify-content-center bg-primary-subtle text-primary">
+                            <i class="bi bi-image display-6"></i>
+                        </div>
+                        {% endif %}
+                        
+                        {% if p_service.is_featured %}
+                        <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2 shadow-xs fw-bold px-2 py-1 rounded-pill small">
+                            <i class="bi bi-star-fill text-dark me-1"></i>مميز
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="card-body p-3 d-flex flex-column">
+                        {% if p_service.category %}
+                        <div class="mb-1">
+                            <span class="badge bg-body-tertiary text-dark-emphasis border small rounded-pill px-2 py-0-5" style="font-size: 0.72rem;">{{ p_service.category.name }}</span>
+                        </div>
+                        {% endif %}
+
+                        <h6 class="card-title fw-bold fs-6 mb-2">
+                            <a href="{% url 'services:service_detail' p_service.slug %}" class="text-decoration-none text-dark-emphasis text-reset stretched-link">
+                                {{ p_service.title|truncatewords:8 }}
+                            </a>
+                        </h6>
+
+                        <!-- Footer: Rating & Price -->
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-auto">
+                            <div>
+                                <span class="small text-muted d-block" style="font-size: 0.7rem;">السعر</span>
+                                <span class="fw-bold text-success">
+                                    {{ p_service|service_price:user_currency }}
+                                </span>
+                            </div>
+
+                            <div class="badge bg-body-tertiary text-dark-emphasis border d-inline-flex align-items-center gap-1 px-2 py-1">
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <span class="fw-bold">{{ p_service.avg_rating|default:"5.0"|floatformat:1 }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

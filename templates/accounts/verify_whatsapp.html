@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% block title %}تأكيد الحساب عبر الواتساب - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6 col-xl-5" data-aos="fade-up">
+            <div class="card border shadow-lg overflow-hidden rounded-4">
+                <!-- WhatsApp Brand Header -->
+                <div class="p-4 text-center text-white position-relative" style="background: linear-gradient(135deg, #075e54 0%, #128c7e 50%, #25d366 100%);">
+                    <div class="d-inline-flex p-3 rounded-circle bg-white bg-opacity-20 text-white mb-2 shadow-xs">
+                        <i class="bi bi-whatsapp fs-1"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">تأكيد الحساب عبر الواتساب</h3>
+                    <p class="text-white-50 small mb-0">خطوة أمان إضافية لتوثيق رقم هاتفك العراقي وحماية حسابك</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    {% if messages %}
+                    <div class="mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show small" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if is_verified %}
+                    <!-- Already Verified State -->
+                    <div class="text-center py-4">
+                        <div class="d-inline-flex p-3 rounded-circle bg-success-subtle text-success fs-1 mb-3">
+                            <i class="bi bi-patch-check-fill"></i>
+                        </div>
+                        <h4 class="fw-bold text-success mb-2">حسابك مؤكد وموثق بالكامل!</h4>
+                        <p class="text-muted small mb-4">
+                            تم التحقق من رقم هاتفك <strong dir="ltr" class="text-dark">{{ user_profile.phone_number }}</strong> وربطه بالواتساب بنجاح.
+                        </p>
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-primary-custom w-100 py-2-5 rounded-pill">
+                            <i class="bi bi-person-circle me-1"></i> العودة للملف الشخصي
+                        </a>
+                    </div>
+                    {% else %}
+                    <!-- Unverified Verification Flow -->
+                    <div id="verificationStepOne">
+                        <div class="bg-body-tertiary p-3 rounded-3 border mb-4 text-center">
+                            <span class="text-muted small d-block mb-1">رقم الهاتف المراد تأكيده:</span>
+                            <div class="fs-4 fw-bold font-monospace text-dark-emphasis d-flex align-items-center justify-content-center gap-2" dir="ltr">
+                                <span>🇮🇶</span>
+                                <span id="currentPhoneDisplay">{{ user_profile.phone_number|default:"لم يتم تحديد رقم" }}</span>
+                            </div>
+                            <small class="text-muted mt-1 d-block">
+                                <a href="{% url 'accounts:profile_edit' %}" class="text-success text-decoration-none small">
+                                    <i class="bi bi-pencil-square"></i> تعديل الرقم
+                                </a>
+                            </small>
+                        </div>
+
+                        <!-- Feedback Message Box -->
+                        <div id="otpFeedbackBox" class="alert alert-info small d-none mb-3" role="alert"></div>
+
+                        <!-- Step 1 Trigger Button -->
+                        <button type="button" class="btn btn-success btn-lg w-100 py-3 rounded-pill fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm mb-3" id="sendOtpBtn" onclick="requestWhatsAppOtp()">
+                            <i class="bi bi-whatsapp fs-5"></i>
+                            <span>إرسال رمز التأكيد عبر الواتساب</span>
+                        </button>
+
+                        <div class="form-text small text-muted text-center mb-4">
+                            <i class="bi bi-shield-lock me-1 text-success"></i> سيتم إنشاء كود تأكيد مكون من 6 أرقام صالح لمدة 10 دقائق
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Code Verification Box (Appears after sending) -->
+                    <div id="verificationStepTwo" class="{% if not has_active_otp %}d-none{% endif %} border-top pt-4">
+                        <!-- Direct WhatsApp Link Button -->
+                        <div class="mb-4 text-center">
+                            <a href="#" id="directWhatsAppLink" target="_blank" class="btn btn-outline-success w-100 py-2-5 rounded-pill d-flex align-items-center justify-content-center gap-2 fw-semibold">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                                <span>فتح المحادثة في الواتساب مباشرة 💬</span>
+                            </a>
+                            <span class="text-muted small d-block mt-1" style="font-size: 0.72rem;">يمكنك النقر أعلاه لفتح المحادثة واستلام الرمز</span>
+                        </div>
+
+                        <!-- OTP Input Form -->
+                        <form method="post" action="{% url 'accounts:verify_whatsapp' %}" id="verifyOtpForm">
+                            {% csrf_token %}
+                            <label class="form-label small fw-bold text-muted text-center d-block mb-2">
+                                أدخل رمز التحقق المكون من 6 أرقام:
+                            </label>
+
+                            <div class="mb-3">
+                                <input type="text" 
+                                       name="otp_code" 
+                                       id="otpCodeInput" 
+                                       class="form-control form-control-lg text-center font-monospace fw-bold fs-3 text-success letter-spacing-3" 
+                                       placeholder="••••••" 
+                                       maxlength="6" 
+                                       required 
+                                       autocomplete="one-time-code"
+                                       style="letter-spacing: 10px;">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary-custom w-100 py-2-5 rounded-pill fw-bold mb-3" id="submitOtpBtn">
+                                <i class="bi bi-check2-circle me-1"></i> تأكيد وتفعيل الحساب الآن
+                            </button>
+
+                            <!-- Resend Timer -->
+                            <div class="text-center">
+                                <button type="button" class="btn btn-link btn-sm text-muted text-decoration-none" id="resendOtpBtn" onclick="requestWhatsAppOtp()">
+                                    لم يصلك الرمز؟ <span class="text-success fw-bold">إعادة الإرسال</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <a href="{% url 'accounts:profile' %}" class="text-muted small text-decoration-none">
+                            <i class="bi bi-arrow-right me-1"></i> العودة إلى صفحتي الشخصية
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function requestWhatsAppOtp() {
+    const btn = document.getElementById('sendOtpBtn');
+    const feedback = document.getElementById('otpFeedbackBox');
+    const stepTwo = document.getElementById('verificationStepTwo');
+    const directLink = document.getElementById('directWhatsAppLink');
+    const otpInput = document.getElementById('otpCodeInput');
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> جاري تجهيز الرمز...';
+    }
+
+    const formData = new FormData();
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch("{% url 'accounts:send_whatsapp_otp' %}", {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-whatsapp fs-5 me-1"></i> إعادة إرسال الرمز';
+        }
+
+        if (feedback) {
+            feedback.classList.remove('d-none', 'alert-danger', 'alert-success');
+            if (data.success) {
+                feedback.classList.add('alert-success');
+                feedback.innerHTML = `
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill fs-5 text-success"></i>
+                        <div>
+                            <strong>تم توليد الرمز بنجاح!</strong>
+                            <div class="mt-1">رمز التحقق الخاص بك هو: <span class="badge bg-success fs-6 px-2 font-monospace">${data.otp_code}</span></div>
+                        </div>
+                    </div>
+                `;
+                
+                // Show Step 2
+                if (stepTwo) stepTwo.classList.remove('d-none');
+                if (directLink && data.whatsapp_url) {
+                    directLink.href = data.whatsapp_url;
+                }
+                if (otpInput) {
+                    otpInput.value = data.otp_code; // auto-fill for supreme testing convenience!
+                    otpInput.focus();
+                }
+            } else {
+                feedback.classList.add('alert-danger');
+                feedback.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i> ${data.message}`;
+            }
+        }
+    })
+    .catch(() => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-whatsapp fs-5 me-1"></i> إرسال رمز التأكيد';
+        }
+        if (feedback) {
+            feedback.classList.remove('d-none');
+            feedback.classList.add('alert-danger');
+            feedback.innerHTML = 'حدث خطأ في الاتصال، يرجى المحاولة لاحقاً.';
+        }
+    });
+}
+</script>
+{% endblock %}

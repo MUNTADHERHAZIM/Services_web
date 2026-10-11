@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}خدماتي المفضلة - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom" data-aos="fade-up">
+        <div>
+            <h1 class="h3 fw-bold mb-1"><i class="bi bi-heart-fill text-danger me-2"></i> قائمة الخدمات المفضلة</h1>
+            <p class="text-muted small mb-0">جميع الخدمات التي قمت بحفظها للرجوع إليها لاحقاً</p>
+        </div>
+        <a href="{% url 'services:service_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-plus-lg"></i> استكشاف المزيد من الخدمات
+        </a>
+    </div>
+
+    {% if favorites %}
+    <div class="row g-4">
+        {% for fav in favorites %}
+        {% with service=fav.service %}
+        <div class="col-md-6 col-lg-4" data-aos="fade-up">
+            <div class="service-card-modern">
+                <div class="service-img-wrapper position-relative">
+                    {% if service.is_on_sale %}
+                    <div class="discount-badge-pill" style="position: absolute !important; top: 12px !important; right: 12px !important; left: auto !important; z-index: 4 !important;">
+                        <i class="bi bi-tag-fill"></i> خصم {{ service.discount_percentage }}%
+                    </div>
+                    {% elif service.is_featured %}
+                    <div class="service-featured-badge" style="position: absolute !important; top: 12px !important; right: 12px !important; left: auto !important; z-index: 4 !important;">
+                        <i class="bi bi-lightning-charge-fill"></i> مُميز
+                    </div>
+                    {% endif %}
+                    
+                    <button type="button" class="btn-favorite-trigger active" data-service-id="{{ service.id }}" title="إزالة من المفضلة" style="position: absolute !important; top: 12px !important; left: 12px !important; right: auto !important; z-index: 5 !important;">
+                        <i class="bi bi-heart-fill text-danger"></i>
+                    </button>
+
+                    <a href="{% url 'services:service_detail' service.slug %}">
+                        {% if service.image %}
+                            <img src="{{ service.image.url }}" alt="{{ service.title }}">
+                        {% elif service.cover_image %}
+                            <img src="{{ service.cover_image.url }}" alt="{{ service.title }}">
+                        {% else %}
+                            <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-body-secondary text-muted">
+                                <i class="bi bi-image fs-1 opacity-50 mb-1"></i>
+                                <span class="small">{{ service.category.name }}</span>
+                            </div>
+                        {% endif %}
+                    </a>
+                </div>
+
+                <div class="service-body-wrap">
+                    <a href="{% url 'services:category_detail' service.category.slug %}" class="service-cat-pill">
+                        {{ service.category.name }}
+                    </a>
+
+                    <h3 class="service-title-text">
+                        <a href="{% url 'services:service_detail' service.slug %}" class="text-reset">
+                            {{ service.title }}
+                        </a>
+                    </h3>
+
+                    <div class="service-provider-strip">
+                        {% if service.provider.avatar %}
+                            <img src="{{ service.provider.avatar.url }}" alt="{{ service.provider.display_name }}" class="provider-avatar-mini">
+                        {% else %}
+                            <div class="provider-avatar-mini d-flex align-items-center justify-content-center bg-success text-white fw-bold small">
+                                {{ service.provider.display_name|slice:":1" }}
+                            </div>
+                        {% endif %}
+                        <div class="flex-grow-1 text-truncate">
+                            <span class="provider-name-mini">{{ service.provider.display_name }}</span>
+                        </div>
+                    </div>
+
+                    <div class="service-footer-strip">
+                        <div class="service-rating-stat">
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <span>{{ service.avg_rating|default:"5.0"|floatformat:1 }}</span>
+                            <span class="text-muted small">({{ service.total_reviews|default:"0" }})</span>
+                        </div>
+
+                        <div class="service-price-block">
+                            <span class="price-prefix">تبدأ من</span>
+                            <span class="price-amount">${{ service.price|intcomma }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5 my-5 bg-card border rounded-4 p-5" data-aos="fade-up">
+        <div class="d-inline-flex p-4 rounded-circle bg-danger-subtle text-danger fs-1 mb-3">
+            <i class="bi bi-heart"></i>
+        </div>
+        <h4 class="fw-bold mb-2">قائمة مفضلتك فارغة حالياً</h4>
+        <p class="text-muted mb-4">عند تصفح الخدمات، انقر على رمز القلب لحفظ الخدمات المفضلة لديك هنا والوصول إليها لاحقاً بسهولة.</p>
+        <a href="{% url 'services:service_list' %}" class="btn btn-primary-custom">
+            <i class="bi bi-search"></i> تصفح الخدمات الآن
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

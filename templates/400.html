@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}400 - طلب غير صالح | {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5 my-md-5">
+    <div class="row justify-content-center text-center">
+        <div class="col-lg-8 col-xl-7" data-aos="zoom-in" data-aos-duration="600">
+            <!-- Animated Error Graphic -->
+            <div class="position-relative d-inline-block mb-4">
+                <div class="error-number-display error-400">400</div>
+                <div class="error-floating-icon text-info">
+                    <i class="bi bi-question-diamond-fill"></i>
+                </div>
+                <div class="error-ambient-glow glow-cyan"></div>
+            </div>
+
+            <!-- Error Messages -->
+            <h1 class="h2 fw-black mb-3">عذراً، الطلب المرسل غير صالح أو تالف!</h1>
+            <p class="text-muted fs-6 mb-4 mx-auto" style="max-width: 520px; line-height: 1.8;">
+                تعذر على الخادم فهم الطلب بسبب خطأ في البيانات المرسلة أو عدم اكتمال المعاملة. يرجى التأكد من الرابط أو المحاولة لاحقاً.
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+                <a href="{% url 'core:home' %}" class="btn btn-primary-custom px-4 py-2">
+                    <i class="bi bi-house-door-fill me-1"></i> العودة للرئيسية
+                </a>
+                <a href="{% url 'services:service_list' %}" class="btn btn-outline-secondary px-4 py-2">
+                    <i class="bi bi-grid-fill me-1"></i> تصفح الخدمات
+                </a>
+                <a href="{% url 'core:contact' %}" class="btn btn-link text-muted text-decoration-none px-3 py-2">
+                    <i class="bi bi-headset me-1"></i> مركز المساعدة
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-number-display.error-400 {
+    font-size: clamp(6rem, 16vw, 11rem);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -4px;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #6366f1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    user-select: none;
+    position: relative;
+    z-index: 2;
+}
+
+.glow-cyan {
+    background: radial-gradient(circle, rgba(2, 132, 199, 0.22) 0%, rgba(99, 102, 241, 0.1) 50%, transparent 70%) !important;
+}
+
+.error-floating-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    z-index: 3;
+    animation: bounceIcon 3s ease-in-out infinite;
+    filter: drop-shadow(0 10px 15px rgba(2, 132, 199, 0.4));
+}
+
+.error-ambient-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    z-index: 1;
+    pointer-events: none;
+    filter: blur(20px);
+}
+
+@keyframes bounceIcon {
+    0%, 100% { transform: translate(-50%, -50%); }
+    50% { transform: translate(-50%, -60%); }
+}
+</style>
+{% endblock %}

@@ -1,894 +1,697 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-bs-theme="light">
 
 <head>
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('site_theme');
+                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme ? savedTheme : (systemDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-bs-theme', theme);
+            } catch (e) {}
+        })();
+    </script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <meta name="description" content="{{ SITE_DESCRIPTION }}">
-    <meta name="robots" content="index, follow">
-    <meta name="theme-color" content="#25ebb6">
+    <meta name="theme-color" content="#10b981" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
+
+    <!-- PWA Manifest & App Info -->
+    <link rel="manifest" href="{% url 'pwa_manifest' %}">
+    <link rel="icon" type="image/png" sizes="72x72" href="{% static 'images/pwa/icon-72x72.png' %}">
+    <link rel="icon" type="image/png" sizes="96x96" href="{% static 'images/pwa/icon-96x96.png' %}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'images/pwa/icon-192x192.png' %}">
+
+    <!-- Apple iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="خدماتي">
+    <link rel="apple-touch-icon" href="{% static 'images/pwa/apple-touch-icon.png' %}">
+    <link rel="apple-touch-icon" sizes="152x152" href="{% static 'images/pwa/icon-152x152.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/pwa/apple-touch-icon.png' %}">
+    <link rel="apple-touch-icon" sizes="192x192" href="{% static 'images/pwa/icon-192x192.png' %}">
+
+    <!-- Microsoft Tiles Support -->
+    <meta name="msapplication-TileColor" content="#10b981">
+    <meta name="msapplication-TileImage" content="{% static 'images/pwa/icon-144x144.png' %}">
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="canonical" href="{{ request.build_absolute_uri }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="/media/profiles/pictures/icon-512.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/media/profiles/pictures/icon-512.png">
-    <meta property="og:locale" content="ar_IQ">
+
+    <!-- Open Graph / Meta -->
+    <meta property="og:locale" content="ar_SA">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="{{ SITE_NAME }}">
-    <meta property="og:title" content="{{ SITE_NAME }}">
+    <meta property="og:title" content="{% block og_title %}{{ SITE_NAME }}{% endblock %}">
     <meta property="og:description" content="{{ SITE_DESCRIPTION }}">
-    <meta property="og:url" content="{{ request.build_absolute_uri }}">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ SITE_NAME }}">
-    <meta name="twitter:description" content="{{ SITE_DESCRIPTION }}">
+
     <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
 
-    <!-- Bootstrap 5 RTL CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <!-- AOS Animation Library -->
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <!-- Google Fonts - Tajawal -->
+    <!-- Google Fonts - Tajawal & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "{{ SITE_NAME|default:'منصة الخدمات' }}",
-      "url": "{{ request.scheme }}://{{ request.get_host }}/",
-      "inLanguage": "ar-IQ",
-      "description": "{{ SITE_DESCRIPTION|default:'منصة متكاملة لعرض وطلب الخدمات' }}"
-    }
-    </script>
-
-    <style>
-        :root {
-            --primary-color: #25ebb6;
-            --secondary-color: #1e5e30;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --dark-color: #1e293b;
-            --light-bg: #f8fafc;
-        }
-
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: var(--light-bg);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Navbar Styles */
-        .navbar {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .navbar-brand {
-            font-weight: 800;
-            font-size: 1.5rem;
-        }
-
-        .nav-link {
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .nav-link:hover {
-            transform: translateY(-2px);
-        }
-
-        /* Card Styles */
-        .card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .card-img-top {
-            border-radius: 16px 16px 0 0;
-            height: 200px;
-            object-fit: cover;
-        }
-
-        /* Button Styles */
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            border: none;
-            border-radius: 10px;
-            padding: 10px 25px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4);
-        }
-
-        /* Badge Styles */
-        .badge {
-            font-weight: 500;
-            padding: 6px 12px;
-            border-radius: 8px;
-        }
-
-        /* Footer Styles */
-        .footer {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            color: white;
-            margin-top: auto;
-            position: relative;
-        }
-
-        .footer-link {
-            color: rgba(255, 255, 255, 0.7);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            display: inline-block;
-        }
-
-        .footer-link:hover {
-            color: #25ebb6;
-            transform: translateX(-5px);
-        }
-
-        .footer-icon {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .footer-icon:hover {
-            background: rgba(37, 235, 182, 0.2);
-            transform: scale(1.1);
-        }
-
-        .footer .btn-outline-light {
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .footer .btn-outline-light:hover {
-            background: linear-gradient(135deg, #25ebb6 0%, #1e5e30 100%);
-            border-color: transparent;
-            transform: translateY(-3px);
-        }
-
-        /* Form Styles */
-        .form-control,
-        .form-select {
-            border-radius: 10px;
-            border: 2px solid #e2e8f0;
-            padding: 12px 16px;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        /* Hero Section */
-        .hero-section {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-            padding: 80px 0;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        }
-
-        /* Category Card */
-        .category-card {
-            text-align: center;
-            padding: 30px;
-            border-radius: 16px;
-            background: white;
-            transition: all 0.3s ease;
-        }
-
-        .category-card:hover {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-        }
-
-        .category-card:hover .category-icon {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-
-        .category-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: rgba(37, 99, 235, 0.1);
-            color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 15px;
-            font-size: 2rem;
-            transition: all 0.3s ease;
-        }
-
-        /* Alerts */
-        .alert {
-            border: none;
-            border-radius: 12px;
-        }
-
-        /* Rating Stars */
-        .rating {
-            color: #fbbf24;
-        }
-
-        /* Pagination */
-        .pagination .page-link {
-            border: none;
-            border-radius: 10px;
-            margin: 0 3px;
-            color: var(--dark-color);
-        }
-
-        .pagination .page-item.active .page-link {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-        }
-
-        /* Service Card */
-        .service-card .price-tag {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: var(--success-color);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-
-        /* Sidebar Filter */
-        .filter-sidebar {
-            background: white;
-            border-radius: 16px;
-            padding: 25px;
-            position: sticky;
-            top: 100px;
-        }
-
-        /* Dashboard Stats Card */
-        .stats-card {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-            border-radius: 16px;
-            padding: 25px;
-        }
-
-        .stats-card.success {
-            background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
-        }
-
-        .stats-card.warning {
-            background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
-        }
-
-        .stats-card.danger {
-            background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
-        }
-
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .fade-in-up {
-            animation: fadeInUp 0.6s ease forwards;
-        }
-
-        /* Status Badge Colors */
-        .status-new {
-            background-color: var(--primary-color);
-        }
-
-        .status-in_review {
-            background-color: #06b6d4;
-        }
-
-        .status-approved {
-            background-color: var(--success-color);
-        }
-
-        .status-rejected {
-            background-color: var(--danger-color);
-        }
-
-        .status-in_progress {
-            background-color: var(--warning-color);
-            color: #000;
-        }
-
-        .status-done {
-            background-color: #22c55e;
-        }
-
-        .status-canceled {
-            background-color: #64748b;
-        }
-
-        /* Loading Spinner */
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Skeleton Loading */
-        .skeleton {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-            border-radius: 8px;
-        }
-
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        /* Toast Notifications */
-        .toast-container {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 9999;
-        }
-
-        .toast-notification {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-            padding: 16px 20px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideInRight 0.3s ease;
-            min-width: 300px;
-        }
-
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(100px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        /* Better Button Hover */
-        .btn-hover-lift {
-            transition: all 0.3s ease;
-        }
-
-        .btn-hover-lift:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        /* Image Lazy Load Placeholder */
-        .lazy-image {
-            background: #f0f0f0;
-            min-height: 200px;
-        }
-
-        .lazy-image.loaded {
-            background: transparent;
-        }
-
-        /* Card Hover Lift */
-        .card-hover-lift {
-            transition: all 0.3s ease;
-        }
-
-        .card-hover-lift:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
-        }
-
-        /* Pulse Animation for Important Elements */
-        .pulse {
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        /* Smooth Scroll Behavior */
-        html {
-            scroll-behavior: smooth;
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border-radius: 5px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--secondary-color);
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5.3.2 RTL CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <!-- Bootstrap Icons 1.11 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <!-- Project Custom Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2026.09.27.9">
 
     {% block extra_css %}{% endblock %}
 </head>
 
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'core:home' %}">
-                <i class="bi bi-grid-3x3-gap-fill me-2"></i>{{ SITE_NAME }}
-            </a>
+    <!-- Top Progress / Page Loader -->
+    <div id="pageLoader" style="position: fixed; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, #10b981, #059669, #38bdf8); z-index: 99999; transition: opacity 0.4s ease;"></div>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'core:home' %}">
-                            <i class="bi bi-house-fill me-1"></i> الرئيسية
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'services:service_list' %}">
-                            <i class="bi bi-collection me-1"></i> الخدمات
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'core:about' %}">
-                            <i class="bi bi-info-circle me-1"></i> من نحن
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'core:contact' %}">
-                            <i class="bi bi-envelope me-1"></i> اتصل بنا
-                        </a>
-                    </li>
-                </ul>
-
-                <ul class="navbar-nav">
-                    {% if user.is_authenticated %}
-                        {% if user.is_staff %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'dashboard:home' %}">
-                                <i class="bi bi-speedometer2 me-1"></i> لوحة الإدارة
-                            </a>
-                        </li>
-                        {% elif user.profile.user_type == 'provider' or user.profile.user_type == 'PROVIDER' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'dashboard:provider' %}">
-                                <i class="bi bi-speedometer2 me-1"></i> لوحة التحكم
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'services:service_create' %}">
-                                <i class="bi bi-plus-circle me-1"></i> إضافة خدمة
-                            </a>
-                        </li>
-                        {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'dashboard:customer' %}">
-                                <i class="bi bi-speedometer2 me-1"></i> لوحة التحكم
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'requests:my_requests' %}">
-                                <i class="bi bi-list-check me-1"></i> طلباتي
-                            </a>
-                        </li>
-                        {% endif %}
-
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle me-1"></i> {{ user.get_full_name|default:user.username }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2">
-                            <li><a class="dropdown-item py-2 px-3" href="{% url 'accounts:profile' %}">
-                                    <i class="bi bi-person me-2"></i> الملف الشخصي
-                                </a></li>
-                            <li><a class="dropdown-item py-2 px-3" href="{% url 'requests:notifications' %}">
-                                    <i class="bi bi-bell me-2"></i> الإشعارات
-                                </a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            {% if user.is_staff %}
-                            <li><a class="dropdown-item py-2 px-3" href="{% url 'admin:index' %}">
-                                    <i class="bi bi-gear me-2"></i> الإدارة العامة
-                                </a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            {% endif %}
-                            <li><a class="dropdown-item py-2 px-3 text-danger" href="{% url 'accounts:logout' %}">
-                                    <i class="bi bi-box-arrow-right me-2"></i> تسجيل الخروج
-                                </a></li>
-                        </ul>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'accounts:login' %}">
-                            <i class="bi bi-box-arrow-in-left me-1"></i> تسجيل الدخول
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link btn btn-light text-primary px-3 ms-2" href="{% url 'accounts:register' %}">
-                            <i class="bi bi-person-plus me-1"></i> إنشاء حساب
-                        </a>
-                    </li>
+    <!-- Main Navigation Bar -->
+    <header>
+        {% if active_announcement %}
+        <!-- Top Announcement Bar -->
+        <div id="topAnnouncementBar" class="announcement-bar py-2 px-3 text-white text-center position-relative shadow-sm" style="background: {{ active_announcement.bg_gradient }}; font-size: 0.88rem; z-index: 1030; border-bottom: 1px solid rgba(255,255,255,0.15);">
+            <div class="container d-flex align-items-center justify-content-center justify-content-md-between flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap justify-content-center">
+                    <span class="badge bg-warning text-dark px-2 py-1 fw-bold rounded-pill">
+                        <i class="bi {{ active_announcement.icon }}"></i> {{ active_announcement.badge_text|default:"عرض محدود 🔥" }}
+                    </span>
+                    <span class="fw-semibold">{{ active_announcement.title }}</span>
+                    {% if active_announcement.subtitle %}
+                    <span class="d-none d-lg-inline opacity-75">| {{ active_announcement.subtitle }}</span>
                     {% endif %}
-                </ul>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    {% if active_announcement.coupon_code %}
+                    <div class="coupon-code-chip" role="button" onclick="copyCouponCode('{{ active_announcement.coupon_code }}', this)" title="انقر لنسخ الكوبون">
+                        <span class="coupon-chip-label">الكود:</span>
+                        <strong class="coupon-chip-code">{{ active_announcement.coupon_code }}</strong>
+                        <i class="bi bi-copy coupon-chip-icon"></i>
+                    </div>
+                    {% endif %}
+                    {% if active_announcement.cta_url %}
+                    <a href="{% url 'core:banner_click' active_announcement.id %}" class="btn btn-sm btn-light rounded-pill px-3 py-1 fw-bold text-success shadow-xs">
+                        {{ active_announcement.cta_text }} <i class="bi bi-arrow-left"></i>
+                    </a>
+                    {% endif %}
+                    <button type="button" class="btn-close btn-close-white ms-1" style="font-size: 0.65rem;" onclick="dismissAnnouncementBar()" aria-label="إغلاق"></button>
+                </div>
             </div>
         </div>
-    </nav>
+        {% endif %}
 
-    <!-- Messages -->
+        <nav class="navbar navbar-expand-lg main-navbar">
+            <div class="container">
+                <!-- Brand / Logo -->
+                <a class="navbar-brand-wrap" href="{% url 'core:home' %}">
+                    <div class="brand-icon-box">
+                        <i class="bi bi-layers-fill"></i>
+                    </div>
+                    <div>
+                        <div class="brand-text-main">خَـدَمَـاتـي</div>
+                        <div class="brand-text-sub">منصة الخدمات الاحترافية</div>
+                    </div>
+                </a>
+
+                <!-- Mobile Toggler & Actions -->
+                <div class="d-flex align-items-center gap-2 d-lg-none">
+                    <!-- Mobile Quick Currency Switcher -->
+                    <a href="{% if user_currency == 'IQD' %}{% url 'core:switch_currency' 'USD' %}{% else %}{% url 'core:switch_currency' 'IQD' %}{% endif %}" class="btn btn-sm btn-outline-light rounded-pill px-2 py-1 fw-bold" style="font-size: 0.76rem; border-color: rgba(255,255,255,0.3);" title="تبديل العملة (دينار / دولار)">
+                        {% if user_currency == 'IQD' %}
+                            <span>🇮🇶 د.ع</span>
+                        {% else %}
+                            <span>🇺🇸 $</span>
+                        {% endif %}
+                    </a>
+                    <button class="theme-toggle-btn" id="themeToggleMobile" type="button" title="تبديل المظهر">
+                        <i class="bi bi-moon-stars-fill"></i>
+                    </button>
+                    <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbarContent">
+                        <i class="bi bi-list fs-2"></i>
+                    </button>
+                </div>
+
+                <!-- Nav Links & Actions -->
+                <div class="collapse navbar-collapse" id="mainNavbarContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-lg-center">
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-custom {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'core:home' %}">
+                                <i class="bi bi-house-door"></i> الرئيسية
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-custom {% if 'services' in request.path and not 'category' in request.path %}active{% endif %}" href="{% url 'services:service_list' %}">
+                                <i class="bi bi-grid"></i> تصفح الخدمات
+                            </a>
+                        </li>
+                        {% if nav_categories %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link nav-link-custom dropdown-toggle d-flex align-items-center gap-1" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="navCategoriesMenuBtn">
+                                <i class="bi bi-collection"></i> <span>التصنيفات</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end shadow-xl border-0 p-0 overflow-hidden" style="border-radius: 14px; min-width: 320px; max-width: 360px;" aria-labelledby="navCategoriesMenuBtn">
+                                <!-- Search bar in navbar categories -->
+                                <div class="p-2 border-bottom bg-body-tertiary">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-body border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                                        <input type="text" class="form-control border-start-0 shadow-none" id="navCategorySearchBox" placeholder="ابحث في الأقسام والتخصصات..." autocomplete="off">
+                                    </div>
+                                </div>
+                                
+                                <!-- Categories List with Subcategories -->
+                                <div class="overflow-y-auto p-2" id="navCategoryList" style="max-height: 350px;">
+                                    {% for cat in nav_categories %}
+                                    <div class="nav-cat-group-item mb-1" data-cat-search="{{ cat.name }} {% for sub in cat.subcategories.all %}{{ sub.name }} {% endfor %}">
+                                        <a class="dropdown-item py-2 px-2 rounded-3 d-flex align-items-center justify-content-between text-decoration-none" href="{% url 'services:category_detail' cat.slug %}">
+                                            <div class="d-flex align-items-center gap-2 text-truncate">
+                                                <div class="rounded-circle d-flex align-items-center justify-content-center bg-success-subtle text-success" style="width: 30px; height: 30px; min-width: 30px;">
+                                                    <i class="bi {{ cat.icon|default:'bi-folder' }}" style="font-size: 0.9rem;"></i>
+                                                </div>
+                                                <span class="fw-bold text-dark-emphasis text-truncate" style="font-size: 0.88rem;">{{ cat.name }}</span>
+                                            </div>
+                                            <span class="badge bg-body-secondary text-muted rounded-pill small">{{ cat.subcategories.count }} تخصص</span>
+                                        </a>
+                                    </div>
+                                    {% endfor %}
+                                    <div class="text-center text-muted py-3 d-none" id="noNavCategoryResults">
+                                        <i class="bi bi-search d-block mb-1 opacity-50"></i>
+                                        <small>لا توجد نتائج مطابقة للبحث</small>
+                                    </div>
+                                </div>
+
+                                <div class="p-2 border-top bg-body-tertiary text-center">
+                                    <a class="btn btn-sm btn-link text-success fw-bold text-decoration-none w-100" href="{% url 'services:service_list' %}">
+                                        <i class="bi bi-grid-fill me-1"></i> استعراض كافة الخدمات والتصنيفات <i class="bi bi-arrow-left ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-custom" href="{% url 'core:about' %}">
+                                <i class="bi bi-info-circle"></i> عن المنصة
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-custom" href="{% url 'core:contact' %}">
+                                <i class="bi bi-envelope"></i> اتصل بنا
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- User Actions -->
+                    <div class="d-flex align-items-center gap-2 gap-lg-3">
+                        <!-- Currency Switcher Dropdown (IQD / USD) -->
+                        <div class="dropdown currency-switcher-nav">
+                            <button class="btn btn-sm btn-outline-light rounded-pill px-2 px-xl-3 py-1-5 d-flex align-items-center gap-1 shadow-xs" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="تغيير عملة العرض الأساسية">
+                                {% if user_currency == 'USD' %}
+                                    <span class="fs-6">🇺🇸</span>
+                                    <span class="fw-bold small">USD ($)</span>
+                                {% else %}
+                                    <span class="fs-6">🇮🇶</span>
+                                    <span class="fw-bold small">IQD (د.ع)</span>
+                                {% endif %}
+                                <i class="bi bi-chevron-down opacity-75" style="font-size: 0.7rem;"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-2 mt-2" style="border-radius: 14px; min-width: 210px; z-index: 1080;">
+                                <li class="px-3 py-1 small text-muted fw-bold border-bottom mb-1">
+                                    <i class="bi bi-cash-coin text-success me-1"></i> اختر عملة العرض:
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2 d-flex align-items-center justify-content-between {% if user_currency == 'IQD' %}active bg-success text-white fw-bold{% endif %}" href="{% url 'core:switch_currency' 'IQD' %}">
+                                        <span class="d-flex align-items-center gap-2">
+                                            <span>🇮🇶</span>
+                                            <span>دينار عراقي (د.ع)</span>
+                                        </span>
+                                        {% if user_currency == 'IQD' %}<i class="bi bi-check2-circle"></i>{% endif %}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2 d-flex align-items-center justify-content-between {% if user_currency == 'USD' %}active bg-success text-white fw-bold{% endif %}" href="{% url 'core:switch_currency' 'USD' %}">
+                                        <span class="d-flex align-items-center gap-2">
+                                            <span>🇺🇸</span>
+                                            <span>دولار أمريكي ($)</span>
+                                        </span>
+                                        {% if user_currency == 'USD' %}<i class="bi bi-check2-circle"></i>{% endif %}
+                                    </a>
+                                </li>
+                                <li class="dropdown-divider"></li>
+                                <li class="px-3 py-1 text-muted" style="font-size: 0.74rem;">
+                                    <i class="bi bi-arrow-left-right text-success me-1"></i> 1 دولار = 1,500 د.ع تقريباً
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- PWA App Install Button (Desktop & Mobile Browser) -->
+                        <button class="btn btn-sm btn-outline-light rounded-pill px-3 py-1-5 d-none align-items-center gap-2 shadow-xs" id="pwaInstallNavBtn" type="button" title="تثبيت تطبيق خدماتي">
+                            <i class="bi bi-phone"></i>
+                            <span class="d-none d-xl-inline">تثبيت التطبيق</span>
+                        </button>
+
+                        <!-- Theme Toggle (Desktop) -->
+                        <button class="theme-toggle-btn d-none d-lg-flex" id="themeToggle" type="button" title="تبديل المظهر">
+                            <i class="bi bi-moon-stars-fill"></i>
+                        </button>
+
+                        {% if user.is_authenticated %}
+                            <!-- Favorites Link -->
+                            <a href="{% url 'favorites:my_favorites' %}" class="position-relative text-white p-2 text-decoration-none" title="المفضلة">
+                                <i class="bi bi-heart fs-5"></i>
+                                {% if user_favorites_count > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                                    {{ user_favorites_count }}
+                                </span>
+                                {% endif %}
+                            </a>
+
+                            <!-- Messages Link -->
+                            <a href="{% url 'conversations:inbox' %}" class="position-relative text-white p-2 text-decoration-none" title="الرسائل">
+                                <i class="bi bi-chat-dots fs-5"></i>
+                                {% if unread_messages_count > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark" style="font-size: 0.65rem;">
+                                    {{ unread_messages_count }}
+                                </span>
+                                {% endif %}
+                            </a>
+
+                            <!-- User Profile Dropdown -->
+                            <div class="dropdown">
+                                <a href="#" class="d-flex align-items-center gap-2 text-decoration-none text-white dropdown-toggle" data-bs-toggle="dropdown">
+                                    {% if user.profile.get_avatar_url %}
+                                    <img src="{{ user.profile.get_avatar_url }}" alt="{{ user.username }}" class="rounded-circle shadow-xs" style="width: 38px; height: 38px; object-fit: cover; border: 2px solid rgba(255,255,255,0.4); background-color: #1e293b;">
+                                    {% else %}
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-success text-white fw-bold" style="width: 38px; height: 38px; font-size: 1rem; border: 2px solid rgba(255,255,255,0.3);">
+                                        {{ user.username|slice:":1"|upper }}
+                                    </div>
+                                    {% endif %}
+                                    <span class="d-none d-md-inline fw-semibold">{{ user.first_name|default:user.username }}</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-2 mt-2" style="border-radius: 14px; min-width: 230px;">
+                                    <li class="px-3 py-2 border-bottom mb-1">
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            {% if user.profile.get_avatar_url %}
+                                            <img src="{{ user.profile.get_avatar_url }}" alt="{{ user.username }}" class="rounded-circle shadow-xs" style="width: 36px; height: 36px; object-fit: cover; border: 1px solid rgba(0,0,0,0.1); background-color: #1e293b;">
+                                            {% endif %}
+                                            <div class="text-truncate">
+                                                <div class="fw-bold text-truncate">{{ user.get_full_name|default:user.username }}</div>
+                                                <div class="text-muted small text-truncate" style="font-size: 0.78rem;">{{ user.email }}</div>
+                                            </div>
+                                        </div>
+                                        {% if user_wallet %}
+                                        <div class="mt-2 p-2 bg-light rounded text-dark d-flex justify-content-between align-items-center small">
+                                            <span>الرصيد:</span>
+                                            <strong class="text-success">
+                                                {% if user_wallet.currency == 'IQD' %}
+                                                    {{ user_wallet.available_balance|floatformat:0 }} د.ع
+                                                {% else %}
+                                                    ${{ user_wallet.available_balance|default:"0.00" }}
+                                                {% endif %}
+                                            </strong>
+                                        </div>
+                                        {% endif %}
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2 d-flex align-items-center gap-2" href="{% url 'dashboard:redirect' %}">
+                                            <i class="bi bi-speedometer2 text-primary"></i> لوحة التحكم
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2 d-flex align-items-center gap-2" href="{% url 'requests:my_requests' %}">
+                                            <i class="bi bi-bag-check text-success"></i> طلباتي
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2 d-flex align-items-center gap-2" href="{% url 'wallet:my_wallet' %}">
+                                            <i class="bi bi-wallet2 text-warning"></i> المحفظة والرصيد
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2 d-flex align-items-center gap-2" href="{% url 'favorites:my_favorites' %}">
+                                            <i class="bi bi-heart text-danger"></i> خدماتي المفضلة
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item py-2 d-flex align-items-center gap-2" href="{% url 'accounts:profile' %}">
+                                            <i class="bi bi-person-gear text-secondary"></i> إعدادات الحساب
+                                        </a>
+                                    </li>
+                                    {% if user.is_staff %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item py-2 d-flex align-items-center gap-2 text-danger" href="/admin/">
+                                            <i class="bi bi-shield-lock"></i> لوحة الإدارة العامة
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item py-2 d-flex align-items-center gap-2 text-danger" href="{% url 'accounts:logout' %}">
+                                            <i class="bi bi-box-arrow-left"></i> تسجيل الخروج
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        {% else %}
+                            <a href="{% url 'accounts:login' %}" class="btn-outline-custom">
+                                <i class="bi bi-box-arrow-in-right"></i> دخول
+                            </a>
+                            <a href="{% url 'accounts:register' %}" class="btn-primary-custom">
+                                <i class="bi bi-person-plus"></i> حساب جديد
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Global Messages / Alerts -->
     {% if messages %}
     <div class="container mt-3">
         {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm d-flex align-items-center gap-2" role="alert" style="border-radius: 12px;">
             {% if message.tags == 'success' %}
-            <i class="bi bi-check-circle-fill me-2"></i>
-            {% elif message.tags == 'danger' or message.tags == 'error' %}
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            {% elif message.tags == 'warning' %}
-            <i class="bi bi-exclamation-circle-fill me-2"></i>
+                <i class="bi bi-check-circle-fill fs-5 text-success"></i>
+            {% elif message.tags == 'error' or message.tags == 'danger' %}
+                <i class="bi bi-exclamation-triangle-fill fs-5 text-danger"></i>
             {% else %}
-            <i class="bi bi-info-circle-fill me-2"></i>
+                <i class="bi bi-info-circle-fill fs-5 text-info"></i>
             {% endif %}
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="flex-grow-1">{{ message }}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         {% endfor %}
     </div>
     {% endif %}
 
-    <!-- Main Content -->
-    <main class="flex-grow-1 pb-5">
+    <!-- Page Content -->
+    <main>
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer class="footer py-5 mt-5 position-relative overflow-hidden">
-        <!-- Wave Pattern SVG -->
-        <div class="position-absolute top-0 start-0 w-100" style="transform: translateY(-100%);">
-            <svg viewBox="0 0 1200 120" preserveAspectRatio="none" style="height: 120px; width: 100%;">
-                <path
-                    d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z"
-                    opacity=".25" fill="currentColor"></path>
-                <path
-                    d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z"
-                    opacity=".5" fill="currentColor"></path>
-                <path
-                    d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z"
-                    fill="currentColor"></path>
-            </svg>
-        </div>
-
-        <div class="container position-relative">
-            <div class="row g-4">
-                <!-- About Section with SVG -->
-                <div class="col-lg-4 mb-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="footer-icon me-3">
-                            <svg width="50" height="50" viewBox="0 0 24 24" fill="none"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="url(#grad1)" stroke="white"
-                                    stroke-width="1.5" />
-                                <path d="M2 17L12 22L22 17" stroke="white" stroke-width="1.5" stroke-linecap="round" />
-                                <path d="M2 12L12 17L22 12" stroke="white" stroke-width="1.5" stroke-linecap="round" />
-                                <defs>
-                                    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" style="stop-color:#25ebb6;stop-opacity:1" />
-                                        <stop offset="100%" style="stop-color:#1e5e30;stop-opacity:1" />
-                                    </linearGradient>
-                                </defs>
-                            </svg>
+    <!-- Modern Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="row g-4 mb-5">
+                <!-- About Col -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="brand-icon-box" style="width: 36px; height: 36px; font-size: 1.1rem;">
+                            <i class="bi bi-layers-fill"></i>
                         </div>
-                        <h5 class="fw-bold mb-0 text-white">{{ SITE_NAME }}</h5>
+                        <h4 class="footer-brand-title mb-0">خَـدَمَـاتـي</h4>
                     </div>
-                    <p class="text-white-50 pe-3">
-                        منصة متكاملة لعرض وطلب الخدمات بكل سهولة وأمان.
-                        نربط العملاء بمقدمي الخدمات الموثوقين في البصرة.
+                    <p class="text-secondary small mb-4" style="line-height: 1.8;">
+                        سوق عربي متكامل يجمع نخبة المستقلين ومقدمي الخدمات المحترفين بأصحاب المشاريع والشركات، لإنجاز الأعمال بجودة عالية وضمان مالي 100%.
                     </p>
-                    <!-- Social Media -->
-                    <div class="mt-4">
-                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle me-2"
-                            style="width: 40px; height: 40px; padding: 8px;">
-                            <i class="bi bi-facebook"></i>
-                        </a>
-                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle me-2"
-                            style="width: 40px; height: 40px; padding: 8px;">
-                            <i class="bi bi-twitter"></i>
-                        </a>
-                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle me-2"
-                            style="width: 40px; height: 40px; padding: 8px;">
-                            <i class="bi bi-instagram"></i>
-                        </a>
-                        <a href="#" class="btn btn-outline-light btn-sm rounded-circle"
-                            style="width: 40px; height: 40px; padding: 8px;">
-                            <i class="bi bi-linkedin"></i>
-                        </a>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="footer-social-icon" title="تويتر"><i class="bi bi-twitter-x"></i></a>
+                        <a href="#" class="footer-social-icon" title="لينكد إن"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" class="footer-social-icon" title="فيسبوك"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="footer-social-icon" title="يوتيوب"><i class="bi bi-youtube"></i></a>
                     </div>
                 </div>
 
                 <!-- Quick Links -->
-                <div class="col-lg-2 col-md-4 mb-4">
-                    <h6 class="fw-bold mb-4 text-white">
-                        <i class="bi bi-link-45deg me-2"></i>روابط سريعة
-                    </h6>
-                    <ul class="list-unstyled footer-links">
-                        <li class="mb-2">
-                            <a href="{% url 'core:home' %}" class="footer-link">
-                                <i class="bi bi-chevron-left me-2"></i>الرئيسية
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a href="{% url 'services:service_list' %}" class="footer-link">
-                                <i class="bi bi-chevron-left me-2"></i>الخدمات
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a href="{% url 'core:about' %}" class="footer-link">
-                                <i class="bi bi-chevron-left me-2"></i>من نحن
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a href="{% url 'core:contact' %}" class="footer-link">
-                                <i class="bi bi-chevron-left me-2"></i>اتصل بنا
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a href="{% url 'core:terms_of_service' %}" class="footer-link">
-                                <i class="bi bi-file-text me-2"></i>شروط الاستخدام
-                            </a>
-                        </li>
-                    </ul>
+                <div class="col-lg-2 col-md-6 col-6">
+                    <h5 class="footer-links-title">روابط هامة</h5>
+                    <a href="{% url 'services:service_list' %}" class="footer-link-item">تصفح الخدمات</a>
+                    <a href="{% url 'core:about' %}" class="footer-link-item">عن المنصة</a>
+                    <a href="{% url 'core:contact' %}" class="footer-link-item">تواصل معنا</a>
+                    <a href="{% url 'core:terms_of_service' %}" class="footer-link-item">شروط الاستخدام</a>
                 </div>
 
-                <!-- My Account -->
-                <div class="col-lg-2 col-md-4 mb-4">
-                    <h6 class="fw-bold mb-4 text-white">
-                        <i class="bi bi-person-circle me-2"></i>حسابي
-                    </h6>
-                    <ul class="list-unstyled footer-links">
-                        {% if user.is_authenticated %}
-                        <li class="mb-2">
-                            <a href="{% url 'accounts:profile' %}" class="footer-link">
-                                <i class="bi bi-chevron-left me-2"></i>الملف الشخصي
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a href="{% url 'requests:my_requests' %}" class="footer-link">
-                                <i class="bi bi-chevron-left me-2"></i>طلباتي
-                            </a>
-                        </li>
-                        {% else %}
-                        <li class="mb-2">
-                            <a href="{% url 'accounts:login' %}" class="footer-link">
-                                <i class="bi bi-chevron-left me-2"></i>تسجيل الدخول
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a href="{% url 'accounts:register' %}" class="footer-link">
-                                <i class="bi bi-chevron-left me-2"></i>إنشاء حساب
-                            </a>
-                        </li>
-                        {% endif %}
-                    </ul>
+                <!-- Top Categories -->
+                <div class="col-lg-3 col-md-6 col-6">
+                    <h5 class="footer-links-title">أبرز الأقسام</h5>
+                    {% for cat in nav_categories|slice:":5" %}
+                    <a href="{% url 'services:category_detail' cat.slug %}" class="footer-link-item">{{ cat.name }}</a>
+                    {% empty %}
+                    <a href="{% url 'services:service_list' %}" class="footer-link-item">برمجة وتطوير</a>
+                    <a href="{% url 'services:service_list' %}" class="footer-link-item">تصميم وجرافيك</a>
+                    <a href="{% url 'services:service_list' %}" class="footer-link-item">تسويق إلكتروني</a>
+                    <a href="{% url 'services:service_list' %}" class="footer-link-item">كتابة وترجمة</a>
+                    {% endfor %}
                 </div>
 
-                <!-- Contact Info with illustration -->
-                <div class="col-lg-4 col-md-4 mb-4">
-                    <h6 class="fw-bold mb-4 text-white">
-                        <i class="bi bi-telephone-fill me-2"></i>تواصل معنا
-                    </h6>
-                    <ul class="list-unstyled footer-links">
-                        <li class="mb-3 d-flex align-items-start">
-                            <i class="bi bi-geo-alt-fill me-3 mt-1" style="font-size: 1.2rem; color: #25ebb6;"></i>
-                            <span class="text-white-50">البصرة، العراق</span>
-                        </li>
-                        <li class="mb-3 d-flex align-items-center">
-                            <i class="bi bi-envelope-fill me-3" style="font-size: 1.2rem; color: #25ebb6;"></i>
-                            <a href="mailto:info@services.com" class="footer-link">info@services.com</a>
-                        </li>
-                        <li class="mb-3 d-flex align-items-center">
-                            <i class="bi bi-telephone-fill me-3" style="font-size: 1.2rem; color: #25ebb6;"></i>
-                            <a href="tel:+9647700000000" class="footer-link">+964 770 000 0000</a>
-                        </li>
-                    </ul>
-
-                    <!-- Service illustration SVG -->
-                    <div class="mt-4 text-center">
-                        <svg width="150" height="100" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
-                            <!-- Background circles -->
-                            <circle cx="100" cy="75" r="60" fill="rgba(37, 235, 182, 0.1)" />
-                            <circle cx="100" cy="75" r="45" fill="rgba(37, 235, 182, 0.15)" />
-
-                            <!-- Service icons -->
-                            <g transform="translate(70, 50)">
-                                <circle cx="30" cy="25" r="20" fill="#25ebb6" opacity="0.8" />
-                                <path d="M30 15 L30 35 M20 25 L40 25" stroke="white" stroke-width="3"
-                                    stroke-linecap="round" />
-                            </g>
-
-                            <!-- Connecting lines -->
-                            <path d="M60 60 Q100 40 140 60" stroke="#25ebb6" stroke-width="2" fill="none"
-                                opacity="0.5" />
-                            <path d="M60 90 Q100 110 140 90" stroke="#25ebb6" stroke-width="2" fill="none"
-                                opacity="0.5" />
-                        </svg>
+                <!-- Newsletter & Trust -->
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="footer-links-title">انضم لنشرتنا البريدية</h5>
+                    <p class="text-secondary small mb-3">احصل على أحدث الخدمات والعروض الحصرية مباشرة في بريدك.</p>
+                    <form onsubmit="event.preventDefault(); showToast('تم الاشتراك بنجاح في النشرة البريدية!', 'success'); this.reset();" class="d-flex gap-2 mb-3">
+                        <input type="email" required class="form-control form-control-sm border-secondary bg-dark text-white" placeholder="بريدك الإلكتروني...">
+                        <button class="btn btn-sm btn-success px-3" type="submit">اشتراك</button>
+                    </form>
+                    <div class="p-3 rounded bg-dark border border-secondary border-opacity-25 d-flex align-items-center gap-3">
+                        <i class="bi bi-shield-check text-success fs-2"></i>
+                        <div>
+                            <div class="text-white fw-bold small">حماية وضمان كامل</div>
+                            <div class="text-secondary" style="font-size: 0.75rem;">دفع آمن مع إمكانية استرداد الأموال</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Copyright -->
-            <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
-            <div class="row align-items-center">
-                <div class="col-md-6 text-center text-md-start">
-                    <p class="mb-2 mb-md-0 text-white-50">
-                        <i class="bi bi-c-circle me-1"></i>
-                        2026 {{ SITE_NAME }}. جميع الحقوق محفوظة.
-                    </p>
+            <!-- Developer & Iraq Localization Feature Ribbon -->
+            <div class="p-3 mb-4 rounded-4" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08);">
+                <div class="row align-items-center g-3">
+                    <div class="col-lg-7 col-md-12">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center bg-success text-white shadow-sm flex-shrink-0" style="width: 46px; height: 46px; font-size: 1.25rem;">
+                                <i class="bi bi-code-slash"></i>
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                    <span class="text-white fw-bold">المطور والمهندس البرمجي:</span>
+                                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-2 py-1 rounded-pill fw-bold">
+                                        <i class="bi bi-person-fill-gear me-1"></i> MUNTADHER HAZIM
+                                    </span>
+                                    <span class="badge bg-danger bg-opacity-20 text-white border border-danger border-opacity-25 px-2 py-1 rounded-pill">
+                                        <i class="bi bi-geo-alt-fill me-1"></i> العراق - البصرة 🇮🇶
+                                    </span>
+                                </div>
+                                <div class="text-secondary small">
+                                    النظام موجّه للعراق بشكل اساسي وبمرونة كاملة لإضافة وعرض الأسعار بالدينار العراقي (د.ع) أو بالدولار الأمريكي ($).
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-md-12 text-lg-end">
+                        <div class="d-inline-flex align-items-center gap-2 flex-wrap">
+                            <a href="tel:07724978301" class="btn btn-sm btn-outline-light rounded-pill px-3 py-1-5 shadow-xs" title="اتصال هاتفي مباشر">
+                                <i class="bi bi-telephone-fill text-success me-1"></i> 07724978301
+                            </a>
+                            <a href="https://wa.me/9647724978301" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-success rounded-pill px-3 py-1-5 shadow-xs" title="محادثة واتساب سريعة">
+                                <i class="bi bi-whatsapp me-1"></i> واتساب المطور
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <p class="mb-0 text-white-50">
-                        <i class="bi bi-code-slash me-2"></i> تم التطوير بواسطة <strong class="text-white">MUNTADHER HAZIM THAMER </strong>
-                        <i class="bi bi-heart-fill text-danger ms-2"></i>
-                    </p>
+            </div>
+
+            <hr style="border-color: rgba(255, 255, 255, 0.1);">
+
+            <!-- Bottom Copyright -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center py-2 small text-secondary">
+                <div>
+                    &copy; 2026 {{ SITE_NAME }}. جميع الحقوق محفوظة. صُمم وبرمج في <strong>العراق - البصرة</strong> 🇮🇶
+                </div>
+                <div class="mt-2 mt-md-0 d-flex align-items-center gap-2">
+                    <span>برمجة وتطوير: <strong class="text-white">MUNTADHER HAZIM</strong></span>
+                    <span>•</span>
+                    <span>العملة الحالية: <span class="badge bg-success-subtle text-success">{{ user_currency }} ({{ currency_symbol }})</span></span>
                 </div>
             </div>
         </div>
-
-        <!-- Decorative elements -->
-        <div class="position-absolute bottom-0 start-0 opacity-25">
-            <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="0" cy="200" r="100" fill="url(#footerGrad)" />
-            </svg>
-        </div>
-        <div class="position-absolute top-0 end-0 opacity-25">
-            <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="200" cy="0" r="100" fill="url(#footerGrad)" />
-                <defs>
-                    <linearGradient id="footerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#25ebb6;stop-opacity:0.3" />
-                        <stop offset="100%" style="stop-color:#1e5e30;stop-opacity:0.3" />
-                    </linearGradient>
-                </defs>
-            </svg>
-        </div>
     </footer>
 
-    <!-- Bootstrap JS -->
+    <!-- Back to Top Button -->
+    <button id="backToTopBtn" class="back-to-top-btn" title="العودة للأعلى">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <!-- Bootstrap 5.3 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- AOS Animation Library -->
+    <!-- AOS Animation -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     
+    <!-- Main Interactive Script -->
+    <script src="{% static 'js/main.js' %}"></script>
     <script>
-        // Initialize AOS animations
+        // Init AOS
         AOS.init({
-            duration: 800,
+            duration: 700,
             once: true,
-            offset: 100
+            offset: 80
         });
 
-        // Lazy loading for images
-        document.addEventListener('DOMContentLoaded', function() {
-            const lazyImages = document.querySelectorAll('img[data-src]');
-            
-            const imageObserver = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const img = entry.target;
-                        img.src = img.dataset.src;
-                        img.classList.add('loaded');
-                        observer.unobserve(img);
-                    }
-                });
+
+
+        // Copy coupon code
+        function copyCouponCode(code, el) {
+            if (!navigator.clipboard) return;
+            navigator.clipboard.writeText(code).then(() => {
+                const oldHtml = el.innerHTML;
+                el.innerHTML = '<span class="text-white small fw-bold"><i class="bi bi-check2-circle text-warning"></i> تم النسخ بنجاح!</span>';
+                setTimeout(() => el.innerHTML = oldHtml, 2200);
             });
-
-            lazyImages.forEach(img => imageObserver.observe(img));
-        });
-
-        // Counter animation for stats
-        function animateCounter(element, target) {
-            let current = 0;
-            const increment = target / 50;
-            const duration = 2000;
-            const stepTime = duration / 50;
-            
-            const timer = setInterval(() => {
-                current += increment;
-                if (current >= target) {
-                    element.textContent = target;
-                    clearInterval(timer);
-                } else {
-                    element.textContent = Math.floor(current);
-                }
-            }, stepTime);
         }
 
-        // Initialize counters when they come into view
-        document.addEventListener('DOMContentLoaded', function() {
-            const counters = document.querySelectorAll('.counter[data-target]');
-            
-            const counterObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const counter = entry.target;
-                        const target = parseInt(counter.dataset.target);
-                        animateCounter(counter, target);
-                        counterObserver.unobserve(counter);
-                    }
+        // Dismiss announcement bar
+        function dismissAnnouncementBar() {
+            const bar = document.getElementById('topAnnouncementBar');
+            if (bar) {
+                bar.style.display = 'none';
+                sessionStorage.setItem('announcement_closed', 'true');
+            }
+        }
+        if (sessionStorage.getItem('announcement_closed') === 'true') {
+            const bar = document.getElementById('topAnnouncementBar');
+            if (bar) bar.style.display = 'none';
+        }
+
+        // Arabic text normalizer for intelligent search
+        function normalizeArText(str) {
+            if (!str) return '';
+            return str.toString()
+                .toLowerCase()
+                .replace(/[أإآ]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/[\u064B-\u065F]/g, '') // remove diacritics / harakat
+                .trim();
+        }
+
+        // Navbar Searchable Categories Dropdown Filter
+        const navSearchBox = document.getElementById('navCategorySearchBox');
+        const navCatItems = document.querySelectorAll('.nav-cat-group-item');
+        const noNavResults = document.getElementById('noNavCategoryResults');
+        const navMenuBtn = document.getElementById('navCategoriesMenuBtn');
+
+        if (navSearchBox) {
+            // Auto focus search box when dropdown opens
+            if (navMenuBtn) {
+                navMenuBtn.addEventListener('shown.bs.dropdown', function () {
+                    navSearchBox.focus();
                 });
+            }
+
+            // Prevent dropdown from closing when clicking inside search input
+            navSearchBox.addEventListener('click', function (e) {
+                e.stopPropagation();
             });
 
-            counters.forEach(counter => counterObserver.observe(counter));
-        });
+            navSearchBox.addEventListener('input', function () {
+                const q = normalizeArText(this.value);
+                let visibleCount = 0;
+
+                navCatItems.forEach(function (item) {
+                    const text = normalizeArText(item.getAttribute('data-cat-search') || item.textContent);
+                    const match = q === '' || text.includes(q);
+                    item.style.display = match ? 'block' : 'none';
+                    if (match) visibleCount++;
+                });
+
+                if (noNavResults) {
+                    noNavResults.classList.toggle('d-none', visibleCount > 0);
+                }
+            });
+        }
     </script>
+
+    <!-- ======================================================================
+         Progressive Web App (PWA) Mobile Bottom Nav & Install UI Components
+         ====================================================================== -->
+
+    <!-- Mobile App Bottom Navigation Bar (Visible on mobile/tablets) -->
+    <nav class="pwa-bottom-nav d-md-none" aria-label="شريط تنقل التطبيق">
+        <a href="{% url 'core:home' %}" class="pwa-nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+            <i class="bi bi-house-door-fill"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{% url 'services:service_list' %}" class="pwa-nav-item {% if 'services' in request.path and not 'category' in request.path %}active{% endif %}">
+            <i class="bi bi-grid-fill"></i>
+            <span>سوق الخدمات</span>
+        </a>
+        <a href="{% if user.is_authenticated %}{% url 'requests:my_requests' %}{% else %}{% url 'accounts:login' %}{% endif %}" class="pwa-nav-item {% if 'requests' in request.path %}active{% endif %}">
+            <i class="bi bi-bag-check-fill"></i>
+            <span>طلباتي</span>
+        </a>
+        <a href="{% url 'favorites:my_favorites' %}" class="pwa-nav-item position-relative {% if 'favorites' in request.path %}active{% endif %}">
+            <i class="bi bi-heart-fill"></i>
+            <span>المفضلة</span>
+            {% if user_favorites_count > 0 %}
+            <span class="pwa-nav-badge">{{ user_favorites_count }}</span>
+            {% endif %}
+        </a>
+        <a href="{% if user.is_authenticated %}{% url 'dashboard:redirect' %}{% else %}{% url 'accounts:login' %}{% endif %}" class="pwa-nav-item {% if 'dashboard' in request.path or 'accounts' in request.path %}active{% endif %}">
+            <i class="bi bi-person-circle"></i>
+            <span>{% if user.is_authenticated %}حسابي{% else %}دخول{% endif %}</span>
+        </a>
+    </nav>
+
+    <!-- Floating PWA Install Prompt Banner (Android, Chrome, Edge, Desktop) -->
+    <div class="pwa-install-banner" id="pwaInstallBanner" role="dialog" aria-modal="true" aria-labelledby="pwaBannerTitle">
+        <div class="d-flex align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <img src="{% static 'images/pwa/icon-96x96.png' %}" alt="تطبيق خدماتي" class="pwa-banner-icon">
+                <div>
+                    <h6 class="fw-bold mb-1 text-dark-emphasis" id="pwaBannerTitle">تطبيق خدماتي</h6>
+                    <p class="text-muted small mb-0">تصفح أسرع، إشعارات فورية، ويعمل دون إنترنت!</p>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-primary-custom px-3 py-1-5 text-nowrap" id="pwaInstallActionBtn">
+                    <i class="bi bi-download me-1"></i> تثبيت
+                </button>
+                <button type="button" class="btn-close" id="pwaInstallCloseBtn" aria-label="إغلاق"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- iOS Safari PWA Install Instructions Modal -->
+    <div class="modal fade" id="pwaIosModal" tabindex="-1" aria-labelledby="pwaIosModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-xl">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="pwaIosModalLabel">
+                        <i class="bi bi-apple text-dark me-1"></i> تثبيت التطبيق على آيفون (iOS)
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <img src="{% static 'images/pwa/icon-128x128.png' %}" alt="خدماتي" class="rounded-4 mb-3 shadow-md" style="width: 72px; height: 72px;">
+                    <h6 class="fw-bold mb-2">أضف "خدماتي" إلى شاشتك الرئيسية</h6>
+                    <p class="text-muted small mb-4">يعمل التطبيق كبرنامج مستقل على هاتفك بكامل المميزات والسرعة:</p>
+                    
+                    <div class="bg-body-tertiary p-3 rounded-3 text-start small mb-3">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <span class="badge bg-success rounded-circle p-2 px-3 fw-bold fs-6">1</span>
+                            <span>اضغط على زر المشاركة <i class="bi bi-box-arrow-up text-primary fs-5 mx-1"></i> أسفل شاشة Safari.</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="badge bg-success rounded-circle p-2 px-3 fw-bold fs-6">2</span>
+                            <span>مرر للأسفل واختر <strong>"إضافة إلى الشاشة الرئيسية" (Add to Home Screen)</strong> <i class="bi bi-plus-square text-success fs-5 mx-1"></i>.</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-secondary w-100 rounded-pill" data-bs-dismiss="modal">فهمت ذلك</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA Client Controller Script -->
+    <script src="{% static 'js/pwa.js' %}?v=1.0.0"></script>
 
     {% block extra_js %}{% endblock %}
 </body>
 
 </html>
+

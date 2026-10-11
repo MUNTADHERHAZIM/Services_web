@@ -9,6 +9,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import FileExtensionValidator, RegexValidator
 from django.utils import timezone
+from core.validators import iraqi_phone_validator
 import os
 
 
@@ -46,6 +47,7 @@ class Provider(models.Model):
     phone = models.CharField(
         max_length=20,
         blank=True,
+        validators=[iraqi_phone_validator],
         verbose_name=_('رقم الهاتف')
     )
     avatar = models.ImageField(
@@ -138,6 +140,23 @@ class Provider(models.Model):
             return self.languages
         return []
 
+    @property
+    def get_avatar_url(self):
+        """الحصول على رابط صورة مقدم الخدمة أو صورة الملف الشخصي أو الصورة الافتراضية"""
+        if self.avatar:
+            try:
+                return self.avatar.url
+            except Exception:
+                pass
+        if hasattr(self.user, 'profile') and self.user.profile.profile_picture:
+            try:
+                return self.user.profile.profile_picture.url
+            except Exception:
+                pass
+        if hasattr(self.user, 'profile') and self.user.profile.gender == 'female':
+            return '/static/images/fallbacks/avatar_female.svg'
+        return '/static/images/fallbacks/avatar_male.svg'
+
 
 class UserProfile(models.Model):
     """
@@ -153,7 +172,6 @@ class UserProfile(models.Model):
     class Gender(models.TextChoices):
         MALE = 'male', _('ذكر')
         FEMALE = 'female', _('أنثى')
-        OTHER = 'other', _('آخر')
     
     class UserType(models.TextChoices):
         CUSTOMER = 'customer', _('عميل')
@@ -199,13 +217,34 @@ class UserProfile(models.Model):
     phone_number = models.CharField(
         max_length=20,
         blank=True,
+        validators=[iraqi_phone_validator],
         verbose_name=_('رقم الهاتف'),
-        help_text=_('أدخل رقم هاتفك')
+        help_text=_('أدخل رقم هاتف عراقي يبدأ بـ 07 (مثال: 07701234567)')
     )
     alternate_phone = models.CharField(
         max_length=20,
         blank=True,
+        validators=[iraqi_phone_validator],
         verbose_name=_('رقم هاتف بديل')
+    )
+    phone_verified = models.BooleanField(
+        default=False,
+        verbose_name=_('تم تأكيد رقم الهاتف')
+    )
+    whatsapp_verified = models.BooleanField(
+        default=False,
+        verbose_name=_('تم تأكيد الواتساب')
+    )
+    whatsapp_otp = models.CharField(
+        max_length=6,
+        blank=True,
+        null=True,
+        verbose_name=_('رمز تأكيد الواتساب')
+    )
+    whatsapp_otp_created_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_('تاريخ إنشاء رمز الواتساب')
     )
     
     # Address Information
@@ -253,6 +292,20 @@ class UserProfile(models.Model):
         default=False,
         verbose_name=_('تم التحقق من الهوية')
     )
+    
+    class VerificationStatus(models.TextChoices):
+        UNSUBMITTED = 'unsubmitted', _('غير مقدم')
+        PENDING = 'pending', _('قيد المراجعة')
+        VERIFIED = 'verified', _('مقبول / موثق')
+        REJECTED = 'rejected', _('مرفوض')
+
+    verification_status = models.CharField(
+        max_length=20,
+        choices=VerificationStatus.choices,
+        default=VerificationStatus.UNSUBMITTED,
+        verbose_name=_('حالة التحقق من الهوية')
+    )
+
     verified_at = models.DateTimeField(
         null=True,
         blank=True,
@@ -318,6 +371,22 @@ class UserProfile(models.Model):
     
     def __str__(self):
         return f'{self.user.username} - Profile'
+
+    @property
+    def get_avatar_url(self):
+        """الحصول على رابط الصورة الشخصية أو صورة افتراضية بحسب الجنس أو الدور"""
+        if self.profile_picture:
+            try:
+                return self.profile_picture.url
+            except Exception:
+                pass
+        if self.user.is_staff or self.user_type == self.UserType.ADMIN:
+            return '/static/images/fallbacks/avatar_admin.svg'
+        if self.gender == self.Gender.FEMALE:
+            return '/static/images/fallbacks/avatar_female.svg'
+        elif self.gender == self.Gender.MALE:
+            return '/static/images/fallbacks/avatar_male.svg'
+        return '/static/images/fallbacks/avatar_default.svg'
     
     def calculate_completion(self):
         """حساب نسبة اكتمال الملف الشخصي"""

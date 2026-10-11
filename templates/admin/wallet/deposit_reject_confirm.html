@@ -1,0 +1,44 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+&rsaquo; <a href="{% url 'admin:wallet_depositrequest_changelist' %}">{{ opts.verbose_name_plural }}</a>
+&rsaquo; رفض الطلب #{{ deposit_req.reference_id }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 20px auto; background: var(--card-bg, #fff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+    <h2 style="color: #dc2626; margin-top: 0; display: flex; align-items: center; gap: 8px;">
+        <i class="bi bi-exclamation-triangle-fill"></i> تأكيد رفض طلب شحن الرصيد
+    </h2>
+    <p style="color: #64748b; font-size: 0.95rem;">
+        أنت على وشك رفض طلب شحن الرصيد الخاص بالعميل <strong>{{ deposit_req.wallet.user.username }}</strong> بمبلغ <strong style="color: #059669;">${{ deposit_req.amount }}</strong>.
+    </p>
+
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin: 20px 0; font-size: 0.9rem;">
+        <div style="margin-bottom: 8px;"><strong>رقم الطلب المرجعي:</strong> <code>{{ deposit_req.reference_id }}</code></div>
+        <div style="margin-bottom: 8px;"><strong>وسيلة التحويل:</strong> {{ deposit_req.deposit_method.name|default:"تحويل يدوي" }}</div>
+        <div style="margin-bottom: 8px;"><strong>اسم المحوّل:</strong> {{ deposit_req.sender_name }} ({{ deposit_req.sender_phone }})</div>
+        <div style="margin-bottom: 8px;"><strong>رقم الحوالة:</strong> <code>{{ deposit_req.transaction_reference }}</code></div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div style="margin-bottom: 20px;">
+            <label for="id_reason" style="display: block; font-weight: bold; margin-bottom: 8px;">سبب الرفض (سيتم إرساله كإشعار للعميل):</label>
+            <textarea name="reason" id="id_reason" rows="4" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; font-family: inherit; font-size: 0.95rem;" placeholder="مثال: لم يتم العثور على الحوالة في كشف الحساب، أو رقم الحوالة غير صحيح، أو تم إرفاق صورة غير واضحة..." required></textarea>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <a href="{% url 'admin:wallet_depositrequest_changelist' %}" class="button" style="background: #94a3b8; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none;">إلغاء والعودة</a>
+            <button type="submit" class="button" style="background: #dc2626; color: white; padding: 8px 20px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer;">
+                تأكيد رفض الطلب وإشعار العميل
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

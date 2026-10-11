@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="maleBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="suitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0369a1" />
+    </linearGradient>
+    <clipPath id="avatarClip">
+      <circle cx="100" cy="100" r="96" />
+    </clipPath>
+  </defs>
+
+  <circle cx="100" cy="100" r="96" fill="url(#maleBg)" stroke="#38bdf8" stroke-width="4" />
+
+  <g clip-path="url(#avatarClip)">
+    <!-- Shoulders / Body -->
+    <path d="M 40 185 C 40 145, 65 135, 100 135 C 135 135, 160 145, 160 185 Z" fill="url(#suitGrad)" />
+    <!-- Collar / Shirt -->
+    <polygon points="100,150 85,135 115,135" fill="#f8fafc" />
+    <polygon points="100,165 95,145 105,145" fill="#e0f2fe" />
+
+    <!-- Head & Neck -->
+    <rect x="92" y="115" width="16" height="25" fill="#fcd34d" rx="4" />
+    <!-- Face -->
+    <ellipse cx="100" cy="85" rx="36" ry="42" fill="#fde68a" />
+    
+    <!-- Hair -->
+    <path d="M 64 80 C 64 50, 75 42, 100 42 C 125 42, 136 50, 136 80 C 136 68, 128 55, 100 55 C 75 55, 66 68, 64 80 Z" fill="#1e293b" />
+    <!-- Side hair / ears -->
+    <circle cx="63" cy="85" r="7" fill="#fde68a" />
+    <circle cx="137" cy="85" r="7" fill="#fde68a" />
+    
+    <!-- Eyes -->
+    <circle cx="88" cy="84" r="3.5" fill="#1e293b" />
+    <circle cx="112" cy="84" r="3.5" fill="#1e293b" />
+    <!-- Eyebrows -->
+    <path d="M 82 76 Q 88 74 94 76" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 106 76 Q 112 74 118 76" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+    <!-- Smile -->
+    <path d="M 91 104 Q 100 112 109 104" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" fill="none" />
+  </g>
+</svg>

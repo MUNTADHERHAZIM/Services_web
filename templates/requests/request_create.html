@@ -1,103 +1,416 @@
 {% extends 'base.html' %}
-{% block title %}طلب خدمة - {{ SITE_NAME }}{% endblock %}
+{% load captcha_tags %}
+{% load currency_tags %}
+
+{% block title %}تأكيد طلب: {{ service.title }} - {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.checkout-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    margin-bottom: 2rem;
+}
+.checkout-stepper::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--bs-border-color, #e2e8f0);
+    z-index: 1;
+    transform: translateY(-50%);
+}
+.stepper-step {
+    position: relative;
+    z-index: 2;
+    background: var(--bs-body-bg, #ffffff);
+    padding: 0 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+.stepper-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    background: var(--bs-secondary-bg, #f1f5f9);
+    color: var(--bs-secondary-color, #64748b);
+    border: 2px solid var(--bs-border-color, #cbd5e1);
+    transition: all 0.3s ease;
+}
+.stepper-step.completed .stepper-circle {
+    background: #10b981;
+    color: #ffffff;
+    border-color: #10b981;
+}
+.stepper-step.active .stepper-circle {
+    background: var(--brand-primary, #10b981);
+    color: #ffffff;
+    border-color: var(--brand-primary, #10b981);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+}
+.stepper-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--bs-secondary-color, #64748b);
+    white-space: nowrap;
+}
+.stepper-step.active .stepper-label {
+    color: var(--brand-primary, #10b981);
+    font-weight: 700;
+}
+.sticky-summary {
+    position: sticky;
+    top: 90px;
+}
+.trust-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--bs-border-color-translucent, rgba(0,0,0,0.06));
+    font-size: 0.85rem;
+}
+.trust-feature-item:last-child {
+    border-bottom: none;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <!-- Breadcrumb -->
-            <nav aria-label="breadcrumb" class="mb-4">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'core:home' %}">الرئيسية</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'services:service_list' %}">الخدمات</a></li>
-                    <li class="breadcrumb-item">
-                        <a href="{% url 'services:service_detail' service.slug %}">{{ service.title|truncatewords:5
-                            }}</a>
-                    </li>
-                    <li class="breadcrumb-item active">طلب الخدمة</li>
-                </ol>
-            </nav>
+<div class="container py-4 py-lg-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>الرئيسية</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'services:service_list' %}" class="text-decoration-none">سوق الخدمات</a></li>
+            {% if service.category %}
+            <li class="breadcrumb-item"><a href="{% url 'services:category_detail' service.category.slug %}" class="text-decoration-none">{{ service.category.name }}</a></li>
+            {% endif %}
+            <li class="breadcrumb-item"><a href="{% url 'services:service_detail' service.slug %}" class="text-decoration-none">{{ service.title|truncatewords:4 }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">طلب الخدمة</li>
+        </ol>
+    </nav>
 
-            <div class="row">
-                <!-- Service Summary -->
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <div class="card-body text-center">
-                            {% if service.cover_image %}
-                            <img src="{{ service.cover_image.url }}" class="img-fluid rounded mb-3"
-                                style="max-height: 150px; object-fit: cover;" alt="{{ service.title }}">
+    <!-- Modern Stepper Header -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-lg-8">
+            <div class="checkout-stepper">
+                <div class="stepper-step completed">
+                    <div class="stepper-circle">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+                    <span class="stepper-label">اختيار الخدمة</span>
+                </div>
+                <div class="stepper-step active">
+                    <div class="stepper-circle">2</div>
+                    <span class="stepper-label">تأكيد المتطلبات</span>
+                </div>
+                <div class="stepper-step">
+                    <div class="stepper-circle">3</div>
+                    <span class="stepper-label">بدء التنفيذ والاستلام</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="row g-4 g-xl-5">
+        <!-- Right Column: Sticky Service & Order Summary -->
+        <div class="col-lg-5 col-xl-4 order-lg-2">
+            <div class="sticky-summary">
+                <div class="card border rounded-4 shadow-sm overflow-hidden mb-4">
+                    <!-- Service Image -->
+                    <div class="position-relative" style="height: 180px;">
+                        {% if service.cover_image %}
+                        <img src="{{ service.cover_image.url }}" class="w-100 h-100 object-fit-cover" alt="{{ service.title }}">
+                        {% elif service.image %}
+                        <img src="{{ service.image.url }}" class="w-100 h-100 object-fit-cover" alt="{{ service.title }}">
+                        {% elif service.get_cover_image_url %}
+                        <img src="{{ service.get_cover_image_url }}" class="w-100 h-100 object-fit-cover" alt="{{ service.title }}">
+                        {% else %}
+                        <div class="w-100 h-100 bg-gradient d-flex align-items-center justify-content-center bg-success-subtle text-success">
+                            <i class="bi bi-tools display-4"></i>
+                        </div>
+                        {% endif %}
+
+                        {% if service.category %}
+                        <span class="badge bg-dark bg-opacity-75 text-white position-absolute top-0 end-0 m-3 rounded-pill px-3 py-1-5 shadow-xs small backdrop-blur">
+                            {{ service.category.name }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3 fs-6 lh-base text-dark-emphasis">
+                            {{ service.title }}
+                        </h5>
+
+                        <!-- Provider Snippet -->
+                        {% if service.provider %}
+                        <div class="d-flex align-items-center gap-3 p-2-5 bg-body-tertiary rounded-3 mb-3 border">
+                            {% if service.provider.get_avatar_url %}
+                            <img src="{{ service.provider.get_avatar_url }}" class="rounded-circle" style="width: 44px; height: 44px; object-fit: cover;" alt="{{ service.provider.display_name }}">
                             {% else %}
-                            <div class="bg-gradient rounded d-flex align-items-center justify-content-center mb-3"
-                                style="height: 150px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                                <i class="bi bi-image text-white display-4"></i>
+                            <div class="rounded-circle bg-success text-white fw-bold d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                {{ service.provider.display_name|slice:":1" }}
                             </div>
                             {% endif %}
-                            <h5 class="fw-bold">{{ service.title }}</h5>
-                            {% if service.price %}
-                            <h4 class="text-primary">{{ service.price }} ر.س</h4>
-                            {% endif %}
-                            <p class="text-muted small">{{ service.summary|truncatewords:20 }}</p>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="d-flex align-items-center gap-1">
+                                    <span class="fw-bold small text-truncate">{{ service.provider.display_name }}</span>
+                                    {% if service.provider.is_verified %}
+                                    <i class="bi bi-patch-check-fill text-primary small" title="مقدم خدمة موثق"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="text-muted small d-flex align-items-center gap-2" style="font-size: 0.75rem;">
+                                    <span><i class="bi bi-star-fill text-warning me-1"></i>{{ service.provider.get_average_rating|default:5.0|floatformat:1 }}</span>
+                                    <span>•</span>
+                                    <span><i class="bi bi-check2-circle text-success me-1"></i>{{ service.provider.completed_orders }} طلب مكتمل</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Key Order Features -->
+                        <div class="mb-3">
+                            <div class="trust-feature-item text-muted">
+                                <i class="bi bi-clock-history text-primary fs-6"></i>
+                                <span>مدة التنفيذ: <strong class="text-dark-emphasis">{{ service.duration|default:"1 - 3 أيام عمل" }}</strong></span>
+                            </div>
+                            <div class="trust-feature-item text-muted">
+                                <i class="bi bi-arrow-repeat text-success fs-6"></i>
+                                <span>مراجعات وتعديلات متاحة لضمان رضاك</span>
+                            </div>
+                            <div class="trust-feature-item text-muted">
+                                <i class="bi bi-shield-check text-info fs-6"></i>
+                                <span>ضمان مالي بنسبة 100% حتى استلام الخدمة</span>
+                            </div>
+                        </div>
+
+                        <!-- Price Breakdown Box -->
+                        <div class="p-3 bg-body-tertiary rounded-3 border">
+                            <div class="d-flex justify-content-between small text-muted mb-2">
+                                <span>سعر الخدمة الأساسي:</span>
+                                <span id="basePriceDisplay" class="fw-bold">{{ service.get_primary_price_display }}</span>
+                            </div>
+                            <div id="discountRow" class="d-flex justify-content-between small text-success mb-2" style="display: none !important;">
+                                <span>كوبون الخصم:</span>
+                                <span id="discountValDisplay" class="fw-bold">-0</span>
+                            </div>
+                            <hr class="my-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-dark-emphasis">المجموع الإجمالي:</span>
+                                <span id="finalPriceDisplay" class="fw-bold text-success fs-4">{{ service.get_primary_price_display }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Request Form -->
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header bg-white">
-                            <h4 class="mb-0 fw-bold">
-                                <i class="bi bi-send text-primary me-2"></i>طلب الخدمة
-                            </h4>
+                <!-- Trust Guarantee Card -->
+                <div class="card border-0 bg-success-subtle text-success-emphasis rounded-4 p-3 shadow-xs">
+                    <div class="d-flex gap-3 align-items-center">
+                        <div class="fs-2 text-success">
+                            <i class="bi bi-shield-lock-fill"></i>
                         </div>
-                        <div class="card-body p-4">
-                            <form method="post">
-                                {% csrf_token %}
-
-                                <div class="mb-4">
-                                    <label for="id_customer_notes" class="form-label fw-semibold">
-                                        ملاحظات إضافية
-                                    </label>
-                                    {{ form.customer_notes }}
-                                    <small class="text-muted">
-                                        يمكنك إضافة أي تفاصيل أو متطلبات خاصة بطلبك
-                                    </small>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="id_contact_phone" class="form-label fw-semibold">
-                                            رقم التواصل
-                                        </label>
-                                        {{ form.contact_phone }}
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="id_contact_email" class="form-label fw-semibold">
-                                            البريد الإلكتروني
-                                        </label>
-                                        {{ form.contact_email }}
-                                    </div>
-                                </div>
-
-                                <div class="alert alert-info">
-                                    <i class="bi bi-info-circle me-2"></i>
-                                    سيتم التواصل معك لتأكيد الطلب وتحديد التفاصيل
-                                </div>
-
-                                <div class="d-grid gap-2">
-                                    <button type="submit" class="btn btn-primary btn-lg">
-                                        <i class="bi bi-send me-2"></i>إرسال الطلب
-                                    </button>
-                                    <a href="{% url 'services:service_detail' service.slug %}"
-                                        class="btn btn-outline-secondary">
-                                        <i class="bi bi-arrow-right me-2"></i>العودة للخدمة
-                                    </a>
-                                </div>
-                            </form>
+                        <div>
+                            <div class="fw-bold small">ضمان خدماتي المالي 100%</div>
+                            <div class="small opacity-75" style="font-size: 0.78rem;">لا يتم تحويل الأموال لمقدم الخدمة إلا بعد استلامك للعمل وموافقتك التامة عليه.</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Left Column: Order Submission Form -->
+        <div class="col-lg-7 col-xl-8 order-lg-1">
+            <div class="card border rounded-4 shadow-sm">
+                <div class="card-header bg-transparent border-bottom p-4">
+                    <h4 class="fw-bold mb-1 fs-5 text-dark-emphasis d-flex align-items-center gap-2">
+                        <i class="bi bi-clipboard2-check text-success"></i>
+                        <span>بيانات ومتطلبات الطلب</span>
+                    </h4>
+                    <p class="text-muted small mb-0">يرجى كتابة تعليماتك بدقة لمساعدة مقدم الخدمة على بدء العمل فوراً</p>
+                </div>
+
+                <div class="card-body p-4">
+                    {% if messages %}
+                    <div class="mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" id="serviceRequestForm">
+                        {% csrf_token %}
+
+                        <!-- Requirements / Notes -->
+                        <div class="mb-4">
+                            <label for="id_customer_notes" class="form-label fw-bold d-flex justify-content-between">
+                                <span>تفاصيل ومتطلبات الطلب <span class="text-danger">*</span></span>
+                                <span class="small text-muted fw-normal">كلما كانت التفاصيل أوضح كان الإنجاز أسرع</span>
+                            </label>
+                            <textarea name="customer_notes" id="id_customer_notes" class="form-control rounded-3" rows="5" placeholder="اكتب هنا جميع التفاصيل أو المتطلبات الخاصة بطلبك (مثل: النصوص، الألوان المفضلة، المقاسات، أو الروابط المرجعية)..." required>{{ form.customer_notes.value|default:'' }}</textarea>
+                            {% if form.customer_notes.errors %}
+                            <div class="text-danger small mt-1">{{ form.customer_notes.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="id_contact_phone" class="form-label fw-bold d-flex justify-content-between">
+                                    <span>رقم الهاتف العراقي للتواصل <span class="text-danger">*</span></span>
+                                    <span class="small text-success fw-normal">🇮🇶 يبدأ بـ 07</span>
+                                </label>
+                                <div class="input-group" dir="ltr">
+                                    <span class="input-group-text bg-body-secondary text-muted">
+                                        🇮🇶 +964
+                                    </span>
+                                    <input type="tel" 
+                                           name="contact_phone" 
+                                           id="id_contact_phone" 
+                                           class="form-control text-start font-monospace" 
+                                           value="{{ form.contact_phone.value|default:user.profile.phone_number|default:'' }}" 
+                                           placeholder="07XXXXXXXXX" 
+                                           pattern="^(?:(?:\+|00)?964|0)?7[3-9]\d{8}$" 
+                                           required>
+                                </div>
+                                {% if form.contact_phone.errors %}
+                                <div class="text-danger small mt-1">{{ form.contact_phone.errors.0 }}</div>
+                                {% endif %}
+                                <div class="form-text small text-muted">شبكات زين، آسيا سيل، كورك (11 رقم) للتواصل الفوري</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="id_contact_email" class="form-label fw-bold">
+                                    البريد الإلكتروني للإشعارات <span class="text-danger">*</span>
+                                </label>
+                                <input type="email" 
+                                       name="contact_email" 
+                                       id="id_contact_email" 
+                                       class="form-control text-start" 
+                                       value="{{ form.contact_email.value|default:user.email|default:'' }}" 
+                                       placeholder="example@mail.com" 
+                                       dir="ltr" 
+                                       required>
+                                {% if form.contact_email.errors %}
+                                <div class="text-danger small mt-1">{{ form.contact_email.errors.0 }}</div>
+                                {% endif %}
+                                <div class="form-text small text-muted">ستصلك تحديثات الطلب ورسائل المستقل على هذا البريد</div>
+                            </div>
+                        </div>
+
+                        <!-- Coupon Section -->
+                        <div class="p-3 bg-body-tertiary rounded-3 border mb-4">
+                            <label class="form-label fw-bold small text-dark-emphasis mb-2 d-flex align-items-center gap-1">
+                                <i class="bi bi-tag-fill text-warning"></i>
+                                <span>هل لديك كوبون خصم؟</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="text" name="coupon_code" id="couponCodeInput" class="form-control font-monospace text-uppercase" placeholder="ادخل الكود (مثل: WELCOME2025)" autocomplete="off">
+                                <button type="button" class="btn btn-outline-success px-4 fw-bold" id="applyCouponBtn" onclick="applyCoupon('{{ service.id }}')">
+                                    تطبيق الكوبون
+                                </button>
+                            </div>
+                            <div id="couponFeedback" class="small mt-2" style="display: none;"></div>
+                        </div>
+
+                        <!-- Professional Captcha Component -->
+                        <div class="mb-4">
+                            {% render_captcha %}
+                        </div>
+
+                        <!-- Final Action CTA -->
+                        <div class="d-grid gap-2 pt-2">
+                            <button type="submit" class="btn btn-primary-custom btn-lg py-3 rounded-pill fw-bold fs-6 shadow-sm" id="submitOrderBtn">
+                                <i class="bi bi-lock-fill me-2"></i>تأكيد وإتمام الطلب الآن
+                            </button>
+                            <a href="{% url 'services:service_detail' service.slug %}" class="btn btn-outline-secondary rounded-pill py-2 text-center">
+                                <i class="bi bi-arrow-right me-1"></i>الرجوع إلى صفحة تفاصيل الخدمة
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+function applyCoupon(serviceId) {
+    const input = document.getElementById('couponCodeInput');
+    const btn = document.getElementById('applyCouponBtn');
+    const feedback = document.getElementById('couponFeedback');
+    const code = input.value.trim();
+
+    if (!code) {
+        feedback.className = 'small mt-2 text-danger';
+        feedback.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i> يرجى إدخال كود الكوبون أولاً.';
+        feedback.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> جاري التحقق...';
+
+    const formData = new FormData();
+    formData.append('code', code);
+    formData.append('service_id', serviceId);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    fetch("{% url 'core:apply_coupon' %}", {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = 'تطبيق الكوبون';
+        feedback.style.display = 'block';
+
+        if (data.success) {
+            feedback.className = 'small mt-2 text-success fw-bold';
+            feedback.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> ' + data.message;
+
+            const discRow = document.getElementById('discountRow');
+            if (discRow) discRow.style.setProperty('display', 'flex', 'important');
+            
+            const isUSD = data.currency === 'USD';
+            if (isUSD) {
+                document.getElementById('discountValDisplay').textContent = '-$' + data.discount_amount;
+                document.getElementById('finalPriceDisplay').textContent = '$' + data.final_price;
+            } else {
+                document.getElementById('discountValDisplay').textContent = '-' + Number(data.discount_amount).toLocaleString() + ' د.ع';
+                document.getElementById('finalPriceDisplay').textContent = Number(data.final_price).toLocaleString() + ' د.ع';
+            }
+            input.readOnly = true;
+        } else {
+            feedback.className = 'small mt-2 text-danger';
+            feedback.innerHTML = '<i class="bi bi-x-circle-fill me-1"></i> ' + data.message;
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = 'تطبيق الكوبون';
+        feedback.className = 'small mt-2 text-danger';
+        feedback.innerHTML = 'حدث خطأ في الاتصال، يرجى المحاولة لاحقاً.';
+        feedback.style.display = 'block';
+    });
+}
+</script>
 {% endblock %}

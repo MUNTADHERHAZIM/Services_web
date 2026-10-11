@@ -53,11 +53,37 @@
     }
 
     .section-header {
-        background: #f8f9fa;
-        padding: 15px 20px;
-        border-radius: 10px;
+        background: var(--bs-tertiary-bg, #f8f9fa);
+        padding: 14px 20px;
+        border-radius: 12px;
         margin-bottom: 20px;
-        border-left: 4px solid #667eea;
+        border: 1px solid var(--bs-border-color, #e2e8f0);
+        border-inline-start: 4px solid #667eea;
+        color: var(--bs-body-color, #1e293b);
+    }
+
+    .section-header h5 {
+        color: var(--bs-heading-color, #1e293b) !important;
+        font-weight: 700;
+    }
+
+    [data-bs-theme="dark"] .profile-card {
+        background-color: var(--bg-card, #111827) !important;
+        border: 1px solid var(--border-color, #1e293b) !important;
+    }
+
+    [data-bs-theme="dark"] .section-header {
+        background: #172136 !important;
+        border-color: #243048 !important;
+        border-inline-start-color: #818cf8 !important;
+    }
+
+    [data-bs-theme="dark"] .section-header h5 {
+        color: #f8fafc !important;
+    }
+
+    [data-bs-theme="dark"] .form-label {
+        color: #f1f5f9 !important;
     }
 </style>
 {% endblock %}
@@ -146,14 +172,28 @@
                                     dir="ltr">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">رقم الهاتف</label>
-                                <input type="text" name="phone_number" class="form-control"
-                                    value="{{ user.profile.phone_number }}" placeholder="07XXXXXXXXX">
+                                <label class="form-label fw-bold">رقم الهاتف (عراقي)</label>
+                                <div class="input-group" dir="ltr">
+                                    <span class="input-group-text bg-body-secondary text-muted">
+                                        🇮🇶 +964
+                                    </span>
+                                    <input type="tel" name="phone_number" class="form-control text-start"
+                                        value="{{ user.profile.phone_number }}" placeholder="07XXXXXXXXX"
+                                        pattern="^(?:(?:\+|00)?964|0)?7[3-9]\d{8}$" required>
+                                </div>
+                                <div class="form-text small text-muted">أرقام زين، آسيا سيل، كورك (11 رقم يبدأ بـ 07)</div>
                             </div>
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">رقم هاتف بديل</label>
-                                <input type="text" name="alternate_phone" class="form-control"
-                                    value="{{ user.profile.alternate_phone }}" placeholder="اختياري">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">رقم هاتف بديل (اختياري)</label>
+                                <div class="input-group" dir="ltr">
+                                    <span class="input-group-text bg-body-secondary text-muted">
+                                        🇮🇶 +964
+                                    </span>
+                                    <input type="tel" name="alternate_phone" class="form-control text-start"
+                                        value="{{ user.profile.alternate_phone }}" placeholder="اختياري (07XXXXXXXXX)"
+                                        pattern="^(?:(?:\+|00)?964|0)?7[3-9]\d{8}$">
+                                </div>
+                                <div class="form-text small text-muted">رقم عراقي إضافي للطوارئ</div>
                             </div>
                         </div>
 

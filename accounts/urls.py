@@ -26,6 +26,11 @@ urlpatterns = [
     path('profile/edit/', views.ProfileUpdateView.as_view(), name='profile_edit'),
     path('profile/document/update/', views.DocumentUpdateView.as_view(), name='document_update'),
     
+    # تأكيد الحساب ورقم الهاتف عبر الواتساب
+    path('verify-whatsapp/', views.VerifyWhatsAppView.as_view(), name='verify_whatsapp'),
+    path('ajax/send-whatsapp-otp/', views.send_whatsapp_otp_ajax, name='send_whatsapp_otp'),
+    path('ajax/verify-whatsapp-otp/', views.verify_whatsapp_otp_ajax, name='verify_whatsapp_otp'),
+    
     # إعادة تعيين كلمة المرور
     path('password-reset/', 
          auth_views.PasswordResetView.as_view(

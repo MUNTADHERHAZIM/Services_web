@@ -8,6 +8,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from .models import Provider, UserProfile
+from core.validators import validate_iraqi_phone, normalize_iraqi_phone, IRAQI_PHONE_REGEX
 import re
 
 class UserRegistrationForm(UserCreationForm):
@@ -112,6 +113,20 @@ class UserRegistrationFormExtended(UserCreationForm):
             self.fields['password1'].widget.attrs.update({'placeholder': _('كلمة المرور')})
         if 'password2' in self.fields:
             self.fields['password2'].widget.attrs.update({'placeholder': _('تأكيد كلمة المرور')})
+        if 'phone' in self.fields:
+            self.fields['phone'].widget.attrs.update({
+                'placeholder': '07XXXXXXXXX (مثال: 07701234567)',
+                'dir': 'ltr',
+                'pattern': IRAQI_PHONE_REGEX,
+                'title': _('يرجى إدخال رقم هاتف عراقي صحيح يبدأ بـ 07')
+            })
+        if 'alternate_phone' in self.fields:
+            self.fields['alternate_phone'].widget.attrs.update({
+                'placeholder': '07XXXXXXXXX (اختياري)',
+                'dir': 'ltr',
+                'pattern': IRAQI_PHONE_REGEX,
+                'title': _('يرجى إدخال رقم هاتف عراقي صحيح يبدأ بـ 07')
+            })
 
     def clean_username(self):
         username = self.cleaned_data.get('username')
@@ -128,6 +143,20 @@ class UserRegistrationFormExtended(UserCreationForm):
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError(_('هذا البريد الإلكتروني مستخدم بالفعل.'))
         return email
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone')
+        if phone:
+            validate_iraqi_phone(phone)
+            return normalize_iraqi_phone(phone, output_format='local')
+        return phone
+
+    def clean_alternate_phone(self):
+        phone = self.cleaned_data.get('alternate_phone')
+        if phone:
+            validate_iraqi_phone(phone)
+            return normalize_iraqi_phone(phone, output_format='local')
+        return phone
 
     def clean_user_type(self):
         user_type = self.cleaned_data.get('user_type')
@@ -212,8 +241,20 @@ class UserProfileUpdateForm(forms.ModelForm):
             'profile_picture': forms.FileInput(attrs={'class': 'form-control'}),
             'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'gender': forms.Select(attrs={'class': 'form-select'}),
-            'phone_number': forms.TextInput(attrs={'class': 'form-control', 'dir': 'ltr'}),
-            'alternate_phone': forms.TextInput(attrs={'class': 'form-control', 'dir': 'ltr'}),
+            'phone_number': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'dir': 'ltr',
+                'placeholder': '07XXXXXXXXX (مثال: 07701234567)',
+                'pattern': IRAQI_PHONE_REGEX,
+                'title': _('يرجى إدخال رقم هاتف عراقي يبدأ بـ 07')
+            }),
+            'alternate_phone': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'dir': 'ltr',
+                'placeholder': '07XXXXXXXXX (اختياري)',
+                'pattern': IRAQI_PHONE_REGEX,
+                'title': _('يرجى إدخال رقم هاتف عراقي يبدأ بـ 07')
+            }),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'city': forms.TextInput(attrs={'class': 'form-control'}),
             'district': forms.TextInput(attrs={'class': 'form-control'}),
@@ -227,6 +268,20 @@ class UserProfileUpdateForm(forms.ModelForm):
             self.fields['first_name'].initial = user.first_name
             self.fields['last_name'].initial = user.last_name
             self.fields['email'].initial = user.email
+
+    def clean_phone_number(self):
+        phone = self.cleaned_data.get('phone_number')
+        if phone:
+            validate_iraqi_phone(phone)
+            return normalize_iraqi_phone(phone, output_format='local')
+        return phone
+
+    def clean_alternate_phone(self):
+        phone = self.cleaned_data.get('alternate_phone')
+        if phone:
+            validate_iraqi_phone(phone)
+            return normalize_iraqi_phone(phone, output_format='local')
+        return phone
 
 
 class DocumentUpdateForm(forms.ModelForm):

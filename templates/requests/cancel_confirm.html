@@ -2,36 +2,295 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}تأكيد إلغاء الطلب - {{ block.super }}{% endblock %}
+{% block title %}إلغاء الطلب #{{ object.pk }} - {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cancel-card {
+        border-radius: 1.25rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        background: #ffffff;
+    }
+    [data-theme="dark"] .cancel-card {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .reason-option-card {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 0.85rem;
+        padding: 0.9rem 1.1rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        position: relative;
+        background: #f8fafc;
+    }
+    [data-theme="dark"] .reason-option-card {
+        border-color: #334155;
+        background: #0f172a;
+    }
+
+    .reason-option-card:hover {
+        border-color: #cbd5e1;
+        background: #ffffff;
+        transform: translateY(-1px);
+    }
+    [data-theme="dark"] .reason-option-card:hover {
+        border-color: #475569;
+        background: #1e293b;
+    }
+
+    .reason-option-card.active,
+    .cancel-reason-input:checked + .reason-option-card {
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.04);
+        box-shadow: 0 0 0 1px #ef4444;
+    }
+    [data-theme="dark"] .reason-option-card.active,
+    [data-theme="dark"] .cancel-reason-input:checked + .reason-option-card {
+        background: rgba(239, 68, 68, 0.12);
+        border-color: #f87171;
+    }
+
+    .reason-icon-box {
+        width: 38px;
+        height: 38px;
+        border-radius: 0.6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        flex-shrink: 0;
+    }
+
+    .order-mini-summary {
+        background: #f1f5f9;
+        border-radius: 1rem;
+        border: 1px dashed #cbd5e1;
+    }
+    [data-theme="dark"] .order-mini-summary {
+        background: rgba(15, 23, 42, 0.6);
+        border-color: #334155;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container py-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">الرئيسية</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'requests:my_requests' %}">طلباتي</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'requests:request_detail' object.pk %}">طلب #{{ object.pk }}</a></li>
+            <li class="breadcrumb-item active text-danger">إلغاء الطلب</li>
+        </ol>
+    </nav>
+
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 text-center p-5">
-                <div class="mb-4">
-                    <div class="bg-danger bg-opacity-10 text-danger rounded-circle p-4 d-inline-block">
-                        <i class="bi bi-x-circle fs-1"></i>
+        <div class="col-lg-8 col-xl-7">
+            
+            <div class="card cancel-card p-4 p-md-5">
+                <!-- Header Icon & Title -->
+                <div class="text-center mb-4">
+                    <div class="bg-danger bg-opacity-10 text-danger rounded-circle p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 72px; height: 72px;">
+                        <i class="bi bi-x-octagon fs-1"></i>
+                    </div>
+                    <h3 class="fw-bold text-danger mb-2">طلب إلغاء الخدمة</h3>
+                    <p class="text-muted">
+                        نأسف لعدم اكتمال تنفيذ طلبك. يرجى توضيح سبب الإلغاء، حيث سيتم إرسال هذا التقرير مباشرةً إلى <strong>إدارة المنصة ومقدم الخدمة</strong> للتحقق ومتابعة الإجراءات.
+                    </p>
+                </div>
+
+                <!-- Order Mini Summary -->
+                <div class="order-mini-summary p-3 mb-4">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-3">
+                            {% if object.service.cover_image %}
+                            <img src="{{ object.service.cover_image.url }}" alt="{{ object.service.title }}" class="rounded-3" style="width: 58px; height: 58px; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-3 bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width: 58px; height: 58px;">
+                                <i class="bi bi-box-seam fs-3"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <span class="badge bg-secondary mb-1">طلب #{{ object.pk }}</span>
+                                <h6 class="fw-bold mb-0 text-truncate" style="max-width: 320px;">{{ object.service.title }}</h6>
+                                <small class="text-muted"><i class="bi bi-person me-1"></i>مقدم الخدمة: {{ object.service.provider.display_name }}</small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="small text-muted d-block">قيمة الطلب</span>
+                            <span class="fw-bold text-primary fs-6">
+                                {% if object.price %}
+                                    {% if object.service.currency == 'USD' %}${{ object.price }}{% else %}{{ object.price|floatformat:0 }} د.ع{% endif %}
+                                {% else %}
+                                    حسب الاتفاق
+                                {% endif %}
+                            </span>
+                        </div>
                     </div>
                 </div>
-                
-                <h3 class="fw-bold mb-3">تأكيد إلغاء الطلب</h3>
-                <p class="text-muted mb-4">
-                    هل أنت متأكد من رغبتك في إلغاء طلبك للخدمة "<strong>{{ object.service.title }}</strong>"؟<br>
-                    هذا الإجراء لا يمكن التراجع عنه.
-                </p>
-                
-                <form method="post">
+
+                <!-- Cancellation Form -->
+                <form method="post" id="cancelRequestForm" novalidate>
                     {% csrf_token %}
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                        <a href="{% url 'requests:request_detail' object.id %}" class="btn btn-light px-4">تراجع</a>
-                        <button type="submit" class="btn btn-danger px-4">
-                            <i class="bi bi-x-circle me-2"></i>نعم، قم بإلغاء الطلب
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger rounded-3 py-2 px-3 mb-4">
+                        {% for error in form.non_field_errors %}
+                        <p class="mb-0 small"><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Reasons Radio Group -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold mb-2 d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-ui-checks me-2 text-danger"></i>حدد سبب الإلغاء الرئيسي <span class="text-danger">*</span></span>
+                            <small class="text-muted fw-normal">إجباري</small>
+                        </label>
+                        
+                        {% if form.cancellation_reason.errors %}
+                        <div class="text-danger small mb-2">
+                            <i class="bi bi-exclamation-circle me-1"></i>{{ form.cancellation_reason.errors.0 }}
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex flex-column gap-2" id="reasonsContainer">
+                            {% for choice_val, choice_label in form.cancellation_reason.field.choices %}
+                            <label class="position-relative m-0" for="reason_{{ choice_val }}">
+                                <input type="radio" 
+                                       name="{{ form.cancellation_reason.name }}" 
+                                       id="reason_{{ choice_val }}" 
+                                       value="{{ choice_val }}" 
+                                       class="visually-hidden cancel-reason-input"
+                                       {% if form.cancellation_reason.value == choice_val %}checked{% endif %}
+                                       required>
+                                <div class="reason-option-card">
+                                    <div class="reason-icon-box bg-white shadow-xs border">
+                                        {% if choice_val == 'changed_mind' %}
+                                            <i class="bi bi-arrow-repeat text-primary"></i>
+                                        {% elif choice_val == 'delay_provider' %}
+                                            <i class="bi bi-hourglass-bottom text-warning"></i>
+                                        {% elif choice_val == 'order_mistake' %}
+                                            <i class="bi bi-patch-exclamation text-danger"></i>
+                                        {% elif choice_val == 'scope_disagreement' %}
+                                            <i class="bi bi-file-earmark-diff text-info"></i>
+                                        {% elif choice_val == 'budget_issue' %}
+                                            <i class="bi bi-cash-coin text-success"></i>
+                                        {% elif choice_val == 'found_alternative' %}
+                                            <i class="bi bi-search text-secondary"></i>
+                                        {% else %}
+                                            <i class="bi bi-pencil-square text-dark"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold text-dark">{{ choice_label }}</div>
+                                    </div>
+                                    <div class="form-check m-0 p-0">
+                                        <i class="bi bi-check-circle-fill text-danger fs-5 check-icon d-none"></i>
+                                        <i class="bi bi-circle text-muted fs-5 uncheck-icon"></i>
+                                    </div>
+                                </div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Additional Notes Field -->
+                    <div class="mb-4">
+                        <label for="{{ form.cancellation_notes.id_for_label }}" class="form-label fw-bold mb-1">
+                            <i class="bi bi-chat-left-text me-1 text-primary"></i>تفاصيل أو ملاحظات إضافية
+                            <span id="notesRequiredBadge" class="badge bg-danger ms-1 d-none">مطلوب عند اختيار سبب آخر</span>
+                        </label>
+                        {{ form.cancellation_notes }}
+                        {% if form.cancellation_notes.errors %}
+                        <div class="text-danger small mt-1">
+                            <i class="bi bi-exclamation-circle me-1"></i>{{ form.cancellation_notes.errors.0 }}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-1">
+                            <i class="bi bi-info-circle me-1"></i>تساعدنا هذه الملاحظات في معالجة طلبك وإبلاغ الإدارة بالمشكلة بدقة.
+                        </small>
+                    </div>
+
+                    <!-- Admin Notification Notice Box -->
+                    <div class="alert alert-secondary bg-opacity-50 border-0 rounded-3 p-3 mb-4">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="bi bi-shield-check text-primary fs-5 mt-1"></i>
+                            <div class="small">
+                                <strong>تنويه الإدارة والضمان:</strong>
+                                بمجرد تأكيد الإلغاء، يتم إرسال إشعار فوري إلى فريق إدارة المنصة ومقدم الخدمة، مع حفظ تقرير الإلغاء في سجل التدقيق لضمان الشفافية وحفظ حقوقك بالكامل.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex flex-column flex-sm-row justify-content-center gap-2 pt-2">
+                        <a href="{% url 'requests:request_detail' object.pk %}" class="btn btn-light border px-4 py-2 order-2 order-sm-1">
+                            <i class="bi bi-arrow-return-right me-1"></i>تراجع والاحتفاظ بالطلب
+                        </a>
+                        <button type="submit" class="btn btn-danger px-4 py-2 order-1 order-sm-2 shadow-sm fw-bold">
+                            <i class="bi bi-x-circle-fill me-2"></i>تأكيد إلغاء الطلب نهائياً
                         </button>
                     </div>
                 </form>
+
             </div>
+
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const inputs = document.querySelectorAll('.cancel-reason-input');
+    const notesInput = document.getElementById('{{ form.cancellation_notes.id_for_label }}');
+    const notesBadge = document.getElementById('notesRequiredBadge');
+
+    function updateCardStates() {
+        inputs.forEach(input => {
+            const card = input.nextElementSibling;
+            const checkIcon = card.querySelector('.check-icon');
+            const uncheckIcon = card.querySelector('.uncheck-icon');
+            
+            if (input.checked) {
+                card.classList.add('active');
+                if (checkIcon) checkIcon.classList.remove('d-none');
+                if (uncheckIcon) uncheckIcon.classList.add('d-none');
+
+                if (input.value === 'other') {
+                    if (notesBadge) notesBadge.classList.remove('d-none');
+                    if (notesInput) {
+                        notesInput.setAttribute('required', 'required');
+                        notesInput.focus();
+                    }
+                } else {
+                    if (notesBadge) notesBadge.classList.add('d-none');
+                    if (notesInput) notesInput.removeAttribute('required');
+                }
+            } else {
+                card.classList.remove('active');
+                if (checkIcon) checkIcon.classList.add('d-none');
+                if (uncheckIcon) uncheckIcon.classList.remove('d-none');
+            }
+        });
+    }
+
+    inputs.forEach(input => {
+        input.addEventListener('change', updateCardStates);
+    });
+
+    // Initial check
+    updateCardStates();
+});
+</script>
 {% endblock %}

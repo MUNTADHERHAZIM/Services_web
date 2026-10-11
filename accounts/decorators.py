@@ -75,3 +75,28 @@ def admin_required(view_func):
         
         return view_func(request, *args, **kwargs)
     return wrapper
+
+
+def support_required(view_func):
+    """Decorator للتأكد من أن المستخدم موظف دعم فني"""
+    @wraps(view_func)
+    @login_required
+    def wrapper(request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.groups.filter(name__iexact='support').exists()):
+            messages.error(request, 'هذه الصفحة مخصصة لموظفي الدعم الفني فقط')
+            raise PermissionDenied
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
+def finance_required(view_func):
+    """Decorator للتأكد من أن المستخدم موظف حسابات"""
+    @wraps(view_func)
+    @login_required
+    def wrapper(request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.groups.filter(name__iexact='finance').exists()):
+            messages.error(request, 'هذه الصفحة مخصصة لموظفي الحسابات فقط')
+            raise PermissionDenied
+        return view_func(request, *args, **kwargs)
+    return wrapper
+

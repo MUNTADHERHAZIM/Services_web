@@ -11,8 +11,16 @@ from accounts.models import Provider
 
 class Category(models.Model):
     """
-    تصنيف الخدمات
+    تصنيف الخدمات (رئيسي أو فرعي)
     """
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='subcategories',
+        verbose_name=_('التصنيف الرئيسي')
+    )
     name = models.CharField(
         max_length=100,
         verbose_name=_('اسم التصنيف')
@@ -30,7 +38,7 @@ class Category(models.Model):
     icon = models.CharField(
         max_length=50,
         blank=True,
-        help_text=_('اسم أيقونة Bootstrap مثل: bi-laptop'),
+        help_text=_('اسم أيقونة Bootstrap مثل: bi-tools, bi-laptop'),
         verbose_name=_('الأيقونة')
     )
     image = models.ImageField(
@@ -58,14 +66,46 @@ class Category(models.Model):
         ordering = ['order', 'name']
 
     def __str__(self):
+        if self.parent:
+            return f"{self.parent.name} ➔ {self.name}"
         return self.name
+
+    @property
+    def is_main_category(self):
+        return self.parent is None
 
     def get_absolute_url(self):
         return reverse('services:category_detail', kwargs={'slug': self.slug})
 
     def get_services_count(self):
-        """عدد الخدمات في التصنيف"""
+        """عدد الخدمات في التصنيف (يشمل الخدمات في التصنيفات الفرعية إذا كان رئيسياً)"""
+        if self.parent is None:
+            return Service.objects.filter(
+                models.Q(category=self) | models.Q(category__parent=self),
+                is_active=True
+            ).count()
         return self.services.filter(is_active=True).count()
+
+    @property
+    def get_image_url(self):
+        """الحصول على رابط صورة التصنيف أو صورة افتراضية عصرية وفائقة الجودة"""
+        if self.image:
+            try:
+                return self.image.url
+            except Exception:
+                pass
+        slug = (self.slug or self.name or "").lower()
+        if any(k in slug for k in ['code', 'prog', 'tech', 'برمج', 'موقع', 'تطبيق', 'حاسوب']):
+            return '/static/images/fallbacks/service_tech.svg'
+        elif any(k in slug for k in ['design', 'graphic', 'تصميم', 'شعار', 'هوية', 'رسم']):
+            return '/static/images/fallbacks/service_design.svg'
+        elif any(k in slug for k in ['home', 'house', 'منزل', 'صيان', 'سباك', 'كهرب', 'تكييف', 'نجار']):
+            return '/static/images/fallbacks/service_home.svg'
+        elif any(k in slug for k in ['car', 'auto', 'سيار', 'مركب']):
+            return '/static/images/fallbacks/service_car.svg'
+        elif any(k in slug for k in ['market', 'seo', 'تسويق', 'إعلان', 'سوشيال']):
+            return '/static/images/fallbacks/service_marketing.svg'
+        return '/static/images/fallbacks/service_default.svg'
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -160,12 +200,37 @@ class Service(models.Model):
         default=Level.INTERMEDIATE,
         verbose_name=_('المستوى')
     )
+    class Currency(models.TextChoices):
+        IQD = 'IQD', _('دينار عراقي (د.ع)')
+        USD = 'USD', _('دولار أمريكي ($)')
+
     price = models.DecimalField(
-        max_digits=10,
+        max_digits=12,
         decimal_places=2,
         null=True,
         blank=True,
         verbose_name=_('السعر')
+    )
+    currency = models.CharField(
+        max_length=3,
+        choices=Currency.choices,
+        default=Currency.IQD,
+        verbose_name=_('العملة'),
+        help_text=_('اختر ما إذا كان السعر بالدينار العراقي (د.ع) أو بالدولار الأمريكي ($)')
+    )
+    original_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name=_('السعر الأصلي قبل الخصم'),
+        help_text=_('إذا حُدد بقيمة أكبر من السعر، ستظهر شارة تخفيض وسعر مشطوب')
+    )
+    discount_end_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_('تاريخ انتهاء العرض'),
+        help_text=_('اختياري: لتشغيل عداد تنازلي للعرض الترويجي')
     )
     price_note = models.CharField(
         max_length=100,
@@ -266,13 +331,124 @@ class Service(models.Model):
         self.views_count += 1
         self.save(update_fields=['views_count'])
 
+    @property
+    def get_cover_image_url(self):
+        """الحصول على رابط صورة الغلاف أو صورة افتراضية عصرية وفائقة الجودة"""
+        if self.cover_image:
+            try:
+                return self.cover_image.url
+            except Exception:
+                pass
+        if self.category:
+            return self.category.get_image_url
+        return '/static/images/fallbacks/service_default.svg'
+
+    EXCHANGE_RATE_USD_TO_IQD = 1500  # سعر الصرف المعتمد في المنصة (1 دولار = 1500 دينار عراقي)
+
+    def get_price_in_iqd(self):
+        """الحصول على السعر محسوباً بالدينار العراقي"""
+        if not self.price:
+            return 0
+        if self.currency == self.Currency.USD:
+            return int(self.price * self.EXCHANGE_RATE_USD_TO_IQD)
+        return int(self.price)
+
+    def get_price_in_usd(self):
+        """الحصول على السعر محسوباً بالدولار الأمريكي"""
+        if not self.price:
+            return 0.0
+        if self.currency == self.Currency.IQD:
+            return round(float(self.price) / self.EXCHANGE_RATE_USD_TO_IQD, 1)
+        return float(self.price)
+
+    def get_original_price_in_iqd(self):
+        """السعر الأصلي بالدينار العراقي"""
+        if not self.original_price:
+            return None
+        if self.currency == self.Currency.USD:
+            return int(self.original_price * self.EXCHANGE_RATE_USD_TO_IQD)
+        return int(self.original_price)
+
+    def get_original_price_in_usd(self):
+        """السعر الأصلي بالدولار الأمريكي"""
+        if not self.original_price:
+            return None
+        if self.currency == self.Currency.IQD:
+            return round(float(self.original_price) / self.EXCHANGE_RATE_USD_TO_IQD, 1)
+        return float(self.original_price)
+
+    def get_primary_price_display(self, target_currency='IQD'):
+        """عرض السعر الأساسي بحسب العملة المختارة"""
+        if not self.price:
+            return "حسب الطلب"
+        if target_currency == 'USD':
+            usd = self.get_price_in_usd()
+            formatted = f"${usd:,.2f}" if usd % 1 != 0 else f"${int(usd):,}"
+            return formatted
+        else:
+            iqd = self.get_price_in_iqd()
+            return f"{iqd:,} د.ع"
+
+    def get_primary_original_price_display(self, target_currency='IQD'):
+        """عرض السعر الأصلي قبل الخصم بحسب العملة المختارة"""
+        if not self.original_price:
+            return None
+        if target_currency == 'USD':
+            usd = self.get_original_price_in_usd()
+            formatted = f"${usd:,.2f}" if usd % 1 != 0 else f"${int(usd):,}"
+            return formatted
+        else:
+            iqd = self.get_original_price_in_iqd()
+            return f"{iqd:,} د.ع"
+
+    def get_secondary_price_display(self, target_currency='IQD'):
+        """عرض السعر الموازي بالعملة الثانية للشفافية وراحة العميل"""
+        if not self.price:
+            return ""
+        if target_currency == 'USD':
+            iqd = self.get_price_in_iqd()
+            return f"({iqd:,} د.ع)"
+        else:
+            usd = self.get_price_in_usd()
+            formatted = f"${usd:,.1f}" if usd % 1 != 0 else f"${int(usd)}"
+            return f"({formatted})"
+
     def get_display_price(self):
-        """عرض السعر بشكل مناسب"""
+        """عرض السعر بشكل مناسب مع دعم الدينار والدولار"""
         if self.price:
+            if self.currency == self.Currency.USD:
+                formatted = f"${self.price:,.0f}" if self.price % 1 == 0 else f"${self.price:,.2f}"
+            else:
+                formatted = f"{int(self.price):,} د.ع"
             if self.price_note:
-                return f"{self.price_note}: {self.price} ر.س"
-            return f"{self.price} ر.س"
+                return f"{self.price_note}: {formatted}"
+            return formatted
         return "حسب الطلب"
+
+    @property
+    def is_on_sale(self):
+        """هل الخدمة عليها عرض تخفيض ساري المفعول؟"""
+        if self.original_price and self.price and self.original_price > self.price:
+            if self.discount_end_date:
+                from django.utils import timezone
+                return timezone.now() < self.discount_end_date
+            return True
+        return False
+
+    @property
+    def discount_percentage(self):
+        """حساب نسبة الخصم المئوية"""
+        if self.is_on_sale and self.original_price and self.original_price > 0:
+            diff = self.original_price - self.price
+            return int(round((diff / self.original_price) * 100))
+        return 0
+
+    @property
+    def savings_amount(self):
+        """مبلغ التوفير"""
+        if self.is_on_sale and self.original_price:
+            return self.original_price - self.price
+        return 0
 
     def save(self, *args, **kwargs):
         if not self.slug:

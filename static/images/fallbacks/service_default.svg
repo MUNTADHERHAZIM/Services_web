@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#064e3b" />
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.2" />
+    </linearGradient>
+    <linearGradient id="accentCard" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.03" />
+    </linearGradient>
+    <pattern id="gridPattern" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1" />
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="url(#bgGrad)" />
+  <rect width="100%" height="100%" fill="url(#gridPattern)" />
+
+  <!-- Ambient light circles -->
+  <circle cx="200" cy="150" r="180" fill="url(#glowGrad)" filter="blur(60px)" opacity="0.35" />
+  <circle cx="650" cy="350" r="220" fill="#10b981" filter="blur(90px)" opacity="0.15" />
+
+  <!-- Center Glass Card -->
+  <g transform="translate(180, 80)">
+    <rect width="440" height="340" rx="24" fill="url(#accentCard)" stroke="rgba(255,255,255,0.18)" stroke-width="1.5" />
+    
+    <!-- Decorative Header in Card -->
+    <circle cx="45" cy="45" r="8" fill="#ef4444" opacity="0.7" />
+    <circle cx="70" cy="45" r="8" fill="#f59e0b" opacity="0.7" />
+    <circle cx="95" cy="45" r="8" fill="#10b981" opacity="0.7" />
+    <line x1="30" y1="75" x2="410" y2="75" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+
+    <!-- Center Icon Circle -->
+    <circle cx="220" cy="180" r="64" fill="rgba(16, 185, 129, 0.15)" stroke="#10b981" stroke-width="2" />
+    
+    <!-- Sparkle / Star Icon -->
+    <path d="M 220 140 L 227 167 L 254 174 L 227 181 L 220 208 L 213 181 L 186 174 L 213 167 Z" fill="#10b981" />
+    <circle cx="255" cy="145" r="4" fill="#38bdf8" />
+    <circle cx="185" cy="205" r="3" fill="#fbbf24" />
+
+    <!-- Text -->
+    <text x="220" y="275" font-family="'Tajawal', 'Segoe UI', sans-serif" font-size="22" font-weight="bold" fill="#ffffff" text-anchor="middle">خدمة مميزة واحترافية</text>
+    <text x="220" y="305" font-family="'Tajawal', 'Segoe UI', sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">منصة خدماتي • جودة وضمان عراقي 100%</text>
+  </g>
+</svg>

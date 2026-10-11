@@ -1,147 +1,298 @@
 {% extends 'base.html' %}
-{% block title %}الخدمات - {{ SITE_NAME }}{% endblock %}
-
-{% block extra_css %}
-<style>
-    .service-card {
-        transition: all 0.3s ease;
-        overflow: hidden;
-    }
-    
-    .service-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-    }
-    
-    .service-card .card-img-top {
-        transition: transform 0.3s ease;
-    }
-    
-    .service-card:hover .card-img-top {
-        transform: scale(1.05);
-    }
-    
-    .filter-card {
-        background: white;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-        position: sticky;
-        top: 100px;
-    }
-    
-    .filter-title {
-        font-weight: 700;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .tag-cloud .badge {
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    
-    .tag-cloud .badge:hover {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
-        color: white !important;
-        transform: translateY(-2px);
-    }
-    
-    .view-toggle-btn {
-        padding: 8px 12px;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-    
-    .view-toggle-btn.active {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        color: white;
-    }
-    
-    .results-info {
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-        border-radius: 12px;
-        padding: 15px 20px;
-    }
-</style>
-{% endblock %}
+{% load humanize %}
+{% load currency_tags %}
+{% block title %}سوق الخدمات - {{ SITE_NAME }}{% endblock %}
 
 {% block content %}
 <div class="container py-5">
-    <!-- Page Header -->
-    <div class="row mb-4" data-aos="fade-up">
-        <div class="col-lg-8">
-            <h1 class="fw-bold mb-2">
-                <i class="bi bi-collection text-primary me-2"></i>
+    <!-- Header Section with Breadcrumbs & Results summary -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom service-list-header position-relative" style="z-index: 1;" data-aos="fade-up">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2 small">
+                    <li class="breadcrumb-item"><a href="{% url 'core:home' %}">الرئيسية</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">سوق الخدمات</li>
+                </ol>
+            </nav>
+            <h1 class="h3 fw-bold mb-1">
                 {% if search_query %}
-                نتائج البحث: "{{ search_query }}"
+                    نتائج البحث عن: <span class="text-success">"{{ search_query }}"</span>
                 {% elif current_category %}
-                {{ current_category }}
+                    تصنيف: <span class="text-success">{{ current_category }}</span>
                 {% else %}
-                جميع الخدمات
+                    تصفح جميع الخدمات المتاحة
                 {% endif %}
             </h1>
-            <p class="text-muted">{{ total_count }} خدمة متاحة</p>
+            <p class="text-muted small mb-0">تم العثور على <strong class="text-main">{{ total_count }}</strong> خدمة احترافية</p>
         </div>
-        <div class="col-lg-4 text-lg-end">
-            <div class="results-info d-inline-flex align-items-center gap-3">
-                <span class="text-muted">ترتيب حسب:</span>
-                <select class="form-select form-select-sm" style="width: auto;" onchange="window.location.href=this.value">
-                    <option value="?sort=newest{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}" {% if current_sort == 'newest' %}selected{% endif %}>الأحدث</option>
-                    <option value="?sort=price_low{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}" {% if current_sort == 'price_low' %}selected{% endif %}>الأقل سعراً</option>
-                    <option value="?sort=price_high{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}" {% if current_sort == 'price_high' %}selected{% endif %}>الأعلى سعراً</option>
-                    <option value="?sort=rating{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}" {% if current_sort == 'rating' %}selected{% endif %}>الأعلى تقييماً</option>
-                </select>
-            </div>
+
+        <!-- Professional Custom Sorting Dropdown -->
+        <div class="dropdown custom-sort-dropdown position-relative" style="z-index: 5;">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill shadow-xs" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-arrow-down-up text-success"></i>
+                <span class="fw-semibold">
+                    {% if current_sort == 'popular' %}الأكثر مشاهدة 🔥
+                    {% elif current_sort == 'rating' %}الأعلى تقييماً ⭐
+                    {% elif current_sort == 'price_low' %}السعر: الأقل أولاً 📉
+                    {% elif current_sort == 'price_high' %}السعر: الأعلى أولاً 📈
+                    {% else %}الأحدث إضافة 🕒{% endif %}
+                </span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-2 rounded-3" style="min-width: 220px;">
+                <li><h6 class="dropdown-header small text-muted">ترتيب الخدمات حسب</h6></li>
+                <li>
+                    <a class="dropdown-item py-2 d-flex align-items-center justify-content-between {% if current_sort == 'newest' or not current_sort %}active bg-success-subtle text-success-emphasis fw-bold{% endif %}" href="?sort=newest{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if request.GET.price_min %}&price_min={{ request.GET.price_min }}{% endif %}{% if request.GET.price_max %}&price_max={{ request.GET.price_max }}{% endif %}{% if request.GET.rating %}&rating={{ request.GET.rating }}{% endif %}{% if deals_only %}&deals=true{% endif %}">
+                        <span><i class="bi bi-clock-history me-2 text-primary"></i>الأحدث إضافة</span>
+                        {% if current_sort == 'newest' or not current_sort %}<i class="bi bi-check2 text-success fw-bold"></i>{% endif %}
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item py-2 d-flex align-items-center justify-content-between {% if current_sort == 'popular' %}active bg-success-subtle text-success-emphasis fw-bold{% endif %}" href="?sort=popular{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if request.GET.price_min %}&price_min={{ request.GET.price_min }}{% endif %}{% if request.GET.price_max %}&price_max={{ request.GET.price_max }}{% endif %}{% if request.GET.rating %}&rating={{ request.GET.rating }}{% endif %}{% if deals_only %}&deals=true{% endif %}">
+                        <span><i class="bi bi-fire me-2 text-danger"></i>الأكثر مشاهدة</span>
+                        {% if current_sort == 'popular' %}<i class="bi bi-check2 text-success fw-bold"></i>{% endif %}
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item py-2 d-flex align-items-center justify-content-between {% if current_sort == 'rating' %}active bg-success-subtle text-success-emphasis fw-bold{% endif %}" href="?sort=rating{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if request.GET.price_min %}&price_min={{ request.GET.price_min }}{% endif %}{% if request.GET.price_max %}&price_max={{ request.GET.price_max }}{% endif %}{% if request.GET.rating %}&rating={{ request.GET.rating }}{% endif %}{% if deals_only %}&deals=true{% endif %}">
+                        <span><i class="bi bi-star-fill me-2 text-warning"></i>الأعلى تقييماً</span>
+                        {% if current_sort == 'rating' %}<i class="bi bi-check2 text-success fw-bold"></i>{% endif %}
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <a class="dropdown-item py-2 d-flex align-items-center justify-content-between {% if current_sort == 'price_low' %}active bg-success-subtle text-success-emphasis fw-bold{% endif %}" href="?sort=price_low{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if request.GET.price_min %}&price_min={{ request.GET.price_min }}{% endif %}{% if request.GET.price_max %}&price_max={{ request.GET.price_max }}{% endif %}{% if request.GET.rating %}&rating={{ request.GET.rating }}{% endif %}{% if deals_only %}&deals=true{% endif %}">
+                        <span><i class="bi bi-sort-numeric-down me-2 text-info"></i>السعر: من الأقل للأعلى</span>
+                        {% if current_sort == 'price_low' %}<i class="bi bi-check2 text-success fw-bold"></i>{% endif %}
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item py-2 d-flex align-items-center justify-content-between {% if current_sort == 'price_high' %}active bg-success-subtle text-success-emphasis fw-bold{% endif %}" href="?sort=price_high{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if request.GET.price_min %}&price_min={{ request.GET.price_min }}{% endif %}{% if request.GET.price_max %}&price_max={{ request.GET.price_max }}{% endif %}{% if request.GET.rating %}&rating={{ request.GET.rating }}{% endif %}{% if deals_only %}&deals=true{% endif %}">
+                        <span><i class="bi bi-sort-numeric-down-alt me-2 text-info"></i>السعر: من الأعلى للأقل</span>
+                        {% if current_sort == 'price_high' %}<i class="bi bi-check2 text-success fw-bold"></i>{% endif %}
+                    </a>
+                </li>
+            </ul>
         </div>
     </div>
 
-    <div class="row">
+    <!-- Active Filter Chips -->
+    {% if search_query or current_category or request.GET.price_min or request.GET.price_max or request.GET.rating %}
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-4 p-2 px-3 rounded bg-body-tertiary border position-relative" style="z-index: 20;" data-aos="fade-up">
+        <span class="small fw-bold text-muted"><i class="bi bi-funnel-fill text-success me-1"></i> فلاتر نشطة:</span>
+        
+        {% if search_query %}
+        <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle p-2 d-inline-flex align-items-center gap-1">
+            البحث: {{ search_query }}
+            <a href="?{% if current_category %}category={{ current_category }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}{% endif %}" class="text-reset ms-1"><i class="bi bi-x-circle-fill"></i></a>
+        </span>
+        {% endif %}
+
+        {% if current_category %}
+        <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle p-2 d-inline-flex align-items-center gap-1">
+            القسم: {{ current_category }}
+            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}{% endif %}" class="text-reset ms-1"><i class="bi bi-x-circle-fill"></i></a>
+        </span>
+        {% endif %}
+
+        {% if request.GET.rating %}
+        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle p-2 d-inline-flex align-items-center gap-1">
+            {{ request.GET.rating }} نجوم فأكثر
+            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}" class="text-reset ms-1"><i class="bi bi-x-circle-fill"></i></a>
+        </span>
+        {% endif %}
+
+        <a href="{% url 'services:service_list' %}" class="btn btn-sm btn-link text-danger text-decoration-none ms-auto small">
+            <i class="bi bi-arrow-counterclockwise"></i> تصفير الفلاتر
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- ======================================================================
+         Amazon / Alibaba Style Main Departments Showcase Ribbon
+         ====================================================================== -->
+    <div class="dept-showcase-wrapper mb-4 position-relative" style="z-index: 10;" data-aos="fade-up">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center gap-2">
+                <div class="p-2 rounded-circle bg-success-subtle text-success fs-5 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark-emphasis">تصفح الأقسام والخدمات الرئيسية</h5>
+                    <small class="text-muted">اختر القسم لاستعراض التخصصات المتاحة والخدمات الموثوقة</small>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-1">
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" id="deptScrollRight" title="التالي" style="width: 34px; height: 34px;">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" id="deptScrollLeft" title="السابق" style="width: 34px; height: 34px;">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Horizontal Scrolling Departments Bar -->
+        <div class="dept-carousel-track" id="deptTrack">
+            <!-- All Services Card -->
+            <a href="{% url 'services:service_list' %}" class="dept-card-item {% if not active_main_category %}active{% endif %}">
+                <div class="dept-card-icon-box">
+                    <i class="bi bi-grid-fill"></i>
+                </div>
+                <div class="dept-card-title">كافة الخدمات</div>
+                <div class="dept-card-count">{{ total_count }} خدمة</div>
+            </a>
+
+            {% for main_cat in main_categories %}
+            <a href="?category={{ main_cat.slug }}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="dept-card-item {% if active_main_category.id == main_cat.id %}active{% endif %}">
+                <div class="dept-card-icon-box">
+                    <i class="bi {{ main_cat.icon|default:'bi-folder' }}"></i>
+                </div>
+                <div class="dept-card-title">{{ main_cat.name }}</div>
+                <div class="dept-card-count">{{ main_cat.subcategories.count }} تخصصات</div>
+            </a>
+            {% endfor %}
+        </div>
+
+        <!-- Subcategories Ribbon (Alibaba/Amazon style sub-navigation) -->
+        {% if active_main_category and active_subcategories %}
+        <div class="subdept-ribbon mt-3 p-3 rounded-4" data-aos="fade-in">
+            <div class="d-flex align-items-center flex-wrap gap-2">
+                <span class="small fw-bold text-muted d-flex align-items-center gap-1 me-2">
+                    <i class="bi {{ active_main_category.icon|default:'bi-folder' }} text-success"></i>
+                    <span>تخصصات {{ active_main_category.name }}:</span>
+                </span>
+                
+                <a href="?category={{ active_main_category.slug }}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="badge rounded-pill subdept-chip {% if current_category == active_main_category.slug %}active{% endif %}">
+                    الكل في هذا القسم
+                </a>
+
+                {% for sub in active_subcategories %}
+                <a href="?category={{ sub.slug }}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="badge rounded-pill subdept-chip {% if current_category == sub.slug %}active{% endif %}">
+                    <i class="bi {{ sub.icon|default:'bi-layers' }} me-1"></i>{{ sub.name }}
+                    <span class="subdept-count">({{ sub.get_services_count }})</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="row g-4">
         <!-- Sidebar Filters -->
-        <div class="col-lg-3 mb-4">
-            <div class="filter-card" data-aos="fade-up" data-aos-delay="100">
-                <div class="filter-title">
-                    <i class="bi bi-funnel text-primary"></i>
-                    <span>تصفية النتائج</span>
+        <aside class="col-lg-3">
+            <div class="filter-card-modern position-sticky" style="top: 85px;" data-aos="fade-up">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                    <h5 class="filter-section-title mb-0"><i class="bi bi-sliders2 text-success"></i> تصفية متقدمة</h5>
+                    {% if search_query or current_category or request.GET.rating or request.GET.price_min %}
+                    <a href="{% url 'services:service_list' %}" class="text-muted small text-decoration-none">مسح</a>
+                    {% endif %}
                 </div>
 
                 <form method="get" action="{% url 'services:service_list' %}">
-                    <!-- Search -->
+                    {% if current_sort %}
+                    <input type="hidden" name="sort" value="{{ current_sort }}">
+                    {% endif %}
+
+                    <!-- Search Input -->
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">البحث</label>
-                        <div class="input-group input-group-lg">
-                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                            <input type="text" name="search" class="form-control border-start-0" placeholder="ابحث عن خدمة..." value="{{ search_query }}">
+                        <label class="form-label small fw-bold text-muted">البحث بالكلمات المفتاحية</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-body border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                            <input type="text" name="search" class="form-control border-start-0" placeholder="ما الذي تبحث عنه؟" value="{{ search_query }}">
                         </div>
                     </div>
 
-                    <!-- Category Filter -->
+                    <!-- Searchable Category Selector -->
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">التصنيف</label>
-                        <select name="category" class="form-select form-select-lg">
-                            <option value="">جميع التصنيفات</option>
-                            {% for cat in categories %}
-                            <option value="{{ cat.slug }}" {% if cat.slug == current_category %}selected{% endif %}>{{ cat.name }}</option>
-                            {% endfor %}
-                        </select>
+                        <label class="form-label small fw-bold text-muted d-flex align-items-center justify-content-between">
+                            <span>التصنيف أو التخصص</span>
+                            <span class="small text-success fw-normal"><i class="bi bi-search"></i> بحث سريع</span>
+                        </label>
+                        
+                        <div class="searchable-select-wrap" id="categorySearchableSelect">
+                            <!-- Hidden input submitted with the form -->
+                            <input type="hidden" name="category" id="selectedCategoryInput" value="{{ current_category }}">
+
+                            <!-- Trigger Button -->
+                            <button type="button" class="searchable-select-trigger" id="categorySelectTrigger" aria-expanded="false">
+                                <span class="d-flex align-items-center gap-2 text-truncate" id="categoryTriggerLabel">
+                                    {% if current_category_obj %}
+                                        <i class="bi {{ current_category_obj.icon|default:'bi-folder' }} text-success fs-6"></i>
+                                        <span class="fw-bold text-truncate">{{ current_category_obj.name }}</span>
+                                    {% else %}
+                                        <i class="bi bi-grid text-muted fs-6"></i>
+                                        <span>جميع الأقسام والتخصصات</span>
+                                    {% endif %}
+                                </span>
+                                <i class="bi bi-chevron-down transition-chevron text-muted small ms-2"></i>
+                            </button>
+
+                            <!-- Floating Dropdown Panel -->
+                            <div class="searchable-dropdown-panel" id="categoryDropdownPanel">
+                                <!-- Sticky Search Input -->
+                                <div class="p-2 border-bottom bg-body sticky-top">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-transparent border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                                        <input type="text" class="form-control border-start-0 shadow-none" id="categorySearchBox" placeholder="ابحث في الأقسام والتخصصات..." autocomplete="off">
+                                        <button type="button" class="btn btn-sm btn-link text-muted d-none" id="clearCategorySearch"><i class="bi bi-x-circle-fill"></i></button>
+                                    </div>
+                                </div>
+
+                                <!-- Items List -->
+                                <div class="searchable-options-list" id="categoryOptionsList">
+                                    <!-- Option: All -->
+                                    <div class="searchable-option-item {% if not current_category %}active{% endif %}" data-value="" data-text="جميع الأقسام والتخصصات كافة الخدمات">
+                                        <i class="bi bi-grid-fill me-2 text-primary"></i>
+                                        <span class="fw-bold">جميع الأقسام والتخصصات</span>
+                                    </div>
+
+                                    {% for main_cat in main_categories %}
+                                    <div class="searchable-category-group" data-group="{{ main_cat.name }}">
+                                        <!-- Main Category Option -->
+                                        <div class="searchable-option-item searchable-main-cat mt-1 {% if current_category == main_cat.slug %}active{% endif %}" data-value="{{ main_cat.slug }}" data-text="{{ main_cat.name }}">
+                                            <i class="bi {{ main_cat.icon|default:'bi-folder' }} text-success me-2"></i>
+                                            <span class="fw-bold flex-grow-1">{{ main_cat.name }}</span>
+                                            <span class="badge bg-body-secondary text-body-secondary small ms-1">{{ main_cat.subcategories.count }} تخصص</span>
+                                        </div>
+
+                                        <!-- Subcategory Options -->
+                                        {% for sub in main_cat.subcategories.all %}
+                                        <div class="searchable-option-item searchable-sub-cat {% if current_category == sub.slug %}active{% endif %}" data-value="{{ sub.slug }}" data-text="{{ sub.name }} {{ main_cat.name }}">
+                                            <span class="text-muted me-1">↳</span>
+                                            <i class="bi {{ sub.icon|default:'bi-layers' }} text-muted me-2 small"></i>
+                                            <span class="flex-grow-1">{{ sub.name }}</span>
+                                            <span class="badge bg-light text-muted border small ms-1">{{ sub.get_services_count }}</span>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endfor %}
+
+                                    <div class="text-center text-muted py-3 d-none" id="noCategoryResults">
+                                        <i class="bi bi-search fs-5 d-block mb-1 opacity-50"></i>
+                                        <small>لا توجد نتائج مطابقة للبحث</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Price Range -->
+                    <!-- Price Range & Currency -->
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">نطاق السعر</label>
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label class="form-label small fw-bold text-muted mb-0">نطاق السعر ({{ currency_symbol }})</label>
+                            <span class="badge bg-secondary-subtle text-secondary small">{{ user_currency }}</span>
+                        </div>
                         <div class="row g-2">
                             <div class="col-6">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light">من</span>
-                                    <input type="number" name="price_min" class="form-control" placeholder="0" value="{{ request.GET.price_min }}">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-body text-muted">من</span>
+                                    <input type="number" name="price_min" class="form-control" placeholder="0" min="0" value="{{ request.GET.price_min }}">
                                 </div>
                             </div>
                             <div class="col-6">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light">إلى</span>
-                                    <input type="number" name="price_max" class="form-control" placeholder="∞" value="{{ request.GET.price_max }}">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-body text-muted">إلى</span>
+                                    <input type="number" name="price_max" class="form-control" placeholder="{% if user_currency == 'IQD' %}100000{% else %}100{% endif %}" min="0" value="{{ request.GET.price_max }}">
                                 </div>
                             </div>
                         </div>
@@ -149,167 +300,337 @@
 
                     <!-- Rating Filter -->
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">التقييم</label>
-                        <div class="d-flex flex-wrap gap-2">
-                            {% for i in "54321" %}
-                            <label class="btn btn-outline-secondary btn-sm flex-fill">
-                                <input type="radio" name="rating" value="{{ i }}" {% if request.GET.rating == i %}checked{% endif %} style="display: none;">
-                                {% for star in "x"|add:i %}<i class="bi bi-star-fill text-warning"></i>{% endfor %}
+                        <label class="form-label small fw-bold text-muted">التقييم الأدنى</label>
+                        <div class="d-flex flex-column gap-1">
+                            <label class="star-filter-btn {% if request.GET.rating == '5' %}active{% endif %}">
+                                <div class="d-flex align-items-center gap-1">
+                                    <input type="radio" name="rating" value="5" class="d-none" onchange="this.form.submit()" {% if request.GET.rating == '5' %}checked{% endif %}>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                </div>
+                                <span class="small">5 نجوم</span>
                             </label>
-                            {% endfor %}
+
+                            <label class="star-filter-btn {% if request.GET.rating == '4' %}active{% endif %}">
+                                <div class="d-flex align-items-center gap-1">
+                                    <input type="radio" name="rating" value="4" class="d-none" onchange="this.form.submit()" {% if request.GET.rating == '4' %}checked{% endif %}>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star text-muted"></i>
+                                </div>
+                                <span class="small">4 نجوم فأكثر</span>
+                            </label>
+
+                            <label class="star-filter-btn {% if request.GET.rating == '3' %}active{% endif %}">
+                                <div class="d-flex align-items-center gap-1">
+                                    <input type="radio" name="rating" value="3" class="d-none" onchange="this.form.submit()" {% if request.GET.rating == '3' %}checked{% endif %}>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <i class="bi bi-star text-muted"></i>
+                                    <i class="bi bi-star text-muted"></i>
+                                </div>
+                                <span class="small">3 نجوم فأكثر</span>
+                            </label>
+                        </div>
+                    <!-- Deals & Promotions Toggle Switch -->
+                    <div class="mb-4 p-3 rounded-3" style="background: rgba(239, 68, 68, 0.08); border: 1.5px dashed rgba(239, 68, 68, 0.35);">
+                        <div class="form-check form-switch mb-0 d-flex align-items-center justify-content-between p-0">
+                            <label class="form-check-label fw-bold text-danger small cursor-pointer m-0" for="dealsFilterSwitch">
+                                <i class="bi bi-fire me-1"></i> عروض وتخفيضات فقط
+                            </label>
+                            <input class="form-check-input m-0 float-none" type="checkbox" name="deals" value="true" id="dealsFilterSwitch" {% if deals_only %}checked{% endif %} onchange="this.form.submit()">
                         </div>
                     </div>
 
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-search me-2"></i> تطبيق الفلتر
-                        </button>
-                        {% if search_query or current_category or request.GET.price_min or request.GET.price_max or request.GET.rating %}
-                        <a href="{% url 'services:service_list' %}" class="btn btn-outline-secondary">
-                            <i class="bi bi-x-circle me-2"></i> مسح الفلتر
-                        </a>
-                        {% endif %}
-                    </div>
+                    <button type="submit" class="btn btn-primary-custom w-100">
+                        <i class="bi bi-funnel"></i> تطبيق الفلاتر
+                    </button>
                 </form>
             </div>
-
-            <!-- Tags Cloud -->
-            {% if tags %}
-            <div class="filter-card mt-4" data-aos="fade-up" data-aos-delay="200">
-                <div class="filter-title">
-                    <i class="bi bi-tags text-primary"></i>
-                    <span>الوسوم الشائعة</span>
-                </div>
-                <div class="tag-cloud d-flex flex-wrap gap-2">
-                    {% for tag in tags|slice:":10" %}
-                    <a href="{% url 'services:tag_services' tag.slug %}" class="badge bg-light text-dark text-decoration-none py-2 px-3">
-                        {{ tag.name }}
-                    </a>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-        </div>
+        </aside>
 
         <!-- Services Grid -->
-        <div class="col-lg-9">
+        <main class="col-lg-9">
             {% if services %}
-            <div class="row g-4">
-                {% for service in services %}
-                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:2 }}00">
-                    <div class="card service-card h-100 border-0 shadow-sm">
-                        <div class="position-relative overflow-hidden">
-                            {% if service.cover_image %}
-                            <img src="{{ service.cover_image.url }}" class="card-img-top" alt="{{ service.title }}" loading="lazy">
-                            {% else %}
-                            <div class="card-img-top bg-gradient d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 200px;">
-                                <i class="bi bi-image text-white display-4"></i>
-                            </div>
-                            {% endif %}
-                            {% if service.is_featured %}
-                            <span class="badge bg-warning position-absolute top-0 start-0 m-3">
-                                <i class="bi bi-star-fill me-1"></i>مميز
-                            </span>
-                            {% endif %}
-                            {% if service.price %}
-                            <span class="badge bg-success position-absolute bottom-0 end-0 m-3">
-                                {{ service.price|floatformat:0 }} د.ع
-                            </span>
-                            {% endif %}
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-2">
-                                {% if service.category %}
-                                <a href="{% url 'services:category_detail' service.category.slug %}" class="badge bg-primary bg-opacity-10 text-primary text-decoration-none">
-                                    <i class="bi bi-folder me-1"></i>{{ service.category.name }}
-                                </a>
-                                {% endif %}
-                                {% if service.avg_rating > 0 %}
-                                <span class="ms-auto text-warning small fw-bold">
-                                    <i class="bi bi-star-fill"></i> {{ service.avg_rating }}
-                                </span>
-                                {% endif %}
-                            </div>
-                            <h5 class="card-title fw-bold">
-                                <a href="{% url 'services:service_detail' service.slug %}" class="text-decoration-none text-dark stretched-link">
-                                    {{ service.title|truncatewords:8 }}
-                                </a>
-                            </h5>
-                            <p class="card-text text-muted small">{{ service.summary|truncatewords:12 }}</p>
-                        </div>
-                        <div class="card-footer bg-transparent border-0 pt-0">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center text-muted small">
-                                    <img src="{% if service.provider.avatar %}{{ service.provider.avatar.url }}{% else %}https://ui-avatars.com/api/?name={{ service.provider.display_name|slice:":1" }}&background=667eea&color=fff{% endif %}" class="rounded-circle me-2" style="width: 24px; height: 24px; object-fit: cover;">
-                                    <span>{{ service.provider.display_name }}</span>
+                <div class="row g-4">
+                    {% for service in services %}
+                    <div class="col-md-6 col-xl-4" data-aos="fade-up" data-aos-delay="{% cycle '50' '100' '150' %}">
+                        <div class="service-card-modern">
+                            <!-- Image Wrap -->
+                            <div class="service-img-wrapper">
+                                {% if service.is_on_sale %}
+                                <div class="discount-badge-pill" style="position: absolute !important; top: 12px !important; right: 12px !important; left: auto !important; z-index: 4 !important;">
+                                    <i class="bi bi-tag-fill"></i> خصم {{ service.discount_percentage }}%
                                 </div>
-                                <div class="d-flex align-items-center gap-2 text-muted small">
-                                    <span><i class="bi bi-eye"></i> {{ service.views_count }}</span>
+                                {% elif service.is_featured %}
+                                <div class="service-featured-badge" style="position: absolute !important; top: 12px !important; right: 12px !important; left: auto !important; z-index: 4 !important;">
+                                    <i class="bi bi-lightning-charge-fill"></i> مُميز
+                                </div>
+                                {% endif %}
+
+                                <!-- Favorite Trigger -->
+                                <button type="button" class="btn-favorite-trigger {% if service.id in user_favorite_ids %}active{% endif %}" data-service-id="{{ service.id }}" title="إضافة للمفضلة" style="position: absolute !important; top: 12px !important; left: 12px !important; right: auto !important; z-index: 5 !important;">
+                                    <i class="bi {% if service.id in user_favorite_ids %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
+                                </button>
+
+                                <a href="{% url 'services:service_detail' service.slug %}">
+                                    {% if service.cover_image %}
+                                        <img src="{{ service.cover_image.url }}" alt="{{ service.title }}" loading="lazy">
+                                    {% elif service.image %}
+                                        <img src="{{ service.image.url }}" alt="{{ service.title }}" loading="lazy">
+                                    {% else %}
+                                        <img src="{{ service.get_cover_image_url }}" alt="{{ service.title }}" loading="lazy">
+                                    {% endif %}
+                                </a>
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="service-body-wrap">
+                                <a href="{% url 'services:category_detail' service.category.slug %}" class="service-cat-pill">
+                                    {{ service.category.name }}
+                                </a>
+
+                                <h3 class="service-title-text">
+                                    <a href="{% url 'services:service_detail' service.slug %}" class="text-reset">
+                                        {{ service.title }}
+                                    </a>
+                                </h3>
+
+                                <!-- Provider Info -->
+                                <div class="service-provider-strip">
+                                    {% if service.provider.get_avatar_url %}
+                                        <img src="{{ service.provider.get_avatar_url }}" alt="{{ service.provider.display_name }}" class="provider-avatar-mini" loading="lazy">
+                                    {% else %}
+                                        <div class="provider-avatar-mini d-flex align-items-center justify-content-center bg-success text-white fw-bold small">
+                                            {{ service.provider.display_name|slice:":1" }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="flex-grow-1 text-truncate">
+                                        <a href="{% url 'services:provider_detail' service.provider.user.username %}" class="provider-name-mini text-decoration-none">
+                                            {{ service.provider.display_name }}
+                                        </a>
+                                        {% if service.provider.is_verified %}
+                                        <i class="bi bi-patch-check-fill text-primary" style="font-size: 0.85rem;" title="حساب موثق"></i>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Footer Strip: Rating & Price -->
+                                <div class="service-footer-strip">
+                                    <div class="service-rating-stat">
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                        <span>{{ service.avg_rating|default:"5.0"|floatformat:1 }}</span>
+                                        <span class="text-muted small">({{ service.total_reviews|default:"0" }})</span>
+                                    </div>
+
+                                    <div class="service-price-block">
+                                        {% if service.is_on_sale %}
+                                        <div class="text-end">
+                                            <div class="text-muted text-decoration-line-through small" style="font-size: 0.78rem;">{{ service|service_orig_price:user_currency }}</div>
+                                            <div class="price-amount text-danger fw-bold">{{ service|service_price:user_currency }}</div>
+                                            <div class="text-muted" style="font-size: 0.72rem;">{{ service|service_sec_price:user_currency }}</div>
+                                        </div>
+                                        {% elif service.price %}
+                                        <div class="text-end">
+                                            <div class="d-flex align-items-baseline gap-1 justify-content-end">
+                                                <span class="price-prefix">تبدأ من</span>
+                                                <span class="price-amount fw-bold">{{ service|service_price:user_currency }}</span>
+                                            </div>
+                                            <div class="text-muted" style="font-size: 0.72rem;">{{ service|service_sec_price:user_currency }}</div>
+                                        </div>
+                                        {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary small">حسب الطلب</span>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                {% endfor %}
-            </div>
-
-            <!-- Pagination -->
-            {% if is_paginated %}
-            <nav class="mt-5" data-aos="fade-up">
-                <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
-                            <i class="bi bi-chevron-double-right"></i>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
-                            <i class="bi bi-chevron-right"></i>
-                        </a>
-                    </li>
-                    {% endif %}
-
-                    {% for num in page_obj.paginator.page_range %}
-                    {% if page_obj.number == num %}
-                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">{{ num }}</a>
-                    </li>
-                    {% endif %}
                     {% endfor %}
+                </div>
 
-                    {% if page_obj.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
-                            <i class="bi bi-chevron-left"></i>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
-                            <i class="bi bi-chevron-double-left"></i>
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <div class="d-flex justify-content-center mt-5" data-aos="fade-up">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-md shadow-sm gap-1">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link rounded" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                                    <i class="bi bi-chevron-right"></i> السابق
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% for num in paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active"><span class="page-link rounded bg-success border-success text-white fw-bold">{{ num }}</span></li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item"><a class="page-link rounded" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">{{ num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link rounded" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+                                    التالي <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
 
             {% else %}
-            <!-- No Results -->
-            <div class="text-center py-5" data-aos="fade-up">
-                <div class="mb-4">
-                    <i class="bi bi-search display-1 text-muted"></i>
+                <!-- Empty State -->
+                <div class="text-center py-5 my-5 bg-card rounded-4 border p-5" data-aos="fade-up">
+                    <div class="mb-4">
+                        <div class="d-inline-flex p-4 rounded-circle bg-success-subtle text-success fs-1">
+                            <i class="bi bi-search"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-2">لم نعثر على خدمات تطابق معايير بحثك</h3>
+                    <p class="text-muted mb-4 max-w-md mx-auto">جرب البحث بكلمات عامة أكثر، أو إزالة بعض الفلاتر المفعلة لاستعراض جميع الخدمات.</p>
+                    <a href="{% url 'services:service_list' %}" class="btn btn-primary-custom">
+                        <i class="bi bi-arrow-repeat"></i> استعراض كافة الخدمات
+                    </a>
                 </div>
-                <h3 class="fw-bold">لا توجد نتائج</h3>
-                <p class="text-muted">لم نتمكن من العثور على خدمات تطابق بحثك</p>
-                <a href="{% url 'services:service_list' %}" class="btn btn-primary btn-lg">
-                    <i class="bi bi-arrow-right me-2"></i> عرض جميع الخدمات
-                </a>
-            </div>
             {% endif %}
-        </div>
+        </main>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // 1. Amazon/Alibaba Department Track Horizontal Scroll
+    const deptTrack = document.getElementById('deptTrack');
+    const scrollRightBtn = document.getElementById('deptScrollRight');
+    const scrollLeftBtn = document.getElementById('deptScrollLeft');
+
+    if (deptTrack && scrollRightBtn && scrollLeftBtn) {
+        scrollRightBtn.addEventListener('click', function () {
+            deptTrack.scrollBy({ left: 240, behavior: 'smooth' });
+        });
+        scrollLeftBtn.addEventListener('click', function () {
+            deptTrack.scrollBy({ left: -240, behavior: 'smooth' });
+        });
+    }
+
+    // 2. Custom Searchable Select Dropdown
+    const selectWrap = document.getElementById('categorySearchableSelect');
+    const selectTrigger = document.getElementById('categorySelectTrigger');
+    const dropdownPanel = document.getElementById('categoryDropdownPanel');
+    const searchBox = document.getElementById('categorySearchBox');
+    const clearBtn = document.getElementById('clearCategorySearch');
+    const hiddenInput = document.getElementById('selectedCategoryInput');
+    const options = document.querySelectorAll('.searchable-option-item');
+    const noResults = document.getElementById('noCategoryResults');
+
+    if (selectWrap && selectTrigger && dropdownPanel) {
+        // Toggle dropdown open/close
+        selectTrigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const isOpen = selectWrap.classList.contains('open');
+            if (isOpen) {
+                closeDropdown();
+            } else {
+                openDropdown();
+            }
+        });
+
+        function openDropdown() {
+            selectWrap.classList.add('open');
+            selectTrigger.setAttribute('aria-expanded', 'true');
+            if (searchBox) {
+                setTimeout(() => searchBox.focus(), 50);
+            }
+        }
+
+        function closeDropdown() {
+            selectWrap.classList.remove('open');
+            selectTrigger.setAttribute('aria-expanded', 'false');
+        }
+
+        // Close when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!selectWrap.contains(e.target)) {
+                closeDropdown();
+            }
+        });
+
+        // Search filtering logic with Arabic normalization
+        if (searchBox) {
+            function normalizeSearchTerm(str) {
+                if (!str) return '';
+                return str.toString()
+                    .toLowerCase()
+                    .replace(/[أإآ]/g, 'ا')
+                    .replace(/ة/g, 'ه')
+                    .replace(/ى/g, 'ي')
+                    .replace(/[\u064B-\u065F]/g, '')
+                    .trim();
+            }
+
+            searchBox.addEventListener('input', function () {
+                const query = normalizeSearchTerm(this.value);
+                let visibleCount = 0;
+
+                if (clearBtn) {
+                    clearBtn.classList.toggle('d-none', query.length === 0);
+                }
+
+                options.forEach(function (item) {
+                    const text = normalizeSearchTerm(item.dataset.text || item.textContent);
+                    const matches = query === '' || text.includes(query);
+                    item.style.display = matches ? 'flex' : 'none';
+                    if (matches) visibleCount++;
+                });
+
+                if (noResults) {
+                    noResults.classList.toggle('d-none', visibleCount > 0);
+                }
+            });
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function () {
+                    searchBox.value = '';
+                    searchBox.dispatchEvent(new Event('input'));
+                    searchBox.focus();
+                });
+            }
+        }
+
+        // Option selection logic
+        options.forEach(function (option) {
+            option.addEventListener('click', function () {
+                const value = this.dataset.value || '';
+                hiddenInput.value = value;
+                
+                // Submit the parent filter form immediately for fast filtering
+                const form = selectWrap.closest('form');
+                if (form) {
+                    form.submit();
+                }
+            });
+        });
+
+        // Keyboard navigation (Esc to close)
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && selectWrap.classList.contains('open')) {
+                closeDropdown();
+                selectTrigger.focus();
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -14,10 +14,24 @@ from .forms import UserRegistrationFormExtended, UserProfileUpdateForm, Document
 
 
 class CustomLoginView(LoginView):
-    """تسجيل الدخول"""
+    """تسجيل الدخول مع التحقق الأمني الذكي"""
     template_name = 'accounts/login.html'
     redirect_authenticated_user = True
     
+    def post(self, request, *args, **kwargs):
+        from core.captcha import verify_captcha_response
+        captcha_token = request.POST.get('captcha_token')
+        captcha_code = request.POST.get('captcha_code')
+
+        if captcha_token or captcha_code:
+            is_valid, err_msg = verify_captcha_response(captcha_token, captcha_code)
+            if not is_valid:
+                form = self.get_form()
+                messages.error(request, err_msg)
+                return self.form_invalid(form)
+
+        return super().post(request, *args, **kwargs)
+
     def get_success_url(self):
         # Redirect to appropriate dashboard
         return reverse_lazy('dashboard:redirect')
@@ -45,11 +59,24 @@ class RegisterView(CreateView):
     form_class = UserRegistrationFormExtended
     success_url = reverse_lazy('accounts:login')
     
+    def post(self, request, *args, **kwargs):
+        from core.captcha import verify_captcha_response
+        captcha_token = request.POST.get('captcha_token')
+        captcha_code = request.POST.get('captcha_code')
+
+        is_valid, err_msg = verify_captcha_response(captcha_token, captcha_code)
+        if not is_valid:
+            form = self.get_form()
+            messages.error(request, err_msg)
+            return self.form_invalid(form)
+
+        return super().post(request, *args, **kwargs)
+
     def form_valid(self, form):
         self.object = form.save()
         messages.success(
             self.request,
-            f'تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.'
+            f'تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول وتأكيد رقم هاتفك عبر الواتساب.'
         )
         return redirect(self.get_success_url())
 
@@ -171,3 +198,86 @@ class ProviderAgreementView(LoginRequiredMixin, TemplateView):
         context['commission_percentage'] = 10
         context['commission_fixed'] = 0
         return context
+
+
+class VerifyWhatsAppView(LoginRequiredMixin, TemplateView):
+    """صفحة تأكيد وتفعيل الحساب ورقم الهاتف عبر الواتساب"""
+    template_name = 'accounts/verify_whatsapp.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        context['user_profile'] = profile
+        context['is_verified'] = profile.phone_verified and profile.whatsapp_verified
+        context['has_active_otp'] = bool(profile.whatsapp_otp)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        from accounts.whatsapp import verify_user_whatsapp_otp
+        otp_code = request.POST.get('otp_code', '').strip()
+        success, msg = verify_user_whatsapp_otp(request.user, otp_code)
+        if success:
+            messages.success(request, msg)
+            return redirect('accounts:profile')
+        else:
+            messages.error(request, msg)
+            return self.get(request, *args, **kwargs)
+
+
+def send_whatsapp_otp_ajax(request):
+    """إرسال وتوليد كود التحقق عبر الواتساب عبر AJAX"""
+    from django.http import JsonResponse
+    from accounts.whatsapp import create_or_refresh_whatsapp_otp, get_whatsapp_direct_link
+    from core.validators import validate_iraqi_phone, normalize_iraqi_phone
+    from django.core.exceptions import ValidationError
+
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'message': 'يرجى تسجيل الدخول أولاً.'}, status=401)
+
+    profile = getattr(request.user, 'profile', None)
+    phone = request.POST.get('phone') or (profile.phone_number if profile else '')
+
+    if not phone:
+        return JsonResponse({'success': False, 'message': 'يرجى إدخال رقم هاتف عراقي أولاً.'})
+
+    try:
+        validated_phone = validate_iraqi_phone(phone)
+        normalized_local = normalize_iraqi_phone(validated_phone, output_format='local')
+        if profile and profile.phone_number != normalized_local:
+            profile.phone_number = normalized_local
+            profile.phone_verified = False
+            profile.whatsapp_verified = False
+            profile.save(update_fields=['phone_number', 'phone_verified', 'whatsapp_verified'])
+    except ValidationError as e:
+        return JsonResponse({'success': False, 'message': e.message})
+
+    otp = create_or_refresh_whatsapp_otp(request.user)
+    whatsapp_url = get_whatsapp_direct_link(phone, otp, request.user.first_name)
+
+    return JsonResponse({
+        'success': True,
+        'otp_code': otp,
+        'whatsapp_url': whatsapp_url,
+        'phone': profile.phone_number if profile else phone,
+        'message': f'تم إنشاء رمز التحقق بنجاح: {otp}. يمكنك إدخال الرمز أو فتح الواتساب بنقرة واحدة.'
+    })
+
+
+def verify_whatsapp_otp_ajax(request):
+    """التحقق من كود الواتساب عبر AJAX"""
+    from django.http import JsonResponse
+    from accounts.whatsapp import verify_user_whatsapp_otp
+
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'message': 'يرجى تسجيل الدخول أولاً.'}, status=401)
+
+    code = request.POST.get('otp_code', '').strip()
+    if not code:
+        return JsonResponse({'success': False, 'message': 'يرجى إدخال رمز التحقق المكون من 6 أرقام.'})
+
+    success, msg = verify_user_whatsapp_otp(request.user, code)
+    return JsonResponse({
+        'success': success,
+        'message': msg
+    })

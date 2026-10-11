@@ -14,7 +14,8 @@ class ServiceForm(forms.ModelForm):
         model = Service
         fields = [
             'category', 'title', 'summary', 'description', 
-            'level', 'price', 'price_note', 'duration', 
+            'level', 'price', 'currency', 'original_price', 'discount_end_date',
+            'price_note', 'duration', 
             'cover_image', 'video_intro', 'tags', 'is_active'
         ]
         widgets = {
@@ -23,9 +24,12 @@ class ServiceForm(forms.ModelForm):
             'summary': forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('ملخص قصير للخدمة')}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': _('وصف تفصيلي للخدمة')}),
             'level': forms.Select(attrs={'class': 'form-select'}),
-            'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': _('السعر')}),
-            'price_note': forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('مثال: يبدأ من')}),
-            'duration': forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('مثال: 3-5 أيام')}),
+            'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': _('السعر (مثال: 25000 أو 50)')}),
+            'currency': forms.Select(attrs={'class': 'form-select'}),
+            'original_price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': _('السعر قبل الخصم (اختياري)')}),
+            'discount_end_date': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'price_note': forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('مثال: يبدأ من، أو شامل المواد')}),
+            'duration': forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('مثال: 3-5 أيام أو يومين')}),
             'cover_image': forms.FileInput(attrs={'class': 'form-control'}),
             'video_intro': forms.URLInput(attrs={'class': 'form-control', 'placeholder': _('رابط فيديو تعريفي')}),
             'tags': forms.SelectMultiple(attrs={'class': 'form-select select2'}),

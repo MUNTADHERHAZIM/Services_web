@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="carBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b132b" />
+      <stop offset="50%" stop-color="#1c2541" />
+      <stop offset="100%" stop-color="#3a506b" />
+    </linearGradient>
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe" />
+      <stop offset="100%" stop-color="#4facfe" />
+    </linearGradient>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#carBg)" />
+  <circle cx="200" cy="200" r="160" fill="#00f2fe" filter="blur(80px)" opacity="0.2" />
+  <circle cx="600" cy="300" r="180" fill="#4facfe" filter="blur(80px)" opacity="0.2" />
+
+  <g transform="translate(180, 75)">
+    <rect width="440" height="350" rx="20" fill="rgba(255, 255, 255, 0.06)" stroke="rgba(79, 172, 254, 0.3)" stroke-width="1.5" />
+    
+    <g transform="translate(120, 50)">
+      <!-- Car silhouette -->
+      <path d="M 20 80 L 50 40 L 150 40 L 180 80 L 195 90 L 195 110 L 5 110 L 5 90 Z" fill="none" stroke="url(#cyanGrad)" stroke-width="5" stroke-linejoin="round" />
+      <line x1="90" y1="40" x2="90" y2="80" stroke="url(#cyanGrad)" stroke-width="3" />
+      <!-- Wheels -->
+      <circle cx="50" cy="110" r="20" fill="#1c2541" stroke="#00f2fe" stroke-width="4" />
+      <circle cx="50" cy="110" r="8" fill="#4facfe" />
+      <circle cx="150" cy="110" r="20" fill="#1c2541" stroke="#00f2fe" stroke-width="4" />
+      <circle cx="150" cy="110" r="8" fill="#4facfe" />
+    </g>
+
+    <text x="220" y="275" font-family="'Tajawal', 'Segoe UI', sans-serif" font-size="22" font-weight="bold" fill="#ffffff" text-anchor="middle">خدمات وصيانة السيارات</text>
+    <text x="220" y="305" font-family="'Tajawal', 'Segoe UI', sans-serif" font-size="14" fill="#bae6fd" text-anchor="middle">ميكانيك • كهرباء • كشف أعطال • تلميع</text>
+  </g>
+</svg>

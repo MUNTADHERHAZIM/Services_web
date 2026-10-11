@@ -1,0 +1,196 @@
+<!-- Professional Interactive Captcha Component (Cloudflare / reCAPTCHA Style) -->
+<div class="secure-captcha-card p-3 rounded-4 mb-3 border bg-body-tertiary shadow-xs position-relative" id="secureCaptchaBox">
+    <!-- Header Shield & Title -->
+    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+        <div class="d-flex align-items-center gap-2">
+            <div class="captcha-shield-icon text-success fs-5 d-flex align-items-center justify-content-center bg-success-subtle rounded-circle" style="width: 32px; height: 32px;">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <div>
+                <span class="fw-bold small d-block text-dark-emphasis">التحقق الأمني الذكي</span>
+                <span class="text-muted" style="font-size: 0.72rem;">محمي ضد الروبوتات والسبام</span>
+            </div>
+        </div>
+        <span class="badge bg-body-secondary text-muted rounded-pill px-2 py-1" style="font-size: 0.7rem;">
+            <i class="bi bi-lock-fill me-1 text-success"></i>حماية مشفرة
+        </span>
+    </div>
+
+    <!-- 1. Robot Checkbox Simulation (Interactive) -->
+    <div class="robot-check-wrapper p-2-5 rounded-3 border bg-body mb-3 d-flex align-items-center justify-content-between" id="robotCheckWrapper" role="button" onclick="toggleRobotVerification(this)">
+        <div class="d-flex align-items-center gap-2">
+            <div class="custom-robot-box d-flex align-items-center justify-content-center" id="robotCheckboxVisual">
+                <span class="spinner-border spinner-border-sm text-success d-none" id="robotSpinner"></span>
+                <i class="bi bi-check-lg text-white fw-bold fs-6 d-none" id="robotCheckIcon"></i>
+            </div>
+            <label class="form-check-label fw-bold small text-dark-emphasis mb-0 user-select-none" style="cursor: pointer;">
+                أنا لست برنامج روبوت
+            </label>
+        </div>
+        <div class="d-flex flex-column align-items-end text-muted" style="font-size: 0.68rem; line-height: 1.2;">
+            <i class="bi bi-patch-check-fill text-success fs-6"></i>
+            <span class="opacity-75">منظومة الأمان</span>
+        </div>
+    </div>
+
+    <!-- 2. Visual Captcha Challenge (SVG + Input) -->
+    <div class="captcha-challenge-panel mt-2" id="captchaChallengePanel">
+        <label class="form-label small fw-bold text-muted mb-1 d-flex justify-content-between align-items-center">
+            <span>أدخل رمز الأمان الموضح بالصورة:</span>
+            <span class="text-muted small" style="font-size: 0.74rem;">(غير حساس لحالة الأحرف)</span>
+        </label>
+
+        <div class="d-flex align-items-stretch gap-2 mb-2">
+            <!-- SVG Image Box -->
+            <div class="captcha-svg-container flex-grow-1 border rounded-3 p-1 bg-white d-flex align-items-center justify-content-center shadow-xs overflow-hidden" id="captchaSvgWrap" style="min-height: 58px;">
+                {{ captcha_svg|safe }}
+            </div>
+
+            <!-- Single Elegant Refresh Control -->
+            <button type="button" class="btn btn-outline-secondary rounded-3 px-3 d-flex align-items-center justify-content-center" id="refreshCaptchaBtn" onclick="refreshCaptchaChallenge()" title="تحديث رمز جديد" style="min-width: 50px;">
+                <i class="bi bi-arrow-clockwise fs-5" id="refreshCaptchaIcon"></i>
+            </button>
+        </div>
+
+        <!-- Hidden Signed Token -->
+        <input type="hidden" name="{{ token_name|default:'captcha_token' }}" id="captchaTokenInput" value="{{ captcha_token }}">
+
+        <!-- Code Input Box -->
+        <div class="position-relative">
+            <input type="text" 
+                   name="{{ input_name|default:'captcha_code' }}" 
+                   id="captchaCodeInput" 
+                   class="form-control form-control-lg font-monospace text-uppercase text-center fw-bold letter-spacing-2" 
+                   placeholder="رمز التحقق" 
+                   maxlength="6" 
+                   required 
+                   autocomplete="off" 
+                   style="letter-spacing: 4px; font-size: 1.25rem;">
+            <div class="form-text small text-muted text-center mt-1">
+                <i class="bi bi-info-circle me-1"></i> الكود مكون من 5 أحرف أو أرقام إنجليزية
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.secure-captcha-card {
+    transition: all 0.3s ease;
+    border-color: rgba(16, 185, 129, 0.25) !important;
+}
+.robot-check-wrapper {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.robot-check-wrapper:hover {
+    background-color: var(--bs-tertiary-bg) !important;
+    border-color: var(--brand-primary) !important;
+}
+.custom-robot-box {
+    width: 26px;
+    height: 26px;
+    border: 2px solid #94a3b8;
+    border-radius: 6px;
+    background: #ffffff;
+    transition: all 0.2s ease;
+}
+.robot-check-wrapper.verified .custom-robot-box {
+    background-color: #10b981;
+    border-color: #10b981;
+}
+.robot-check-wrapper.verifying .custom-robot-box {
+    border-color: #10b981;
+}
+.captcha-svg-container svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+[data-bs-theme="dark"] .secure-captcha-card {
+    background-color: #111827 !important;
+    border-color: rgba(16, 185, 129, 0.35) !important;
+}
+[data-bs-theme="dark"] .robot-check-wrapper {
+    background-color: #131c2e !important;
+    border-color: #243048 !important;
+}
+[data-bs-theme="dark"] .robot-check-wrapper:hover {
+    background-color: #1a253c !important;
+    border-color: #10b981 !important;
+}
+[data-bs-theme="dark"] .custom-robot-box {
+    border-color: #64748b;
+    background: #0f172a;
+}
+[data-bs-theme="dark"] .captcha-svg-container {
+    background-color: #ffffff !important;
+    border-color: #334155 !important;
+}
+.rotate-animation {
+    animation: captchaSpin 0.7s linear infinite;
+}
+@keyframes captchaSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+let isRobotVerified = false;
+
+function toggleRobotVerification(elem) {
+    if (isRobotVerified) return;
+    
+    elem.classList.add('verifying');
+    const spinner = document.getElementById('robotSpinner');
+    const icon = document.getElementById('robotCheckIcon');
+    
+    if (spinner) spinner.classList.remove('d-none');
+    
+    // Simulate smart verification delay (350ms)
+    setTimeout(() => {
+        if (spinner) spinner.classList.add('d-none');
+        if (icon) icon.classList.remove('d-none');
+        elem.classList.remove('verifying');
+        elem.classList.add('verified');
+        isRobotVerified = true;
+        
+        // Focus the captcha input field
+        const input = document.getElementById('captchaCodeInput');
+        if (input) input.focus();
+    }, 450);
+}
+
+function refreshCaptchaChallenge() {
+    const icon = document.getElementById('refreshCaptchaIcon');
+    const btn = document.getElementById('refreshCaptchaBtn');
+    const svgWrap = document.getElementById('captchaSvgWrap');
+    const tokenInput = document.getElementById('captchaTokenInput');
+    const codeInput = document.getElementById('captchaCodeInput');
+    
+    if (icon) icon.classList.add('rotate-animation');
+    if (btn) btn.disabled = true;
+
+    fetch("{% url 'core:refresh_captcha' %}")
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (svgWrap) svgWrap.innerHTML = data.svg;
+                if (tokenInput) tokenInput.value = data.token;
+                if (codeInput) {
+                    codeInput.value = '';
+                    codeInput.focus();
+                }
+            }
+        })
+        .catch(err => {
+            console.error('Error refreshing captcha:', err);
+        })
+        .finally(() => {
+            setTimeout(() => {
+                if (icon) icon.classList.remove('rotate-animation');
+                if (btn) btn.disabled = false;
+            }, 300);
+        });
+}
+</script>

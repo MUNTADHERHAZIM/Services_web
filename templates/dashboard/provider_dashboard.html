@@ -89,11 +89,39 @@
         </div>
     </div>
 
+    <!-- Provider Analytics & Charts -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-8" data-aos="fade-up">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header border-0 pt-4 px-4 pb-0">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-eye text-success me-2"></i>تحليل مشاهدات خدماتي
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div id="provider-views-chart" style="min-height: 250px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4" data-aos="fade-up">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header border-0 pt-4 px-4 pb-0">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-pie-chart text-success me-2"></i>توزيع حالات طلباتي
+                    </h5>
+                </div>
+                <div class="card-body p-4 d-flex align-items-center justify-content-center">
+                    <div id="provider-status-chart" style="min-height: 250px; width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-4">
         <!-- Main Requests Table -->
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-header bg-white border-0 p-4 pb-0">
+                <div class="card-header border-0 p-4 pb-0">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0">آخر الطلبات المستلمة</h5>
                         <a href="{% url 'dashboard:provider_requests' %}" class="btn btn-link text-success p-0">إدارة الكل</a>
@@ -149,7 +177,7 @@
 
             <!-- My Services List -->
             <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-header bg-white border-0 p-4 pb-0">
+                <div class="card-header border-0 p-4 pb-0">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0">خدماتي</h5>
                         <a href="{% url 'dashboard:provider_services' %}" class="btn btn-link text-success p-0">إدارة الخدمات</a>
@@ -196,8 +224,64 @@
 
         <!-- Sidebar / Quick Actions -->
         <div class="col-lg-4">
+            <!-- Virtual Wallet Card -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: linear-gradient(135deg, var(--secondary-color) 0%, #111827 100%); color: white;">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h6 class="fw-bold mb-0 text-white-50"><i class="bi bi-wallet2 me-2"></i>المحفظة الافتراضية</h6>
+                        <span class="badge bg-success bg-opacity-25 text-success rounded-pill px-3 py-1">نشط</span>
+                    </div>
+                    <h3 class="display-6 fw-bold mb-1">${{ wallet.balance|default:"0.00" }}</h3>
+                    <p class="text-white-50 small mb-4">الرصيد المتاح للسحب</p>
+                    
+                    <div class="row g-2 border-top border-white border-opacity-10 pt-3">
+                        <div class="col-6">
+                            <span class="text-white-50 d-block small">قيد المعالجة</span>
+                            <span class="fw-bold">${{ provider_stats.pending_balance|default:"0.00" }}</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-white-50 d-block small">إجمالي الأرباح</span>
+                            <span class="fw-bold text-success">${{ wallet.total_earned|default:"0.00" }}</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2">
+                        <a href="{% url 'wallet:my_wallet' %}" class="btn btn-sm btn-light w-100 rounded-pill fw-bold text-dark shadow-xs">
+                            <i class="bi bi-wallet2 text-success me-1"></i> إدارة المحفظة وسحب الرصيد
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction History -->
             <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-header bg-white border-0 p-4 pb-0">
+                <div class="card-header border-0 p-4 pb-0">
+                    <h5 class="fw-bold mb-0">آخر المعاملات المالية</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% for tx in recent_transactions %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <span class="fw-semibold d-block small">{{ tx.get_transaction_type_display }}</span>
+                            <small class="text-muted text-xs" style="font-size: 0.75rem;">{{ tx.created_at|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="fw-bold {% if tx.transaction_type == 'order_earning' or tx.transaction_type == 'deposit' %}text-success{% else %}text-danger{% endif %}">
+                                {% if tx.transaction_type == 'order_earning' or tx.transaction_type == 'deposit' %}+{% else %}-{% endif %}${{ tx.amount }}
+                            </span>
+                            <small class="d-block text-muted text-xs" style="font-size: 0.75rem;">{{ tx.get_status_display }}</small>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-3 text-muted">
+                        <i class="bi bi-journal-text d-block mb-1 fs-4"></i>
+                        لا توجد معاملات مالية بعد
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header border-0 p-4 pb-0">
                     <h5 class="fw-bold mb-0">إجراءات سريعة</h5>
                 </div>
                 <div class="card-body p-4">
@@ -241,3 +325,101 @@
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<!-- ApexCharts CDN -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Provider Views Chart (Area Chart)
+        var viewsDates = JSON.parse('{{ provider_views_dates|safe }}');
+        var viewsCounts = JSON.parse('{{ provider_views_counts|safe }}');
+        
+        var viewsOptions = {
+            chart: {
+                type: 'area',
+                height: 250,
+                toolbar: { show: false },
+                fontFamily: 'Tajawal, sans-serif'
+            },
+            colors: ['#10b981'],
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 3 },
+            series: [{
+                name: 'المشاهدات',
+                data: viewsCounts
+            }],
+            xaxis: {
+                categories: viewsDates,
+                labels: {
+                    style: { colors: '#64748b' }
+                }
+            },
+            yaxis: {
+                labels: {
+                    style: { colors: '#64748b' }
+                }
+            },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.4,
+                    opacityTo: 0.05,
+                    stops: [0, 100]
+                }
+            },
+            grid: {
+                borderColor: '#f1f5f9',
+                strokeDashArray: 4
+            }
+        };
+        
+        var viewsChart = new ApexCharts(document.querySelector("#provider-views-chart"), viewsOptions);
+        viewsChart.render();
+        
+        // 2. Provider Request Status Chart (Doughnut Chart)
+        var statusLabels = JSON.parse('{{ provider_status_labels|safe }}');
+        var statusValues = JSON.parse('{{ provider_status_values|safe }}');
+        
+        var statusOptions = {
+            chart: {
+                type: 'donut',
+                height: 250,
+                fontFamily: 'Tajawal, sans-serif'
+            },
+            labels: statusLabels,
+            series: statusValues,
+            colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#64748b'],
+            legend: {
+                position: 'bottom',
+                horizontalAlign: 'center',
+                labels: { colors: '#64748b' }
+            },
+            dataLabels: { enabled: true },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '65%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'إجمالي الطلبات',
+                                color: '#64748b',
+                                formatter: function (w) {
+                                    return w.globals.seriesTotals.reduce((a, b) => a + b, 0)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        
+        var statusChart = new ApexCharts(document.querySelector("#provider-status-chart"), statusOptions);
+        statusChart.render();
+    });
+</script>
+{% endblock %}
+

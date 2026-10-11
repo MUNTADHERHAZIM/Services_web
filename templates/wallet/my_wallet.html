@@ -1,0 +1,926 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}المحفظة والرصيد المالي - {{ SITE_NAME }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* تدرجات وبطاقات المحفظة المالية */
+.wallet-metric-card {
+    border-radius: 20px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+.wallet-metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.12) !important;
+}
+
+.gradient-available {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+.gradient-pending {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+}
+.gradient-earned {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+.gradient-withdrawn {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+}
+
+/* بطاقات وسائل الدفع داخل النافذة المنبثقة */
+.deposit-method-card {
+    border: 2px solid var(--bs-border-color, #e2e8f0);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    background: var(--bs-body-bg, #ffffff);
+}
+.deposit-method-card:hover {
+    border-color: #10b981;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.12);
+}
+.deposit-method-card.active {
+    border-color: #059669;
+    background: rgba(16, 185, 129, 0.05);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+/* منطقة رفع وصل التحويل */
+.dropzone-box {
+    border: 2px dashed #cbd5e1;
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.dropzone-box:hover, .dropzone-box.dragover {
+    border-color: #059669;
+    background: #f0fdf4;
+}
+
+/* شارات النبض للطلبات المعلقة */
+.pulse-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+.pulse-badge::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: currentColor;
+    margin-left: 6px;
+    animation: pulseAnimation 1.8s infinite;
+}
+@keyframes pulseAnimation {
+    0% { transform: scale(0.95); opacity: 0.9; }
+    50% { transform: scale(1.4); opacity: 0.4; }
+    100% { transform: scale(0.95); opacity: 0.9; }
+}
+
+/* تنسيق تبويبات المحفظة */
+.wallet-nav-tabs .nav-link {
+    border: none;
+    padding: 12px 20px;
+    font-weight: 600;
+    color: var(--bs-secondary-color, #64748b);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+.wallet-nav-tabs .nav-link.active {
+    background: var(--brand-primary, #059669);
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 py-lg-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>الرئيسية</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}" class="text-decoration-none">لوحة التحكم</a></li>
+            <li class="breadcrumb-item active" aria-current="page">المحفظة المالية والرصيد</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom" data-aos="fade-up">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <h1 class="h3 fw-bold mb-0"><i class="bi bi-wallet2 text-success me-1"></i> المحفظة والرصيد المالي</h1>
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2-5 py-1 rounded-pill small">
+                    <i class="bi bi-shield-check me-1"></i>نظام ضمان آمن 100%
+                </span>
+            </div>
+            <p class="text-muted small mb-0">إدارة الأرصدة، شحن الحساب عبر التحويل المالي المعتمد، ومتابعة الأرباح وسحبها</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'wallet:my_receipts' %}" class="btn btn-outline-secondary btn-sm px-3 py-2 rounded-pill fw-semibold shadow-xs">
+                <i class="bi bi-receipt-cutoff me-1"></i> سجل الفواتير والوصولات
+            </a>
+            <button class="btn btn-outline-primary btn-sm px-3 py-2 rounded-pill fw-semibold shadow-xs" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+                <i class="bi bi-box-arrow-up-right me-1"></i> طلب سحب أرباح
+            </button>
+            <button class="btn btn-primary-custom btn-sm px-3 py-2 rounded-pill fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#depositModal">
+                <i class="bi bi-plus-circle-fill me-1"></i> شحن الرصيد
+            </button>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 shadow-xs" role="alert">
+            <i class="bi {% if message.tags == 'success' %}bi-check-circle-fill text-success{% else %}bi-info-circle-fill text-primary{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Balance Metrics Cards -->
+    <div class="row g-3 g-lg-4 mb-4">
+        <!-- Available Balance -->
+        <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="50">
+            <div class="card border-0 shadow-sm p-3 p-lg-4 text-white position-relative overflow-hidden wallet-metric-card gradient-available h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-semibold opacity-90">الرصيد المتاح للاستخدام</span>
+                    <i class="bi bi-cash-coin fs-2 opacity-50"></i>
+                </div>
+                <h2 class="display-6 fw-bold mb-1">${{ wallet.available_balance|intcomma }}</h2>
+                <div class="small opacity-75 mt-auto">متاح للشراء الفوري أو طلب السحب</div>
+            </div>
+        </div>
+
+        <!-- Pending / Frozen Balance -->
+        <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+            <div class="card border-0 shadow-sm p-3 p-lg-4 text-white position-relative overflow-hidden wallet-metric-card gradient-pending h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-semibold opacity-90">الرصيد المعلق (محجوز)</span>
+                    <i class="bi bi-clock-history fs-2 opacity-50"></i>
+                </div>
+                <h2 class="display-6 fw-bold mb-1">${{ wallet.frozen_balance|intcomma }}</h2>
+                <div class="small opacity-75 mt-auto">محتجز لطلبات جارية أو سحوبات قيد التدقيق</div>
+            </div>
+        </div>
+
+        <!-- Total Earned -->
+        <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="150">
+            <div class="card border-0 shadow-sm p-3 p-lg-4 text-white position-relative overflow-hidden wallet-metric-card gradient-earned h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-semibold opacity-90">إجمالي الأرباح المستلمة</span>
+                    <i class="bi bi-graph-up-arrow fs-2 opacity-50"></i>
+                </div>
+                <h2 class="display-6 fw-bold mb-1">${{ wallet.total_earned|intcomma }}</h2>
+                <div class="small opacity-75 mt-auto">إجمالي أرباحك من إنجاز وتسليم الخدمات</div>
+            </div>
+        </div>
+
+        <!-- Total Withdrawn -->
+        <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
+            <div class="card border-0 shadow-sm p-3 p-lg-4 text-white position-relative overflow-hidden wallet-metric-card gradient-withdrawn h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-semibold opacity-90">إجمالي السحوبات</span>
+                    <i class="bi bi-arrow-up-right-circle fs-2 opacity-50"></i>
+                </div>
+                <h2 class="display-6 fw-bold mb-1">${{ wallet.total_withdrawn|intcomma }}</h2>
+                <div class="small opacity-75 mt-auto">المبالغ التي تم تحويلها بنجاح لحسابك</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Deposit Notice / Quick Action Banner -->
+    <div class="card border-0 bg-body-tertiary rounded-4 p-3 p-lg-4 mb-4 shadow-xs">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-success-subtle text-success p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                    <i class="bi bi-shield-lock-fill fs-4"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1 text-dark-emphasis">شحن آمن بنظام التحقق اليدوي المباشر</h6>
+                    <p class="text-muted small mb-0">
+                        نوفر وسائل دفع متعددة (زين كاش، بطاقة كي كارد، تحويل بنكي، ويسترن يونيون). يتم تدقيق الإشعار وتفعيل رصيدك بسرعة.
+                    </p>
+                </div>
+            </div>
+            <button class="btn btn-success px-4 py-2 rounded-pill fw-bold text-nowrap shadow-xs" data-bs-toggle="modal" data-bs-target="#depositModal">
+                <i class="bi bi-upload me-1"></i> تقديم إشعار تحويل جديد
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabbed Navigation -->
+    <div class="card border rounded-4 shadow-sm overflow-hidden mb-5">
+        <div class="card-header bg-body-tertiary p-2 px-3 border-bottom">
+            <ul class="nav nav-pills wallet-nav-tabs gap-2" id="walletTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active d-flex align-items-center gap-2" id="transactions-tab" data-bs-toggle="pill" data-bs-target="#transactions-pane" type="button" role="tab">
+                        <i class="bi bi-receipt"></i>
+                        <span>سجل المعاملات</span>
+                        <span class="badge bg-light text-dark rounded-pill">{{ transactions.count }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link d-flex align-items-center gap-2" id="deposits-tab" data-bs-toggle="pill" data-bs-target="#deposits-pane" type="button" role="tab">
+                        <i class="bi bi-arrow-down-left-circle"></i>
+                        <span>طلبات شحن الرصيد</span>
+                        {% if pending_deposits_count > 0 %}
+                        <span class="badge bg-warning text-dark rounded-pill pulse-badge">{{ pending_deposits_count }} قيد التدقيق</span>
+                        {% else %}
+                        <span class="badge bg-light text-dark rounded-pill">{{ deposit_requests.count }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link d-flex align-items-center gap-2" id="withdrawals-tab" data-bs-toggle="pill" data-bs-target="#withdrawals-pane" type="button" role="tab">
+                        <i class="bi bi-box-arrow-up-right"></i>
+                        <span>طلبات سحب الأرباح</span>
+                        {% if pending_withdrawals_count > 0 %}
+                        <span class="badge bg-info text-white rounded-pill pulse-badge">{{ pending_withdrawals_count }} قيد المعالجة</span>
+                        {% else %}
+                        <span class="badge bg-light text-dark rounded-pill">{{ withdrawal_requests.count }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="tab-content" id="walletTabsContent">
+            <!-- Tab 1: Transactions Table -->
+            <div class="tab-pane fade show active" id="transactions-pane" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-muted">
+                            <tr>
+                                <th class="ps-4">رقم المرجع</th>
+                                <th>نوع المعاملة</th>
+                                <th>المبلغ</th>
+                                <th>الرسوم</th>
+                                <th>الوصف</th>
+                                <th>الحالة</th>
+                                <th>التاريخ والوقت</th>
+                                <th class="pe-4 text-center">الوصل</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in transactions %}
+                            <tr>
+                                <td class="ps-4 font-monospace small text-muted">
+                                    <span class="badge bg-light text-dark border font-monospace">{{ tx.reference_id|default:"---" }}</span>
+                                </td>
+                                <td>
+                                    {% if tx.transaction_type == 'deposit' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-arrow-down-left"></i> إيداع / شحن</span>
+                                    {% elif tx.transaction_type == 'withdrawal' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i class="bi bi-arrow-up-right"></i> سحب رصيد</span>
+                                    {% elif tx.transaction_type == 'order_payment' %}
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1"><i class="bi bi-bag"></i> دفع طلب</span>
+                                    {% elif tx.transaction_type == 'order_earning' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-coin"></i> أرباح طلب</span>
+                                    {% elif tx.transaction_type == 'refund' %}
+                                        <span class="badge bg-purple-subtle text-purple border px-2 py-1" style="background-color: #f3e8ff; color: #7e22ce;"><i class="bi bi-arrow-counterclockwise"></i> استرداد</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary px-2 py-1">{{ tx.get_transaction_type_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-bold {% if tx.transaction_type in 'deposit order_earning refund bonus' %}text-success{% else %}text-danger{% endif %}">
+                                    {% if tx.transaction_type in 'deposit order_earning refund bonus' %}+{% else %}-{% endif %}${{ tx.amount|intcomma }}
+                                </td>
+                                <td class="small text-muted">{% if tx.fee > 0 %}${{ tx.fee }}{% else %}—{% endif %}</td>
+                                <td class="small text-dark-emphasis">{{ tx.description|default:"معاملة مالية" }}</td>
+                                <td>
+                                    {% if tx.status == 'completed' %}
+                                        <span class="badge bg-success"><i class="bi bi-check2"></i> مكتمل</span>
+                                    {% elif tx.status == 'pending' %}
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> معلق</span>
+                                    {% elif tx.status == 'canceled' %}
+                                        <span class="badge bg-secondary">ملغي</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">فشل</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted small">{{ tx.created_at|date:"Y-m-d H:i" }}</td>
+                                <td class="pe-4 text-center">
+                                    <a href="{% url 'wallet:transaction_receipt' tx.pk %}" class="btn btn-sm btn-outline-primary py-0-5 px-2 rounded-pill" style="font-size: 0.78rem;" title="عرض الوصل المالي">
+                                        <i class="bi bi-receipt"></i> الوصل
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
+                                    لا توجد أي معاملات مالية مسجلة في محفظتك حتى الآن.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 2: Deposit Requests Table -->
+            <div class="tab-pane fade" id="deposits-pane" role="tabpanel">
+                <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                    <span class="small text-muted">قائمة طلبات الشحن المقدمة وإشعارات التحويل البنكي بانتظار مراجعة الإدارة</span>
+                    <button class="btn btn-sm btn-primary-custom rounded-pill" data-bs-toggle="modal" data-bs-target="#depositModal">
+                        <i class="bi bi-plus-circle me-1"></i> شحن رصيد جديد
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-muted">
+                            <tr>
+                                <th class="ps-4">رمز الطلب</th>
+                                <th>وسيلة الشحن</th>
+                                <th>المبلغ</th>
+                                <th>بيانات المحوّل</th>
+                                <th>رقم الحوالة</th>
+                                <th>وصل التحويل</th>
+                                <th>الحالة</th>
+                                <th>التاريخ</th>
+                                <th class="pe-4 text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dep in deposit_requests %}
+                            <tr>
+                                <td class="ps-4 fw-mono text-dark font-monospace small">
+                                    <strong>#{{ dep.reference_id }}</strong>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi {{ dep.deposit_method.icon_class|default:'bi-phone' }} text-primary fs-5"></i>
+                                        <span class="fw-semibold small">{{ dep.deposit_method.name|default:"تحويل يدوي" }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-success fs-6">+${{ dep.amount|intcomma }}</span>
+                                </td>
+                                <td class="small">
+                                    <div class="fw-semibold">{{ dep.sender_name }}</div>
+                                    <div class="text-muted font-monospace" dir="ltr">{{ dep.sender_phone }}</div>
+                                </td>
+                                <td class="small">
+                                    <code class="bg-body-secondary px-2 py-1 rounded">{{ dep.transaction_reference }}</code>
+                                </td>
+                                <td>
+                                    {% if dep.receipt_image %}
+                                    <button type="button" class="btn btn-sm btn-outline-secondary p-1 rounded-3" onclick="openReceiptModal('{{ dep.receipt_image.url }}', '{{ dep.reference_id }}')">
+                                        <img src="{{ dep.receipt_image.url }}" alt="وصل" style="width: 38px; height: 38px; object-fit: cover; border-radius: 4px;">
+                                        <span class="small ms-1"><i class="bi bi-zoom-in"></i></span>
+                                    </button>
+                                    {% else %}
+                                    <span class="text-muted small">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if dep.status == 'approved' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-check-circle-fill"></i> تم شحن الرصيد</span>
+                                    {% elif dep.status == 'pending' %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 pulse-badge"><i class="bi bi-clock-history"></i> قيد المراجعة</span>
+                                    {% elif dep.status == 'rejected' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" title="{{ dep.admin_notes }}"><i class="bi bi-x-circle-fill"></i> مرفوض</span>
+                                        {% if dep.admin_notes %}
+                                        <div class="text-danger small mt-1" style="font-size: 0.72rem;">{{ dep.admin_notes|truncatechars:35 }}</div>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td class="small text-muted">{{ dep.created_at|date:"Y-m-d H:i" }}</td>
+                                <td class="pe-4 text-center">
+                                    <div class="d-inline-flex gap-1 align-items-center">
+                                        <a href="{% url 'wallet:deposit_receipt' dep.pk %}" class="btn btn-sm btn-outline-success py-1 px-2 rounded-pill" style="font-size: 0.78rem;" title="عرض الوصل المالي الرسمي">
+                                            <i class="bi bi-receipt me-1"></i> الوصل
+                                        </a>
+                                        {% if dep.status == 'pending' %}
+                                        <form action="{% url 'wallet:cancel_deposit' dep.pk %}" method="post" onsubmit="return confirm('هل أنت متأكد من رغبتك في إلغاء هذا الطلب؟');" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm py-1 px-2 rounded-pill" style="font-size: 0.78rem;" title="إلغاء الطلب">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center py-5 text-muted">
+                                    <i class="bi bi-cloud-arrow-up fs-1 d-block mb-2 opacity-50"></i>
+                                    لم تقدم أي طلبات شحن رصيد حتى الآن.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 3: Withdrawal Requests Table -->
+            <div class="tab-pane fade" id="withdrawals-pane" role="tabpanel">
+                <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                    <span class="small text-muted">طلبات سحب الأرباح وتتبع إرسال الحوالات المالية إلى حسابك</span>
+                    <button class="btn btn-sm btn-outline-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+                        <i class="bi bi-box-arrow-up-right me-1"></i> طلب سحب جديد
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-muted">
+                            <tr>
+                                <th class="ps-4">رقم الطلب</th>
+                                <th>طريقة السحب</th>
+                                <th>المبلغ المطلوب</th>
+                                <th>بيانات الحساب والمستلم</th>
+                                <th>الحالة</th>
+                                <th>تاريخ الطلب</th>
+                                <th class="pe-4 text-center">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for w in withdrawal_requests %}
+                            <tr>
+                                <td class="ps-4 font-monospace fw-bold small text-muted">
+                                    #WTH-{{ w.pk|stringformat:"05d" }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary-subtle text-secondary px-2-5 py-1">
+                                        {{ w.get_method_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-danger fs-6">-${{ w.amount|intcomma }}</span>
+                                </td>
+                                <td class="small">
+                                    <div class="fw-semibold">{{ w.account_info.account_holder|default:"—" }}</div>
+                                    <code class="bg-body-secondary px-1-5 py-0-5 rounded small">{{ w.account_info.account_number|default:"—" }}</code>
+                                    {% if w.account_info.bank_or_branch %}
+                                    <div class="text-muted small">{{ w.account_info.bank_or_branch }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if w.status == 'completed' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-check-circle-fill"></i> تم التحويل بنجاح</span>
+                                    {% elif w.status == 'pending' %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 pulse-badge"><i class="bi bi-clock"></i> قيد المراجعة</span>
+                                    {% elif w.status == 'processing' %}
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1"><i class="bi bi-arrow-repeat"></i> جاري إرسال الحوالة</span>
+                                    {% elif w.status == 'rejected' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i class="bi bi-x-circle-fill"></i> مرفوض وتمت إعادة الرصيد</span>
+                                        {% if w.admin_notes %}
+                                        <div class="text-danger small mt-1" style="font-size: 0.72rem;">{{ w.admin_notes|truncatechars:35 }}</div>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td class="small text-muted">{{ w.created_at|date:"Y-m-d H:i" }}</td>
+                                <td class="pe-4 text-center">
+                                    <div class="d-inline-flex gap-1 align-items-center">
+                                        <a href="{% url 'wallet:withdrawal_receipt' w.pk %}" class="btn btn-sm btn-outline-success py-1 px-2 rounded-pill" style="font-size: 0.78rem;" title="عرض سند السحب الرسمي">
+                                            <i class="bi bi-receipt me-1"></i> السند
+                                        </a>
+                                        {% if w.status == 'pending' %}
+                                        <form action="{% url 'wallet:cancel_withdrawal' w.pk %}" method="post" onsubmit="return confirm('هل تريد إلغاء طلب السحب وإعادة المبلغ إلى رصيدك المتاح فوراً؟');" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm py-1 px-2 rounded-pill" style="font-size: 0.78rem;" title="إلغاء واسترجاع الرصيد">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="bi bi-box-arrow-up-right fs-1 d-block mb-2 opacity-50"></i>
+                                    لا توجد أي طلبات سحب رصيد سابقة.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- Modal 1: شحن الرصيد المتقدم والموثق (Deposit Modal) -->
+<!-- ============================================================== -->
+<div class="modal fade" id="depositModal" tabindex="-1" aria-labelledby="depositModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-bottom p-4">
+                <div>
+                    <h5 class="modal-title fw-bold text-dark-emphasis mb-1" id="depositModalLabel">
+                        <i class="bi bi-shield-check text-success me-2"></i> شحن رصيد المحفظة عبر التحويل المالي
+                    </h5>
+                    <p class="text-muted small mb-0">اختر وسيلة الدفع المناسبة، حوّل المبلغ، ثم أرفق إشعار التحويل لتأكيد الشحن فوراً</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form action="{% url 'wallet:deposit' %}" method="post" enctype="multipart/form-data" id="depositRequestForm">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <!-- الخطوة 1: اختيار وسيلة التحويل -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold d-flex justify-content-between align-items-center mb-2">
+                            <span>1. اختر وسيلة التحويل والدفع المعتمدة: <span class="text-danger">*</span></span>
+                            <span class="small text-muted">انقر على الوسيلة لعرض تفاصيل التحويل</span>
+                        </label>
+                        <div class="row g-2" id="depositMethodsGrid">
+                            {% for method in deposit_methods %}
+                            <div class="col-sm-6 col-md-3">
+                                <div class="deposit-method-card p-3 text-center h-100 {% if forloop.first %}active{% endif %}" 
+                                     data-id="{{ method.id }}"
+                                     data-name="{{ method.name }}"
+                                     data-account-name="{{ method.account_name }}"
+                                     data-account-number="{{ method.account_number }}"
+                                     data-instructions="{{ method.instructions }}"
+                                     data-min="{{ method.min_amount }}"
+                                     data-max="{{ method.max_amount }}"
+                                     onclick="selectDepositMethod(this)">
+                                    <div class="fs-2 mb-2 text-primary">
+                                        <i class="bi {{ method.icon_class|default:'bi-phone' }}"></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-1 fs-6 text-dark-emphasis">{{ method.name }}</h6>
+                                    <div class="text-muted small" style="font-size: 0.75rem;">${{ method.min_amount }} - ${{ method.max_amount }}</div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="col-12">
+                                <div class="alert alert-warning small mb-0">لا توجد وسائل شحن مفعلة حالياً من قبل الإدارة.</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <!-- الحقل الخفي لتمرير معرف الوسيلة للنموذج -->
+                        <input type="hidden" name="deposit_method" id="selectedDepositMethodInput" value="{% if deposit_methods.first %}{{ deposit_methods.first.id }}{% endif %}">
+                    </div>
+
+                    <!-- صندوق تفاصيل الحساب والتعليمات والنسخ -->
+                    <div class="card border bg-light rounded-4 p-3 mb-4" id="methodDetailsBox">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 border-bottom mb-3">
+                            <div>
+                                <span class="text-muted small d-block">اسم صاحب الحساب / المستلم:</span>
+                                <strong class="fs-6 text-dark-emphasis" id="activeAccountName">
+                                    {{ deposit_methods.first.account_name|default:"—" }}
+                                </strong>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div>
+                                    <span class="text-muted small d-block">رقم الحساب / المحفظة للتحويل:</span>
+                                    <code class="fs-6 fw-bold text-primary bg-white px-3 py-1-5 rounded-3 border font-monospace" id="activeAccountNumber">
+                                        {{ deposit_methods.first.account_number|default:"—" }}
+                                    </code>
+                                </div>
+                                <button type="button" class="btn btn-outline-secondary btn-sm mt-3" id="copyAccountBtn" onclick="copyAccountNumber()" title="نسخ الرقم">
+                                    <i class="bi bi-clipboard"></i> نسخ
+                                </button>
+                            </div>
+                        </div>
+                        <div class="small text-muted" id="activeInstructions">
+                            <i class="bi bi-info-circle text-primary me-1"></i>
+                            <span id="instructionsText">{{ deposit_methods.first.instructions|default:"قم بتحويل المبلغ المطلوب إلى رقم الحساب أعلاه، ثم املأ بيانات الاستمارة أدناه وأرفق صورة الوصل." }}</span>
+                        </div>
+                    </div>
+
+                    <!-- الخطوة 2: نموذج بيانات التحويل -->
+                    <h6 class="fw-bold mb-3 text-dark-emphasis">2. بيانات وإشعار الحوالة المالية:</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">المبلغ الذي قمت بتحويله ($) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="amount" id="depositAmountInput" class="form-control fw-bold" placeholder="50" min="1" step="any" required>
+                            </div>
+                            <div class="form-text small" id="amountLimitsHint">
+                                الحد المسموح: <span id="hintMin">${{ deposit_methods.first.min_amount|default:5 }}</span> إلى <span id="hintMax">${{ deposit_methods.first.max_amount|default:5000 }}</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">رقم الحوالة أو الرقم المرجعي <span class="text-danger">*</span></label>
+                            <input type="text" name="transaction_reference" class="form-control font-monospace text-uppercase" placeholder="رقم المعاملة / الوصل / MTCN" required>
+                            <div class="form-text small">الرقم المطبوع على وصل أو شاشة التحويل</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">اسم صاحب الحساب المحوِّل منه <span class="text-danger">*</span></label>
+                            <input type="text" name="sender_name" class="form-control" value="{{ user.get_full_name|default:user.username }}" placeholder="اسمك كما يظهر في التحويل" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">رقم هاتف المحوّل <span class="text-danger">*</span></label>
+                            <input type="tel" name="sender_phone" class="form-control font-monospace text-start" dir="ltr" value="{{ user.profile.phone_number|default:'' }}" placeholder="07XXXXXXXXX" required>
+                        </div>
+
+                        <!-- رفع صورة وصل التحويل -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small">صورة وصل أو لقطة شاشة التحويل <span class="text-danger">*</span></label>
+                            <div class="dropzone-box" onclick="document.getElementById('receiptFileInput').click()">
+                                <input type="file" name="receipt_image" id="receiptFileInput" accept="image/*" class="d-none" required onchange="previewReceiptImage(this)">
+                                <div id="dropzonePrompt">
+                                    <i class="bi bi-cloud-arrow-up display-5 text-success mb-2 d-block"></i>
+                                    <div class="fw-bold small mb-1">اضغط هنا لاختيار أو تصوير وصل التحويل</div>
+                                    <div class="text-muted small">صيغ JPG, PNG, WEBP (حجم أقصى 10 ميغابايت)</div>
+                                </div>
+                                <div id="imagePreviewContainer" style="display: none;">
+                                    <img id="receiptPreviewImg" src="" alt="معاينة" style="max-height: 180px; max-width: 100%; border-radius: 8px; border: 1px solid #cbd5e1;">
+                                    <div class="mt-2">
+                                        <span class="badge bg-success-subtle text-success me-2" id="fileNameBadge">تم اختيار الملف</span>
+                                        <button type="button" class="btn btn-outline-danger btn-sm py-0" onclick="event.stopPropagation(); clearReceiptPreview();">تغيير الصورة</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top p-3 px-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary-custom rounded-pill px-5 fw-bold shadow-sm" id="submitDepositBtn">
+                        <i class="bi bi-send-fill me-1"></i> إرسال إشعار التحويل وتأكيد الشحن
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- Modal 2: طلب سحب رصيد (Withdraw Modal) -->
+<!-- ============================================================== -->
+<div class="modal fade" id="withdrawModal" tabindex="-1" aria-labelledby="withdrawModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-bottom p-4">
+                <div>
+                    <h5 class="modal-title fw-bold text-dark-emphasis mb-1" id="withdrawModalLabel">
+                        <i class="bi bi-box-arrow-up-right text-primary me-2"></i> طلب سحب رصيد وأرباح
+                    </h5>
+                    <p class="text-muted small mb-0">تحويل مستحقاتك المالية إلى حسابك البنكي أو محفظتك</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form action="{% url 'wallet:withdraw' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <!-- الرصيد المتاح -->
+                    <div class="alert alert-success d-flex align-items-center justify-content-between p-3 rounded-4 mb-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-wallet-fill fs-3 text-success"></i>
+                            <div>
+                                <div class="small text-muted">الرصيد المتاح للسحب الآن:</div>
+                                <div class="fw-bold fs-5 text-success">${{ wallet.available_balance|intcomma }}</div>
+                            </div>
+                        </div>
+                        <span class="badge bg-success">جاهز للتحويل</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">المبلغ المطلوب سحبه ($) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" name="amount" class="form-control form-control-lg fw-bold" placeholder="25" min="5" max="{{ wallet.available_balance }}" step="any" required>
+                        </div>
+                        <div class="form-text small">الحد الأدنى للسحب هو $5.00</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">وسيلة الاستلام المفضلة <span class="text-danger">*</span></label>
+                        <select name="method" id="withdrawalMethodSelect" class="form-select form-select-lg" onchange="handleWithdrawalMethodChange(this.value)" required>
+                            <option value="zain_cash" selected>زين كاش (ZainCash) - العراق</option>
+                            <option value="qi_card">بطاقة كي كارد / مصرف الرافدين (Qi Card)</option>
+                            <option value="western_union">ويسترن يونيون (Western Union) - استلام نقدي كاش</option>
+                            <option value="bank">حوالة بنكية مباشرة (IBAN)</option>
+                            <option value="wise">منصة وايز (Wise)</option>
+                            <option value="other">وسيلة أخرى</option>
+                        </select>
+                    </div>
+
+                    <!-- إشعار ذكي لطريقة السحب المحددة -->
+                    <div id="withdrawalMethodNotice" class="alert alert-info py-2 px-3 small rounded-3 mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-info-circle-fill fs-5 flex-shrink-0"></i>
+                        <span id="withdrawalNoticeText"><strong>زين كاش:</strong> سيتم التحويل المباشر إلى رقم محفظتك. تأكد من أن المحفظة مفعلة وتقبل الاستلام.</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small" id="lblAccountHolder">اسم المستلم الكامل (كما في الهوية/الحساب) <span class="text-danger">*</span></label>
+                        <input type="text" name="account_holder" id="inputAccountHolder" class="form-control" value="{{ user.get_full_name|default:user.username }}" placeholder="الاسم الثلاثي لصاحب الحساب" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small" id="lblAccountNumber">رقم الحساب / المحفظة / هاتف المستلم <span class="text-danger">*</span></label>
+                        <input type="text" name="account_number" id="inputAccountNumber" class="form-control font-monospace" placeholder="078XXXXXXXX أو 077XXXXXXXX" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small" id="lblBankBranch">اسم المصرف أو الفرع (اختياري)</label>
+                        <input type="text" name="bank_or_branch" id="inputBankBranch" class="form-control" placeholder="مثال: بغداد، النجف...">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">ملاحظات إضافية (اختياري)</label>
+                        <textarea name="notes" class="form-control" rows="2" placeholder="أي تفاصيل تساعد على سرعة إيصال الحوالة"></textarea>
+                    </div>
+
+                    <div class="p-3 bg-body-tertiary rounded-3 border small text-muted">
+                        <i class="bi bi-shield-exclamation text-warning me-1"></i>
+                        سيتم حجز وتجميد المبلغ المطلوب فورياً من محفظتك كضمان، وسيقوم فريق الإدارة المالية بتحويل المبلغ لحسابك خلال 24-48 ساعة عمل.
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top p-3 px-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary-custom rounded-pill px-5 fw-bold shadow-sm">
+                        <i class="bi bi-check-lg me-1"></i> تأكيد تقديم طلب السحب
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- Modal 3: معاينة صورة وصل التحويل (Receipt Lightbox Modal) -->
+<!-- ============================================================== -->
+<div class="modal fade" id="receiptLightboxModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg bg-dark text-white rounded-4 overflow-hidden">
+            <div class="modal-header border-0 pb-0">
+                <h6 class="modal-title font-monospace" id="lightboxTitle">معاينة وصل التحويل</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-3">
+                <img id="lightboxImage" src="" alt="وصل التحويل" class="img-fluid rounded-3" style="max-height: 75vh; object-fit: contain;">
+            </div>
+            <div class="modal-footer border-0 pt-0 justify-content-center">
+                <a id="lightboxDownloadBtn" href="" target="_blank" class="btn btn-light btn-sm rounded-pill px-4">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> فتح الصورة بالحجم الكامل
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// تحديد وسيلة الشحن ديناميكياً وتحديث تفاصيل الحساب
+function selectDepositMethod(cardElement) {
+    document.querySelectorAll('.deposit-method-card').forEach(c => c.classList.remove('active'));
+    cardElement.classList.add('active');
+
+    const id = cardElement.getAttribute('data-id');
+    const name = cardElement.getAttribute('data-name');
+    const accountName = cardElement.getAttribute('data-account-name');
+    const accountNumber = cardElement.getAttribute('data-account-number');
+    const instructions = cardElement.getAttribute('data-instructions');
+    const minAmount = cardElement.getAttribute('data-min');
+    const maxAmount = cardElement.getAttribute('data-max');
+
+    document.getElementById('selectedDepositMethodInput').value = id;
+    document.getElementById('activeAccountName').textContent = accountName || '—';
+    document.getElementById('activeAccountNumber').textContent = accountNumber || '—';
+    document.getElementById('instructionsText').textContent = instructions || 'قم بتحويل المبلغ المطلوب إلى رقم الحساب أعلاه، ثم املأ بيانات الاستمارة أدناه وأرفق صورة الوصل.';
+
+    document.getElementById('hintMin').textContent = '$' + minAmount;
+    document.getElementById('hintMax').textContent = '$' + maxAmount;
+
+    const amountInput = document.getElementById('depositAmountInput');
+    if (amountInput) {
+        amountInput.min = minAmount;
+        amountInput.max = maxAmount;
+    }
+}
+
+// نسخ رقم الحساب للحافظة مع إشعار
+function copyAccountNumber() {
+    const accNumber = document.getElementById('activeAccountNumber').textContent.trim();
+    if (accNumber && accNumber !== '—') {
+        navigator.clipboard.writeText(accNumber).then(() => {
+            const btn = document.getElementById('copyAccountBtn');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check2 text-success"></i> تم النسخ!';
+            btn.classList.add('btn-success', 'text-white');
+            btn.classList.remove('btn-outline-secondary');
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('btn-success', 'text-white');
+                btn.classList.add('btn-outline-secondary');
+            }, 2000);
+        });
+    }
+}
+
+// معاينة صورة الوصل فور اختيارها
+function previewReceiptImage(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('receiptPreviewImg').src = e.target.result;
+            document.getElementById('dropzonePrompt').style.display = 'none';
+            document.getElementById('imagePreviewContainer').style.display = 'block';
+            document.getElementById('fileNameBadge').textContent = file.name;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function clearReceiptPreview() {
+    const input = document.getElementById('receiptFileInput');
+    input.value = '';
+    document.getElementById('receiptPreviewImg').src = '';
+    document.getElementById('dropzonePrompt').style.display = 'block';
+    document.getElementById('imagePreviewContainer').style.display = 'none';
+}
+
+// فتح نافذة المعاينة الكبيرة لوصل التحويل
+function openReceiptModal(url, refId) {
+    document.getElementById('lightboxImage').src = url;
+    document.getElementById('lightboxTitle').textContent = 'وصل التحويل - طلب #' + refId;
+    document.getElementById('lightboxDownloadBtn').href = url;
+    const modal = new bootstrap.Modal(document.getElementById('receiptLightboxModal'));
+    modal.show();
+}
+
+// تخصيص حقول نموذج السحب الذكية حسب الوسيلة المختارة (ويسترن يونيون، زين كاش، كي كارد...)
+function handleWithdrawalMethodChange(method) {
+    const notice = document.getElementById('withdrawalMethodNotice');
+    const noticeText = document.getElementById('withdrawalNoticeText');
+    const lblHolder = document.getElementById('lblAccountHolder');
+    const inputHolder = document.getElementById('inputAccountHolder');
+    const lblNumber = document.getElementById('lblAccountNumber');
+    const inputNumber = document.getElementById('inputAccountNumber');
+    const lblBank = document.getElementById('lblBankBranch');
+    const inputBank = document.getElementById('inputBankBranch');
+
+    if (!notice || !noticeText) return;
+
+    if (method === 'western_union') {
+        notice.className = 'alert alert-warning py-2 px-3 small rounded-3 mb-3 d-flex align-items-center gap-2 border-warning';
+        noticeText.innerHTML = '<strong>⚡ استلام نقدي كاش:</strong> اكتب اسمك بالإنجليزية كما في جواز السفر أو البطاقة الوطنية. سنرسل لك رقم الحوالة السري (MTCN) في وصل السحب فور التنفيذ لتستلم نقداً من أي وكيل ويسترن يونيون أو مصرف الطيف في العراق.';
+        lblHolder.innerHTML = 'اسم المستلم بالإنجليزية والعربية (كما في الجواز/الهوية الوطنية) <span class="text-danger">*</span>';
+        inputHolder.placeholder = 'e.g. MUNTADHER HAZIM (منتظر حاظم)';
+        lblNumber.innerHTML = 'رقم هاتف المستلم (لإرسال إشعار الحوالة ورقم MTCN) <span class="text-danger">*</span>';
+        inputNumber.placeholder = '07XXXXXXXXX';
+        lblBank.innerHTML = 'الدولة والمدينة / المحافظة لاستلام الحوالة <span class="text-danger">*</span>';
+        inputBank.placeholder = 'مثال: العراق - بغداد / الكرخ أو البصرة';
+        inputBank.required = true;
+    } else if (method === 'zain_cash') {
+        notice.className = 'alert alert-info py-2 px-3 small rounded-3 mb-3 d-flex align-items-center gap-2';
+        noticeText.innerHTML = '<strong>زين كاش:</strong> سيتم التحويل المباشر إلى رقم محفظتك. تأكد من أن المحفظة مفعلة وتقبل الاستلام.';
+        lblHolder.innerHTML = 'اسم صاحب محفظة زين كاش <span class="text-danger">*</span>';
+        inputHolder.placeholder = 'الاسم الثلاثي لصاحب المحفظة';
+        lblNumber.innerHTML = 'رقم هاتف محفظة زين كاش <span class="text-danger">*</span>';
+        inputNumber.placeholder = '078XXXXXXXX أو 077XXXXXXXX';
+        lblBank.innerHTML = 'المحافظة أو الفرع (اختياري)';
+        inputBank.placeholder = 'مثال: بغداد، النجف...';
+        inputBank.required = false;
+    } else if (method === 'qi_card') {
+        notice.className = 'alert alert-info py-2 px-3 small rounded-3 mb-3 d-flex align-items-center gap-2';
+        noticeText.innerHTML = '<strong>كي كارد / مصرف الرافدين:</strong> يرجى كتابة رقم بطاقة الماستركارد (16 رقماً) المطبوع على البطاقة.';
+        lblHolder.innerHTML = 'اسم صاحب بطاقة كي كارد <span class="text-danger">*</span>';
+        inputHolder.placeholder = 'الاسم المطبوع على البطاقة';
+        lblNumber.innerHTML = 'رقم بطاقة كي كارد (16 رقماً) <span class="text-danger">*</span>';
+        inputNumber.placeholder = 'مثال: 5377XXXXXXXXXXXX';
+        lblBank.innerHTML = 'المصرف المصدر (الرافدين / الرشيد / TBI)';
+        inputBank.placeholder = 'مثال: مصرف الرافدين فرع الرئيسي';
+        inputBank.required = false;
+    } else if (method === 'bank') {
+        notice.className = 'alert alert-primary py-2 px-3 small rounded-3 mb-3 d-flex align-items-center gap-2';
+        noticeText.innerHTML = '<strong>تحويل بنكي مباشر:</strong> يرجى إدخال رمز الآيبان (IBAN) الدولي لحسابك المصرفي كاملاً.';
+        lblHolder.innerHTML = 'اسم المستلم في الحساب البنكي <span class="text-danger">*</span>';
+        inputHolder.placeholder = 'الاسم المطابق تماماً للحساب المصرفي';
+        lblNumber.innerHTML = 'رقم الحساب الدولي (IBAN) <span class="text-danger">*</span>';
+        inputNumber.placeholder = 'IQXXXXXXXXXXXXXXXXXXXX';
+        lblBank.innerHTML = 'اسم المصرف والفرع <span class="text-danger">*</span>';
+        inputBank.placeholder = 'مثال: مصرف بغداد فرع المنصور';
+        inputBank.required = true;
+    } else {
+        notice.className = 'alert alert-secondary py-2 px-3 small rounded-3 mb-3 d-flex align-items-center gap-2';
+        noticeText.innerHTML = 'يرجى تزويدنا بكافة البيانات المطلوبة لتسهيل إرسال الأرباح.';
+        lblHolder.innerHTML = 'اسم المستلم الكامل <span class="text-danger">*</span>';
+        inputHolder.placeholder = 'الاسم الكامل';
+        lblNumber.innerHTML = 'رقم الحساب / البريد / المعرّف <span class="text-danger">*</span>';
+        inputNumber.placeholder = 'رقم الحساب أو معرف المنصة';
+        lblBank.innerHTML = 'تفاصيل إضافية عن الوسيلة (اختياري)';
+        inputBank.placeholder = 'اسم المنصة أو المصرف';
+        inputBank.required = false;
+    }
+}
+</script>
+{% endblock %}

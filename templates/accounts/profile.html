@@ -37,22 +37,31 @@
         margin-top: 15px;
     }
 
+    .verification-badge.bg-warning {
+        color: #0f172a !important;
+        font-weight: 700;
+    }
+
     .card {
-        border: none;
+        border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.08));
         border-radius: 15px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.04);
         margin-bottom: 25px;
+        background-color: var(--bs-card-bg, #ffffff);
     }
 
     .card-header {
-        background: white;
-        border-bottom: 2px solid #f8f9fa;
+        background: var(--bs-card-bg, #ffffff);
+        border-bottom: 1px solid var(--bs-border-color, #e2e8f0);
         padding: 20px 25px;
+        border-top-left-radius: 15px !important;
+        border-top-right-radius: 15px !important;
     }
 
     .card-header h5 {
         margin: 0;
-        color: #2d3748;
+        color: var(--bs-heading-color, #1e293b);
+        font-weight: 700;
     }
 
     .section-icon {
@@ -67,16 +76,18 @@
     }
 
     .progress-wrapper {
-        background: #f8f9fa;
+        background: var(--bs-tertiary-bg, #f8fafc);
         padding: 20px;
-        border-radius: 10px;
+        border-radius: 12px;
         margin-bottom: 20px;
+        border: 1px solid var(--bs-border-color, #e2e8f0);
     }
 
     .progress {
         height: 25px;
         border-radius: 50px;
         overflow: visible;
+        background-color: var(--bs-secondary-bg, #e2e8f0);
     }
 
     .progress-bar {
@@ -89,7 +100,7 @@
 
     .info-item {
         padding: 12px 0;
-        border-bottom: 1px solid #f0f0f0;
+        border-bottom: 1px solid var(--bs-border-color, #f1f5f9);
     }
 
     .info-item:last-child {
@@ -97,7 +108,7 @@
     }
 
     .info-label {
-        color: #718096;
+        color: var(--bs-secondary-color, #64748b);
         font-size: 0.875rem;
         font-weight: 600;
         margin-bottom: 4px;
@@ -105,15 +116,17 @@
     }
 
     .info-value {
-        color: #2d3748;
+        color: var(--bs-body-color, #1e293b);
         font-size: 1rem;
-        font-weight: 500;
+        font-weight: 600;
     }
 
     .stat-card {
         text-align: center;
         padding: 20px;
-        border-radius: 10px;
+        border-radius: 12px;
+        background: var(--bs-tertiary-bg, #f8fafc);
+        border: 1px solid var(--bs-border-color, #e2e8f0);
         transition: transform 0.3s ease;
     }
 
@@ -125,6 +138,42 @@
         font-size: 2rem;
         font-weight: 700;
         margin-bottom: 5px;
+    }
+
+    [data-bs-theme="dark"] .card {
+        background-color: var(--bg-card, #111827) !important;
+        border-color: var(--border-color, #1e293b) !important;
+    }
+
+    [data-bs-theme="dark"] .card-header {
+        background-color: var(--bg-card, #111827) !important;
+        border-bottom-color: var(--border-color, #1e293b) !important;
+    }
+
+    [data-bs-theme="dark"] .card-header h5 {
+        color: #f8fafc !important;
+    }
+
+    [data-bs-theme="dark"] .progress-wrapper {
+        background: #172136 !important;
+        border-color: #243048 !important;
+    }
+
+    [data-bs-theme="dark"] .info-item {
+        border-bottom-color: #1e293b !important;
+    }
+
+    [data-bs-theme="dark"] .info-label {
+        color: #94a3b8 !important;
+    }
+
+    [data-bs-theme="dark"] .info-value {
+        color: #f8fafc !important;
+    }
+
+    [data-bs-theme="dark"] .stat-card {
+        background: #172136 !important;
+        border-color: #243048 !important;
     }
 </style>
 {% endblock %}
@@ -308,14 +357,25 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="info-item">
-                            <span class="info-label">رقم الهاتف</span>
-                            <div class="info-value">{{ user_profile.phone_number|default:'غير محدد' }}</div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="info-label mb-0">رقم الهاتف</span>
+                                {% if user_profile.whatsapp_verified or user_profile.phone_verified %}
+                                <span class="badge bg-success-subtle text-success small rounded-pill px-2">
+                                    <i class="bi bi-patch-check-fill me-1"></i>مؤكد عبر الواتساب
+                                </span>
+                                {% elif user_profile.phone_number %}
+                                <a href="{% url 'accounts:verify_whatsapp' %}" class="badge bg-warning text-dark text-decoration-none rounded-pill px-2 shadow-xs">
+                                    <i class="bi bi-whatsapp me-1"></i>تأكيد عبر الواتساب
+                                </a>
+                                {% endif %}
+                            </div>
+                            <div class="info-value font-monospace" dir="ltr">{{ user_profile.phone_number|default:'غير محدد' }}</div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="info-item">
                             <span class="info-label">رقم هاتف بديل</span>
-                            <div class="info-value">{{ user_profile.alternate_phone|default:'غير محدد' }}</div>
+                            <div class="info-value font-monospace" dir="ltr">{{ user_profile.alternate_phone|default:'غير محدد' }}</div>
                         </div>
                     </div>
                     <div class="col-md-6">

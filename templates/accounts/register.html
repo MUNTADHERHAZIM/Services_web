@@ -1,47 +1,49 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load captcha_tags %}
 {% block title %}إنشاء حساب - {{ SITE_NAME }}{% endblock %}
 
 {% block extra_css %}
 <style>
     .registration-container {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #0f172a 0%, #064e3b 100%);
         min-height: 100vh;
-        padding: 60px 0;
+        padding: 50px 0;
     }
 
     .registration-card {
-        background: #fff;
+        background: var(--bg-card, #fff);
         border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, .30);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, .35);
         overflow: hidden;
+        border: 1px solid var(--border-color, #e2e8f0);
     }
 
-    /* ✅ FIX: كان عندك text-center بدون خاصية */
     .registration-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #0f172a 0%, #064e3b 100%);
         color: #fff;
-        padding: 40px;
+        padding: 40px 20px;
         text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
     }
 
     .registration-header i {
-        font-size: 4rem;
-        margin-bottom: 20px;
-        opacity: .9;
+        font-size: 3.5rem;
+        margin-bottom: 15px;
+        color: #10b981;
     }
 
     .registration-body {
-        padding: 40px;
+        padding: 35px;
     }
 
     .section-title {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #667eea;
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #059669;
         margin: 30px 0 20px;
         padding-bottom: 10px;
-        border-bottom: 3px solid #667eea;
+        border-bottom: 2px solid #059669;
         display: flex;
         align-items: center;
         gap: 10px;
@@ -51,36 +53,113 @@
         margin-top: 0;
     }
 
-    .section-title i {
-        font-size: 1.5rem;
-    }
-
     .form-label {
-        font-weight: 600;
-        color: #495057;
-        margin-bottom: 8px;
+        font-weight: 700;
+        color: var(--text-main, #334155);
+        margin-bottom: 6px;
+        font-size: 0.9rem;
     }
 
     .form-control,
     .form-select {
-        border: 2px solid #e9ecef;
+        border: 1.5px solid var(--border-color, #cbd5e1);
         border-radius: 10px;
-        padding: 12px 15px;
+        padding: 10px 14px;
         transition: all .2s ease;
+        background-color: var(--bg-surface, #fff);
+        color: var(--text-main, #0f172a);
     }
 
-    .form-control:focus,
-    .form-select:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 .2rem rgba(102, 126, 234, .25);
+    [data-bs-theme="dark"] .form-control,
+    [data-bs-theme="dark"] .form-select {
+        background-color: #172136 !important;
+        border: 1.5px solid #334155 !important;
+        color: #ffffff !important;
+    }
+
+    [data-bs-theme="dark"] .form-control:focus,
+    [data-bs-theme="dark"] .form-select:focus {
+        background-color: #1e2b45 !important;
+        border-color: #10b981 !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 0 .25rem rgba(16, 185, 129, .25) !important;
+    }
+
+    [data-bs-theme="dark"] .form-control::placeholder {
+        color: #64748b !important;
+    }
+
+    [data-bs-theme="dark"] .toggle-password {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #94a3b8 !important;
+    }
+
+    /* Role Selector Styling */
+    .role-selector-wrap {
+        background: var(--bg-surface, #f8fafc);
+        border: 1px solid var(--border-color, #e2e8f0);
+    }
+
+    .role-card-option {
+        border: 2px solid var(--border-color, #cbd5e1);
+        background: var(--bg-card, #ffffff);
+        border-radius: 14px;
+        padding: 18px 20px;
+        cursor: pointer;
+        transition: all .25s ease;
+        display: block;
+        text-align: right;
+    }
+
+    .role-card-option:hover {
+        border-color: #10b981;
+        transform: translateY(-2px);
+    }
+
+    .btn-check:checked + .role-card-option.role-customer {
+        border-color: #0284c7 !important;
+        background: rgba(2, 132, 199, 0.12) !important;
+        box-shadow: 0 4px 15px rgba(2, 132, 199, 0.2);
+    }
+
+    .btn-check:checked + .role-card-option.role-provider {
+        border-color: #10b981 !important;
+        background: rgba(16, 185, 129, 0.12) !important;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+    }
+
+    .role-icon-box {
+        font-size: 2.2rem;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .role-customer .role-icon-box { color: #0284c7; }
+    .role-provider .role-icon-box { color: #10b981; }
+
+    .role-title {
+        font-weight: 800;
+        font-size: 1.15rem;
+        color: var(--text-main);
+    }
+
+    .role-desc {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+
+    [data-bs-theme="dark"] .role-desc {
+        color: #94a3b8 !important;
     }
 
     .file-upload-wrapper {
         position: relative;
-        background: #f8f9fa;
-        border: 3px dashed #dee2e6;
-        border-radius: 15px;
-        padding: 30px;
+        background: var(--bg-surface, #f8fafc);
+        border: 2px dashed var(--border-color, #cbd5e1);
+        border-radius: 14px;
+        padding: 24px;
         text-align: center;
         transition: all .2s ease;
         cursor: pointer;
@@ -88,82 +167,63 @@
     }
 
     .file-upload-wrapper:hover {
-        border-color: #667eea;
-        background: #f0f2ff;
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.05);
     }
 
     .file-upload-wrapper.has-file {
-        border-color: #28a745;
-        background: #d4edda;
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.12);
     }
 
     .file-upload-icon {
-        font-size: 3rem;
-        color: #667eea;
-        margin-bottom: 15px;
-    }
-
-    .file-upload-text {
-        color: #6c757d;
+        font-size: 2.5rem;
+        color: #059669;
         margin-bottom: 10px;
     }
 
-    .file-upload-hint {
-        font-size: .875rem;
-        color: #6c757d;
-    }
-
-    #file-preview {
-        max-width: 100%;
-        max-height: 300px;
-        margin-top: 20px;
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, .2);
-        display: none;
-    }
-
     .btn-register {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         border: none;
-        padding: 15px 40px;
+        color: #ffffff;
+        padding: 14px 40px;
         font-size: 1.1rem;
-        font-weight: 700;
+        font-weight: 800;
         border-radius: 50px;
         transition: all .2s ease;
-        box-shadow: 0 5px 15px rgba(102, 126, 234, .40);
+        box-shadow: 0 4px 15px rgba(16, 185, 129, .4);
     }
 
     .btn-register:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(102, 126, 234, .60);
-    }
-
-    .text-muted-custom {
-        color: #6c757d;
-        font-size: .875rem;
+        box-shadow: 0 8px 24px rgba(16, 185, 129, .6);
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        color: #ffffff;
     }
 
     .required-badge {
-        color: #dc3545;
-        font-size: .75rem;
-        margin-left: 6px;
+        color: #ef4444;
+        margin-left: 4px;
+        font-weight: bold;
     }
 
-    /* RTL */
     .optional-badge {
-        color: #6c757d;
-        font-size: .75rem;
-        background: #e9ecef;
-        padding: 2px 8px;
+        font-size: 0.72rem;
+        color: var(--text-muted, #64748b);
+        background: var(--bg-surface, #f1f5f9);
+        border: 1px solid var(--border-color, #cbd5e1);
+        padding: 1px 7px;
         border-radius: 20px;
-        margin-left: 6px;
-        /* RTL */
+        margin-right: 6px;
+        font-weight: 500;
+        vertical-align: middle;
+        display: inline-block;
     }
 
-    /* RTL spacing fix for bootstrap icons (اختياري) */
-    .me-2 {
-        margin-right: 0 !important;
-        margin-left: .5rem !important;
+    [data-bs-theme="dark"] .optional-badge {
+        background: #1e293b;
+        border-color: #334155;
+        color: #94a3b8;
     }
 </style>
 {% endblock %}
@@ -185,29 +245,30 @@
                         <form method="post" enctype="multipart/form-data" id="registration-form">
                             {% csrf_token %}
 
-                            <div class="mb-4 p-4 bg-light rounded-3 text-dark">
-                                <label class="form-label fw-bold mb-3">
-                                    <i class="bi bi-person-badge me-2"></i>اختر نوع الحساب
+                            <div class="mb-4 p-4 rounded-4 role-selector-wrap">
+                                <label class="form-label fw-bold mb-3 d-flex align-items-center gap-2">
+                                    <i class="bi bi-person-badge text-success fs-5"></i>
+                                    <span>اختر نوع الحساب المطلوب</span>
                                 </label>
 
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <input type="radio" class="btn-check" name="user_type" id="type_customer"
                                             value="customer" {% if form.user_type.value == 'customer' or not form.user_type.value %}checked{% endif %}>
-                                        <label class="btn btn-outline-primary w-100 p-3 text-end" for="type_customer">
-                                            <i class="bi bi-person-circle fs-2 d-block mb-2"></i>
-                                            <div class="fw-bold">عميل</div>
-                                            <small class="text-muted">أريد طلب خدمات</small>
+                                        <label class="role-card-option role-customer w-100" for="type_customer">
+                                            <i class="bi bi-person-circle role-icon-box"></i>
+                                            <div class="role-title">عميل</div>
+                                            <div class="role-desc">أريد تصفح وطلب الخدمات</div>
                                         </label>
                                     </div>
 
                                     <div class="col-md-6">
                                         <input type="radio" class="btn-check" name="user_type" id="type_provider"
                                             value="provider" {% if form.user_type.value == 'provider' %}checked{% endif %}>
-                                        <label class="btn btn-outline-success w-100 p-3 text-end" for="type_provider">
-                                            <i class="bi bi-tools fs-2 d-block mb-2"></i>
-                                            <div class="fw-bold">مقدم خدمة</div>
-                                            <small class="text-muted">أريد تقديم خدمات</small>
+                                        <label class="role-card-option role-provider w-100" for="type_provider">
+                                            <i class="bi bi-tools role-icon-box"></i>
+                                            <div class="role-title">مقدم خدمة</div>
+                                            <div class="role-desc">أريد تقديم وتنفيذ الخدمات</div>
                                         </label>
                                     </div>
                                 </div>
@@ -325,8 +386,9 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="id_alternate_phone" class="form-label"><span
-                                            class="optional-badge">اختياري</span>رقم هاتف بديل</label>
+                                    <label for="id_alternate_phone" class="form-label">
+                                        رقم هاتف بديل <span class="optional-badge">اختياري</span>
+                                    </label>
                                     {{ form.alternate_phone }}
                                     {% if form.alternate_phone.errors %}
                                     <div class="text-danger small mt-1">{{ form.alternate_phone.errors.0 }}</div>
@@ -372,8 +434,9 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="id_postal_code" class="form-label"><span
-                                        class="optional-badge">اختياري</span>الرمز البريدي</label>
+                                <label for="id_postal_code" class="form-label">
+                                    الرمز البريدي <span class="optional-badge">اختياري</span>
+                                </label>
                                 {{ form.postal_code }}
                                 {% if form.postal_code.errors %}
                                 <div class="text-danger small mt-1">{{ form.postal_code.errors.0 }}</div>
@@ -433,8 +496,9 @@
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="id_date_of_birth" class="form-label"><span
-                                            class="optional-badge">اختياري</span>تاريخ الميلاد</label>
+                                    <label for="id_date_of_birth" class="form-label">
+                                        تاريخ الميلاد <span class="optional-badge">اختياري</span>
+                                    </label>
                                     {{ form.date_of_birth }}
                                     {% if form.date_of_birth.errors %}
                                     <div class="text-danger small mt-1">{{ form.date_of_birth.errors.0 }}</div>
@@ -442,8 +506,9 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="id_gender" class="form-label"><span
-                                            class="optional-badge">اختياري</span>الجنس</label>
+                                    <label for="id_gender" class="form-label">
+                                        الجنس <span class="optional-badge">اختياري</span>
+                                    </label>
                                     {{ form.gender }}
                                     {% if form.gender.errors %}
                                     <div class="text-danger small mt-1">{{ form.gender.errors.0 }}</div>
@@ -453,10 +518,15 @@
 
                             <div class="alert alert-info mt-4">
                                 <i class="bi bi-info-circle me-2"></i>
-                                <strong>ملاحظة:</strong> سيتم مراجعة بياناتك والتحقق من هويتك من قبل فريقنا قريباً.
+                                <strong>ملاحظة:</strong> سيتم مراجعة وتوثيق بياناتك وهويتك لضمان أعلى معايير الأمان.
                             </div>
 
-                            <button type="submit" class="btn btn-register btn-primary w-100 mt-4" id="submit-btn">
+                            <!-- Professional Security Captcha -->
+                            <div class="mt-4">
+                                {% render_captcha %}
+                            </div>
+
+                            <button type="submit" class="btn btn-register btn-primary w-100 mt-3" id="submit-btn">
                                 <i class="bi bi-check-circle me-2"></i>إنشاء الحساب
                             </button>
 

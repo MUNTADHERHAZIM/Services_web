@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}غير متصل بالإنترنت - {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5 my-md-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8 text-center" data-aos="fade-up">
+            <!-- Offline Graphic Icon -->
+            <div class="mb-4">
+                <div class="offline-icon-pulse d-inline-flex align-items-center justify-content-center rounded-circle bg-danger-subtle text-danger shadow-lg" style="width: 110px; height: 110px;">
+                    <i class="bi bi-wifi-off" style="font-size: 3.5rem;"></i>
+                </div>
+            </div>
+
+            <!-- Title & Notice -->
+            <h1 class="h3 fw-bold mb-3 text-dark-emphasis">أنت غير متصل بالإنترنت حالياً</h1>
+            <p class="text-muted mb-4 lead fs-6">
+                تعذر الوصول إلى هذه الصفحة لأن جهازك غير متصل بالشبكة. لا تقلق، تطبيق <strong>خدماتي</strong> يحفظ بياناتك الأساسية للعمل حتى في حالة انقطاع الاتصال.
+            </p>
+
+            <!-- Network Status Indicator -->
+            <div class="alert alert-secondary d-inline-flex align-items-center gap-2 px-4 py-2 rounded-pill mb-4 shadow-xs" id="networkStatusBadge">
+                <span class="spinner-grow spinner-grow-sm text-danger" role="status" aria-hidden="true" id="statusPulseDot"></span>
+                <span class="small fw-semibold" id="statusText">بانتظار استعادة الاتصال بالشبكة...</span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex flex-wrap justify-content-center gap-3 mb-5">
+                <button type="button" class="btn btn-primary-custom px-4 py-2" id="retryConnectionBtn">
+                    <i class="bi bi-arrow-clockwise me-1"></i> إعادة المحاولة الآن
+                </button>
+                <a href="{% url 'core:home' %}" class="btn btn-outline-secondary px-4 py-2 rounded-pill">
+                    <i class="bi bi-house-door me-1"></i> الانتقال للرئيسية
+                </a>
+            </div>
+
+            <!-- Cached Features Available -->
+            <div class="card border-0 bg-body-tertiary rounded-4 p-4 text-start">
+                <h6 class="fw-bold mb-3 d-flex align-items-center gap-2 text-dark-emphasis">
+                    <i class="bi bi-shield-check text-success fs-5"></i>
+                    <span>مميزات تطبيق خدماتي PWA المتاحة دون إنترنت:</span>
+                </h6>
+                <ul class="list-unstyled mb-0 d-flex flex-column gap-2 small text-muted">
+                    <li class="d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span>تصفح الصفحات والمحتوى الذي تمت زيارته مسبقاً بسرعة فائقة.</span>
+                    </li>
+                    <li class="d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span>حفظ طلباتك وتفضيلاتك في الذاكرة المحلية حتى عودة الاتصال.</span>
+                    </li>
+                    <li class="d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span>إعادة الاتصال والتحديث تلقائياً بمجرد عودة إشارة الإنترنت.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.offline-icon-pulse {
+    animation: offlinePulse 2.5s infinite ease-in-out;
+}
+@keyframes offlinePulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const retryBtn = document.getElementById('retryConnectionBtn');
+    const statusText = document.getElementById('statusText');
+    const statusBadge = document.getElementById('networkStatusBadge');
+    const statusDot = document.getElementById('statusPulseDot');
+
+    function checkConnection() {
+        if (navigator.onLine) {
+            statusBadge.classList.remove('alert-secondary', 'alert-danger');
+            statusBadge.classList.add('alert-success');
+            statusDot.classList.remove('text-danger');
+            statusDot.classList.add('text-success');
+            statusText.textContent = 'تمت استعادة الاتصال بنجاح! جارٍ تحديث الصفحة...';
+            setTimeout(() => {
+                window.location.reload();
+            }, 1200);
+        } else {
+            statusBadge.classList.remove('alert-success');
+            statusBadge.classList.add('alert-danger');
+            statusText.textContent = 'لا يزال الاتصال مقطوعاً، تأكد من اتصال الـ Wi-Fi أو البيانات.';
+        }
+    }
+
+    if (retryBtn) {
+        retryBtn.addEventListener('click', function () {
+            retryBtn.disabled = true;
+            retryBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> جارٍ الفحص...';
+            setTimeout(() => {
+                retryBtn.disabled = false;
+                retryBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i> إعادة المحاولة الآن';
+                checkConnection();
+            }, 800);
+        });
+    }
+
+    // Auto-detect when online again
+    window.addEventListener('online', checkConnection);
+});
+</script>
+{% endblock %}

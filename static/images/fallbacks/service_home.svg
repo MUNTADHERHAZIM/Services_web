@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="homeBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1c1917" />
+      <stop offset="50%" stop-color="#292524" />
+      <stop offset="100%" stop-color="#451a03" />
+    </linearGradient>
+    <linearGradient id="toolGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f97316" />
+      <stop offset="100%" stop-color="#eab308" />
+    </linearGradient>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#homeBg)" />
+  <circle cx="200" cy="180" r="150" fill="#f97316" filter="blur(70px)" opacity="0.25" />
+  <circle cx="620" cy="300" r="160" fill="#eab308" filter="blur(80px)" opacity="0.2" />
+
+  <g transform="translate(180, 75)">
+    <rect width="440" height="350" rx="20" fill="rgba(255, 255, 255, 0.07)" stroke="rgba(249, 115, 22, 0.3)" stroke-width="1.5" />
+    
+    <!-- Home / Tools Icon -->
+    <g transform="translate(145, 45)">
+      <!-- House outline -->
+      <polygon points="75,10 10,70 30,70 30,140 120,140 120,70 140,70" fill="none" stroke="#f97316" stroke-width="5" stroke-linejoin="round" />
+      <!-- Door -->
+      <rect x="58" y="90" width="34" height="50" rx="4" fill="#f97316" opacity="0.3" stroke="#f97316" stroke-width="3" />
+      
+      <!-- Crossed Wrench / Screwdriver badge -->
+      <circle cx="75" cy="55" r="28" fill="#292524" stroke="#eab308" stroke-width="3" />
+      <!-- Gear / Wrench -->
+      <path d="M 68 45 L 82 45 L 85 53 L 80 62 L 70 62 L 65 53 Z" fill="#eab308" />
+      <circle cx="75" cy="54" r="4" fill="#292524" />
+    </g>
+
+    <text x="220" y="275" font-family="'Tajawal', 'Segoe UI', sans-serif" font-size="22" font-weight="bold" fill="#ffffff" text-anchor="middle">خدمات المنزل والصيانة الفنية</text>
+    <text x="220" y="305" font-family="'Tajawal', 'Segoe UI', sans-serif" font-size="14" fill="#fed7aa" text-anchor="middle">سباكة • كهرباء • تكييف وتبريد • نجارة</text>
+  </g>
+</svg>
